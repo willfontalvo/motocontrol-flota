@@ -377,6 +377,30 @@ window.MotoData = {
     this.persist();
   },
 
+  getVehicles() {
+    return (this.data && this.data.vehicles) ? this.data.vehicles : [];
+  },
+
+  getTransactions() {
+    return (this.data && this.data.transactions) ? this.data.transactions : [];
+  },
+
+  getMaintenanceOrders() {
+    return (this.data && this.data.maintenanceOrders) ? this.data.maintenanceOrders : [];
+  },
+
+  getDocuments() {
+    return (this.data && this.data.documents) ? this.data.documents : [];
+  },
+
+  getSpareParts() {
+    return (this.data && this.data.spareParts) ? this.data.spareParts : [];
+  },
+
+  getMaintenanceTypes() {
+    return (this.data && this.data.maintenanceTypes) ? this.data.maintenanceTypes : [];
+  },
+
   async clearAllData() {
     this.data = {
       vehicles: [],
@@ -387,6 +411,9 @@ window.MotoData = {
       spareParts: [],
       maintenanceTypes: []
     };
+    try {
+      localStorage.removeItem('motocontrol_data');
+    } catch (e) {}
     this.saveToLocal();
     if (this.isFirebaseActive && this.db) {
       try {
@@ -400,12 +427,8 @@ window.MotoData = {
   },
 
   getAccounts() {
-    if (!this.data.accounts || this.data.accounts.length === 0) {
-      this.data.accounts = [
-        { id: 'acc-1', name: 'Nequi Flota', balance: 1420000, type: 'Digital', bank: 'Bancolombia Nequi', number: '312 458 9034', description: 'Billetera digital · Tarifas diarias' },
-        { id: 'acc-2', name: 'Bancolombia Ahorros', balance: 3850000, type: 'Bancaria', bank: 'Bancolombia', number: '031-884920-11', description: 'Cuenta principal · Recaudo y pólizas' },
-        { id: 'acc-3', name: 'Caja Efectivo', balance: 640000, type: 'Efectivo', bank: 'Caja Oficina', number: 'Oficina Central', description: 'Efectivo en oficina · Taller y varios' }
-      ];
+    if (!this.data || !this.data.accounts) {
+      this.data.accounts = [];
     }
     return this.data.accounts;
   },

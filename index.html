@@ -179,8 +179,8 @@
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">build</span>
 <span class="font-body text-body-md" data-design-text-token="body-md">Mantenimientos</span>
 </span>
-<span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-warning-container text-on-warning-container tabular-nums" data-component-id="badge-numeric-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">2</span>
+<span id="badge-maint-count" class="hidden inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-warning-container text-on-warning-container tabular-nums" data-component-id="badge-numeric-warning" data-component-type="badge" data-component-variant="warning" role="status">
+<span class="font-label text-label-sm" id="badge-maint-count-text">0</span>
 </span>
 </a>
 <a class="flex items-center justify-between gap-gutter-sm px-gutter-sm py-2.5 rounded text-light-on-surface-variant hover:bg-light-surface-container-low hover:text-light-on-surface transition-colors duration-state-change" href="#documentacion">
@@ -188,8 +188,8 @@
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">description</span>
 <span class="font-body text-body-md" data-design-text-token="body-md">Documentación</span>
 </span>
-<span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-light-error text-light-on-error tabular-nums" data-component-id="badge-numeric" data-component-type="badge" data-component-variant="numeric" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">2</span>
+<span id="badge-doc-count" class="hidden inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-light-error text-light-on-error tabular-nums" data-component-id="badge-numeric" data-component-type="badge" data-component-variant="numeric" role="status">
+<span class="font-label text-label-sm" id="badge-doc-count-text">0</span>
 </span>
 </a>
 <a class="flex items-center gap-gutter-sm px-gutter-sm py-2.5 rounded text-light-on-surface-variant hover:bg-light-surface-container-low hover:text-light-on-surface transition-colors duration-state-change" href="#gastos">
@@ -259,11 +259,11 @@
 <main class="flex-1 p-gutter-md lg:p-page-margin flex flex-col gap-gutter-lg max-w-[1400px] w-full mx-auto">
 <!-- Urgent Alerts Strip -->
 <section aria-label="Alertas prioritarias" class="flex flex-col gap-gutter-sm">
-<div class="flex flex-wrap items-center justify-between gap-gutter-md p-gutter-md rounded-md bg-light-error-container text-light-on-error-container" data-component-id="alert-error" data-component-type="alert" data-component-variant="error" id="alert-banner-error" role="alert">
+<div class="hidden flex-wrap items-center justify-between gap-gutter-md p-gutter-md rounded-md bg-light-error-container text-light-on-error-container" data-component-id="alert-error" data-component-type="alert" data-component-variant="error" id="alert-banner-error" role="alert">
 <div class="flex items-center gap-gutter-sm">
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] shrink-0">error</span>
-<span class="font-body text-body-md" data-design-text-token="body-md">
-<strong>Alerta crítica:</strong> Tecnomecánica vencida en <span class="font-mono text-mono-md">MCT-109</span> (Luis Pineda) y preventivo vencido en <span class="font-mono text-mono-md">MCT-305</span>.
+<span class="font-body text-body-md" data-design-text-token="body-md" id="alert-banner-error-text">
+<strong>Alerta crítica:</strong> Documentos vencidos o mantenimientos pendientes.
               </span>
 </div>
 <div class="flex items-center gap-gutter-md shrink-0">
@@ -275,11 +275,11 @@
 </button>
 </div>
 </div>
-<div class="flex flex-wrap items-center justify-between gap-gutter-md p-gutter-md rounded-md bg-warning-container text-on-warning-container" data-component-id="alert-warning" data-component-type="alert" data-component-variant="warning" id="alert-banner-warning" role="alert">
+<div class="hidden flex-wrap items-center justify-between gap-gutter-md p-gutter-md rounded-md bg-warning-container text-on-warning-container" data-component-id="alert-warning" data-component-type="alert" data-component-variant="warning" id="alert-banner-warning" role="alert">
 <div class="flex items-center gap-gutter-sm">
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] shrink-0">warning</span>
-<span class="font-body text-body-md" data-design-text-token="body-md">
-<strong>Próximo vencimiento:</strong> El SOAT de <span class="font-mono text-mono-md">MCT-218</span> (Jorge Valencia) vence en 4 días (26 nov 2026).
+<span class="font-body text-body-md" data-design-text-token="body-md" id="alert-banner-warning-text">
+<strong>Próximo vencimiento:</strong> Documentos próximos a vencer.
               </span>
 </div>
 <button aria-label="Ocultar aviso" class="inline-flex items-center justify-center w-7 h-7 rounded hover:bg-warning/10" onclick="this.closest('[role=alert]').classList.add('hidden')" type="button">
@@ -356,8 +356,8 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-success">trending_up</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-income">$ 12.640.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-success-container text-on-success-container tabular-nums whitespace-nowrap" data-design-text-token="label-sm" id="kpi-income-delta">+11,2%</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-income">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-success-container text-on-success-container tabular-nums whitespace-nowrap" data-design-text-token="label-sm" id="kpi-income-delta">+0,0%</span>
 </div>
 <p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-income-sub">Tarifas diarias recaudadas</p>
 </article>
@@ -367,8 +367,8 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-error">trending_down</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-expense">$ 3.890.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container tabular-nums whitespace-nowrap" data-design-text-token="label-sm" id="kpi-expense-delta">30,7%</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-expense">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container tabular-nums whitespace-nowrap" data-design-text-token="label-sm" id="kpi-expense-delta">0,0%</span>
 </div>
 <p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-expense-sub">Preventivos, correctivos y SOAT</p>
 </article>
@@ -378,8 +378,8 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">account_balance_wallet</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-primary tabular-nums" data-design-text-token="headline-md" id="kpi-balance">$ 8.750.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-secondary-container text-light-on-secondary-container whitespace-nowrap" data-design-text-token="label-sm">Utilidad</span>
+<p class="font-headline text-headline-md text-light-primary tabular-nums" data-design-text-token="headline-md" id="kpi-balance">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-secondary-container text-light-on-secondary-container whitespace-nowrap" data-design-text-token="label-sm" id="kpi-balance-status">Disponible</span>
 </div>
 <p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Disponible consolidado en cuentas</p>
 </article>
@@ -389,10 +389,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">electric_rickshaw</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">14 / 16</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="label-sm">$ 45k/día</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-fleet-count">0 / 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="label-sm" id="kpi-fleet-rate">$ 0/día</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">2 motocarros en taller correctivo</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-fleet-sub">Sin motocarros registrados</p>
 </article>
 </section>
 <!-- Income vs Expenses Chart & Money Accounts -->
@@ -455,31 +455,11 @@ Limpiar
 </div>
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">account_balance</span>
 </header>
-<div class="flex flex-col gap-gutter-sm">
-<div class="p-gutter-sm rounded bg-light-surface-container-low border border-light-outline-variant flex items-center justify-between gap-gutter-sm">
-<div class="min-w-0">
-<p class="font-label text-label-lg text-light-on-surface truncate" data-design-text-token="label-lg">Bancolombia Ahorros</p>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Recaudo y SOAT</p>
-</div>
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums shrink-0" data-design-text-token="mono-md">$ 5.120.000</p>
-</div>
-<div class="p-gutter-sm rounded bg-light-surface-container-low border border-light-outline-variant flex items-center justify-between gap-gutter-sm">
-<div class="min-w-0">
-<p class="font-label text-label-lg text-light-on-surface truncate" data-design-text-token="label-lg">Nequi Flota</p>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Tarifas diarias</p>
-</div>
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums shrink-0" data-design-text-token="mono-md">$ 2.480.000</p>
-</div>
-<div class="p-gutter-sm rounded bg-light-surface-container-low border border-light-outline-variant flex items-center justify-between gap-gutter-sm">
-<div class="min-w-0">
-<p class="font-label text-label-lg text-light-on-surface truncate" data-design-text-token="label-lg">Caja Efectivo</p>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Pagos menores y taller</p>
-</div>
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums shrink-0" data-design-text-token="mono-md">$ 1.150.000</p>
-</div>
+<div class="flex flex-col gap-gutter-sm" id="dashboard-accounts-container">
+<!-- Populated dynamically by JS -->
 </div>
 <footer class="pt-gutter-sm border-t border-light-outline-variant flex items-center justify-between">
-<span class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">3 cuentas activas</span>
+<span class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="dashboard-accounts-count">0 cuentas activas</span>
 <a class="font-label text-label-md text-light-primary hover:underline" href="#gastos">
 <span data-design-text-token="label-md">Administrar cuentas</span>
 </a>
@@ -547,79 +527,8 @@ Limpiar
 </th>
 </tr>
 </thead>
-<tbody class="divide-y divide-light-outline-variant">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Diego Torres</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Preventivo</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Aceite y frenos</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">20 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-component-id="badge-error" data-component-type="badge" data-component-variant="error" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vencido</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Carlos Mendoza</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Preventivo</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Ajuste 5.000 km</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">25 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En 3 días</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Mateo Ruiz</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Correctivo</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Kit de embrague</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">23 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En taller</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-611</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Óscar Giraldo</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Preventivo</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Alineación y llantas</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">04 dic 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Programado</span>
-</span>
-</td>
-</tr>
+<tbody class="divide-y divide-light-outline-variant" id="dashboard-maint-table-body">
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -658,78 +567,7 @@ Limpiar
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="doc-table-body">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-type="Tecnomecánica">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-109</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Luis Pineda</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Tecnomecánica</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">CDA Central</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">18 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-component-id="badge-error" data-component-type="badge" data-component-variant="error" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vencido</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-type="SOAT">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-218</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Jorge Valencia</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">SOAT</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Póliza anual</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">26 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En 4 días</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-type="SOAT">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Carlos Mendoza</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">SOAT</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Póliza anual</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">14 mar 2027</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vigente</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-type="Tecnomecánica">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-611</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Óscar Giraldo</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Tecnomecánica</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">CDA Norte</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">02 feb 2027</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vigente</span>
-</span>
-</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -873,214 +711,7 @@ Limpiar
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="fleet-table-body">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="mct-402 carlos mendoza 3124567890 bajaj" data-status="active">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Bajaj RE 2024</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Carlos Mendoza</p>
-<p class="font-body text-body-sm text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="body-sm">312 456 7890</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 45.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Nequi Flota</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-sm text-success whitespace-nowrap" data-design-text-token="body-sm">SOAT y Tecno al día</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">Vence mar 2027</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En ruta</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="reassign-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-driver="Carlos Mendoza" data-plate="MCT-402" type="button">Reasignar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="mct-218 jorge valencia 3158891023 tvs" data-status="active">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-218</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">TVS King 2023</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Jorge Valencia</p>
-<p class="font-body text-body-sm text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="body-sm">315 889 1023</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 45.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Nequi Flota</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-sm text-warning whitespace-nowrap" data-design-text-token="body-sm">SOAT vence en 4 días</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">26 nov 2026</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En ruta</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="reassign-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-driver="Jorge Valencia" data-plate="MCT-218" type="button">Reasignar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="mct-305 diego torres 3007412256 bajaj" data-status="active">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Bajaj RE 2022</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Diego Torres</p>
-<p class="font-body text-body-sm text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="body-sm">300 741 2256</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 42.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Caja Efectivo</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-sm text-success whitespace-nowrap" data-design-text-token="body-sm">SOAT y Tecno al día</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">Preventivo vencido</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En ruta</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="reassign-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-driver="Diego Torres" data-plate="MCT-305" type="button">Reasignar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="mct-109 luis pineda 3182294011 tvs" data-status="workshop">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-109</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">TVS King 2021</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Luis Pineda</p>
-<p class="font-body text-body-sm text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="body-sm">318 229 4011</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 42.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Suspendida</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-sm text-light-error whitespace-nowrap" data-design-text-token="body-sm">Tecno vencida</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">18 nov 2026</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-component-id="badge-error" data-component-type="badge" data-component-variant="error" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Inmovilizado</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="reassign-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-driver="Luis Pineda" data-plate="MCT-109" type="button">Reasignar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="mct-514 mateo ruiz 3205129944 bajaj" data-status="workshop">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Bajaj RE 2023</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Mateo Ruiz</p>
-<p class="font-body text-body-sm text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="body-sm">320 512 9944</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 45.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">En pausa</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-sm text-success whitespace-nowrap" data-design-text-token="body-sm">SOAT y Tecno al día</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Correctivo embrague</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En taller</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="reassign-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-driver="Mateo Ruiz" data-plate="MCT-514" type="button">Reasignar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="mct-611 oscar giraldo 3116403382 bajaj" data-status="active">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-611</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Bajaj RE 2025</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Óscar Giraldo</p>
-<p class="font-body text-body-sm text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="body-sm">311 640 3382</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 48.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Bancolombia</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-sm text-success whitespace-nowrap" data-design-text-token="body-sm">SOAT y Tecno al día</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">Vence feb 2027</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En ruta</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="reassign-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-driver="Óscar Giraldo" data-plate="MCT-611" type="button">Reasignar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="mct-720 andres mejia 3149081120 tvs" data-status="active">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-720</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">TVS King 2024</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Andrés Mejía</p>
-<p class="font-body text-body-sm text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="body-sm">314 908 1120</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 45.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Nequi Flota</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-sm text-success whitespace-nowrap" data-design-text-token="body-sm">SOAT y Tecno al día</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">Vence jun 2027</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En ruta</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="reassign-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-driver="Andrés Mejía" data-plate="MCT-720" type="button">Reasignar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="mct-804 sin asignar disponible bajaj" data-status="unassigned">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-804</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Bajaj RE 2025</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-outline whitespace-nowrap" data-design-text-token="body-md">Sin conductor</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Disponible en patio</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 45.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Tarifa base</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-sm text-success whitespace-nowrap" data-design-text-token="body-sm">SOAT y Tecno al día</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">Vence ago 2027</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Disponible</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="reassign-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-driver="" data-plate="MCT-804" type="button">Asignar</button>
-</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -1209,82 +840,8 @@ Limpiar
 </th>
 </tr>
 </thead>
-<tbody class="divide-y divide-light-outline-variant">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-611</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Óscar Giraldo</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 48.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Modelo 2025</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Pagado</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Carlos Mendoza</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 45.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Estándar</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Pagado</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-218</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Jorge Valencia</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 45.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Estándar</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Pendiente</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Diego Torres</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 42.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Modelo 2022</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Pagado</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Mateo Ruiz</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 45.000</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">En taller</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-component-id="badge-error" data-component-type="badge" data-component-variant="error" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Exonerado</span>
-</span>
-</td>
-</tr>
+<tbody class="divide-y divide-light-outline-variant" id="tariff-vehicles-table-body">
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -1331,81 +888,7 @@ Limpiar
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="tx-table-body">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-tx-account="Nequi" data-tx-type="income">
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Tarifa diaria turno</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">22 nov · 08:40</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Nequi Flota</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-success tabular-nums whitespace-nowrap" data-design-text-token="mono-md">+$ 45.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-tx-account="Efectivo" data-tx-type="expense">
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Correctivo embrague</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">21 nov · 16:15</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Caja Efectivo</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-error tabular-nums whitespace-nowrap" data-design-text-token="mono-md">-$ 285.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-tx-account="Bancolombia" data-tx-type="income">
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Tarifa diaria turno</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">21 nov · 19:05</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-611</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Bancolombia</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-success tabular-nums whitespace-nowrap" data-design-text-token="mono-md">+$ 48.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-tx-account="Bancolombia" data-tx-type="expense">
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Renovación SOAT</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">19 nov · 11:20</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Bancolombia</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-error tabular-nums whitespace-nowrap" data-design-text-token="mono-md">-$ 560.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-tx-account="Nequi" data-tx-type="expense">
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Preventivo aceite y frenos</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">18 nov · 14:50</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Nequi Flota</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-error tabular-nums whitespace-nowrap" data-design-text-token="mono-md">-$ 190.000</span>
-</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -1425,8 +908,8 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-warning">event_upcoming</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">4</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-design-text-token="label-sm">1 vencido</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-maint-prev-count">0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="kpi-maint-prev-badge">0 vencidos</span>
 </div>
 <p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Cada 5.000 km o 30 días</p>
 </article>
@@ -1436,10 +919,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-tertiary">build_circle</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">2</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-design-text-token="label-sm">En curso</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-maint-corr-count">0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="kpi-maint-corr-badge">En curso</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">MCT-514 y MCT-109 en revisión</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-maint-corr-sub">Sin órdenes en taller</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -1447,8 +930,8 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">payments</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 1.680.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm">8 órdenes</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-maint-expense">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="kpi-maint-orders-count">0 órdenes</span>
 </div>
 <p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Mano de obra y repuestos</p>
 </article>
@@ -1458,10 +941,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">inventory_2</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">24 ítems</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-design-text-token="label-sm">3 stock bajo</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-stock-items">0 ítems</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="kpi-stock-low">0 bajo stock</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Valorizado en $ 2.340.000</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-stock-val">Valorizado en $ 0</p>
 </article>
 </section>
 <!-- Primary Module Tabs: Órdenes de Mantenimiento vs Inventario de Repuestos -->
@@ -1537,156 +1020,7 @@ Limpiar
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="orders-table-body">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-order-type="Preventivo Aceite" data-search="mct-305 diego torres cambio de aceite 20w50">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Diego Torres</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-primary whitespace-nowrap" data-design-text-token="label-md">Cambio de aceite</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Cambio de aceite motor 4T</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">1x Aceite 20W50 · Filtro</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">20 nov 2026</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">45.200 km</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 65.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-component-id="badge-error" data-component-type="badge" data-component-variant="error" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vencido</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-order-type="Preventivo Frenos" data-search="mct-305 diego torres mantenimiento de frenos bandas">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Diego Torres</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-primary whitespace-nowrap" data-design-text-token="label-md">Frenos</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Mantenimiento de frenos</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Bandas traseras · Líquido DOT4</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">25 nov 2026</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">45.600 km</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 125.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En 3 días</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-order-type="Correctivo" data-search="mct-514 mateo ruiz embrague">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Mateo Ruiz</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-tertiary whitespace-nowrap" data-design-text-token="label-md">Correctivo</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Reemplazo kit de embrague</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">1x Kit embrague Bajaj RE</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">23 nov 2026</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Entrega estimada</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 285.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En taller</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-order-type="Preventivo" data-search="mct-402 carlos mendoza 5000 km">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Carlos Mendoza</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-primary whitespace-nowrap" data-design-text-token="label-md">Preventivo</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Revisión general 5.000 km</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Aceite · Bujía NGK · Filtro aire</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">25 nov 2026</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">30.000 km</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 145.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En 3 días</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-order-type="Correctivo" data-search="mct-109 luis pineda suspension">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-109</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Luis Pineda</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-tertiary whitespace-nowrap" data-design-text-token="label-md">Correctivo</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Suspensión delantera y frenos</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Amortiguador + líquido DOT4</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">24 nov 2026</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">En taller</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 340.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En taller</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-order-type="Preventivo" data-search="mct-611 oscar giraldo alineacion llantas">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-611</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Óscar Giraldo</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-primary whitespace-nowrap" data-design-text-token="label-md">Preventivo</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Alineación y rotación de llantas</p>
-<p class="font-body text-body-sm text-light-outline whitespace-nowrap" data-design-text-token="body-sm">Revisión presión y balanceo</p>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">04 dic 2026</p>
-<p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">15.000 km</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 85.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Programado</span>
-</span>
-</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -1704,12 +1038,8 @@ Limpiar
 <form class="p-gutter-md rounded bg-light-surface-container-low border border-light-outline-variant grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-gutter-sm items-end" id="part-usage-form">
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">Equipo (Motocarro)</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="usage-plate">
-<option value="MCT-305">MCT-305</option>
-<option value="MCT-402">MCT-402</option>
-<option value="MCT-514">MCT-514</option>
-<option value="MCT-109">MCT-109</option>
-<option value="MCT-611">MCT-611</option>
+<select class="vehicle-plate-select rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="usage-plate">
+<option value="">-- Sin motocarros --</option>
 </select>
 </label>
 <label class="flex flex-col gap-1 lg:col-span-2">
@@ -1758,66 +1088,7 @@ Limpiar
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="usage-table-body">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Kit de embrague Bajaj RE</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Correctivo</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">1 und.</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">21 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 165.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Bandas de freno traseras</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Frenos</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">1 juego</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">20 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 42.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change">
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Aceite 20W50 4T (Litro)</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Cambio de aceite</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">2 litros</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">18 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 56.000</span>
-</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -2022,14 +1293,14 @@ Limpiar
 <main class="flex-1 p-gutter-md lg:p-page-margin flex flex-col gap-gutter-lg max-w-[1400px] w-full mx-auto">
 <!-- Priority Expiration Alerts -->
 <section aria-label="Alertas de vencimiento" class="flex flex-col gap-gutter-sm">
-<div class="flex flex-wrap items-center justify-between gap-gutter-md p-gutter-md rounded-md bg-light-error-container text-light-on-error-container" data-component-id="alert-error" data-component-type="alert" data-component-variant="error" role="alert">
+<div class="hidden flex-wrap items-center justify-between gap-gutter-md p-gutter-md rounded-md bg-light-error-container text-light-on-error-container" data-component-id="alert-error" data-component-type="alert" data-component-variant="error" id="doc-alert-error" role="alert">
 <div class="flex items-center gap-gutter-sm">
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] shrink-0">error</span>
-<span class="font-body text-body-md" data-design-text-token="body-md">
-<strong>Documento vencido:</strong> La Tecnomecánica de <span class="font-mono text-mono-md">MCT-109</span> (Luis Pineda) venció el 18 nov 2026. Unidad inmovilizada hasta renovar.
+<span class="font-body text-body-md" data-design-text-token="body-md" id="doc-alert-error-text">
+<strong>Documento vencido:</strong> No hay documentos vencidos en la flota.
               </span>
 </div>
-<button class="renew-doc-btn shrink-0 font-label text-label-md underline hover:opacity-80" data-doc="Tecnomecánica" data-plate="MCT-109" type="button">
+<button class="renew-doc-btn shrink-0 font-label text-label-md underline hover:opacity-80" data-doc="SOAT" data-plate="" type="button">
 <span data-design-text-token="label-md">Renovar ahora</span>
 </button>
 </div>
@@ -2042,10 +1313,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-success">verified_user</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">28 / 32</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-design-text-token="label-sm">87,5% al día</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-doc-valid-count">0 / 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="kpi-doc-valid-percent">100% al día</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">16 SOAT y 16 Tecnomecánicas</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-doc-valid-sub">SOAT y Tecnomecánica</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -2053,10 +1324,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-warning">schedule</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">2</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-design-text-token="label-sm">En 30 días</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-doc-expiring-count">0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm">En 30 días</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">MCT-218 (4 días) y MCT-514</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-doc-expiring-sub">Sin vencimientos próximos</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -2064,10 +1335,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-error">gpp_bad</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-error tabular-nums" data-design-text-token="headline-md">1</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-design-text-token="label-sm">Urgente</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-doc-expired-count">0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm">Al día</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">MCT-109 sin Tecnomecánica</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-doc-expired-sub">Sin documentos vencidos</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -2075,8 +1346,8 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">payments</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 9.420.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm">2026</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-doc-investment">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm">Año en curso</span>
 </div>
 <p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Pólizas SOAT y revisiones CDA</p>
 </article>
@@ -2139,156 +1410,7 @@ Limpiar
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="docs-table-body">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-state="expired" data-doc-type="Tecnomecánica" data-search="mct-109 luis pineda 1.028.990.112 tecnomecanica cda central">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-109</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Luis Pineda</p>
-<p class="font-mono text-body-xs text-light-primary font-semibold whitespace-nowrap">C.C. 1.028.990.112</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-on-surface whitespace-nowrap" data-design-text-token="label-md">Tecnomecánica</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">CDA Central</p>
-<p class="font-mono text-mono-md text-light-outline whitespace-nowrap" data-design-text-token="mono-md">RTM-884120</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">18 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-component-id="badge-error" data-component-type="badge" data-component-variant="error" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vencido</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="Tecnomecánica" data-plate="MCT-109" type="button">Renovar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-state="soon" data-doc-type="SOAT" data-search="mct-218 jorge valencia 71.890.123 soat sura">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-218</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Jorge Valencia</p>
-<p class="font-mono text-body-xs text-light-primary font-semibold whitespace-nowrap">C.C. 71.890.123</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-on-surface whitespace-nowrap" data-design-text-token="label-md">SOAT</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Seguros Sura</p>
-<p class="font-mono text-mono-md text-light-outline whitespace-nowrap" data-design-text-token="mono-md">SOA-550192</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">26 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En 4 días</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="SOAT" data-plate="MCT-218" type="button">Renovar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-state="soon" data-doc-type="Tecnomecánica" data-search="mct-514 mateo ruiz 1.017.554.321 tecnomecanica cda norte">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Mateo Ruiz</p>
-<p class="font-mono text-body-xs text-light-primary font-semibold whitespace-nowrap">C.C. 1.017.554.321</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-on-surface whitespace-nowrap" data-design-text-token="label-md">Tecnomecánica</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">CDA Norte</p>
-<p class="font-mono text-mono-md text-light-outline whitespace-nowrap" data-design-text-token="mono-md">RTM-912044</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">12 dic 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">En 20 días</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="Tecnomecánica" data-plate="MCT-514" type="button">Renovar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-state="valid" data-doc-type="SOAT" data-search="mct-402 carlos mendoza 1.037.624.890 soat bolivar">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Carlos Mendoza</p>
-<p class="font-mono text-body-xs text-light-primary font-semibold whitespace-nowrap">C.C. 1.037.624.890</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-on-surface whitespace-nowrap" data-design-text-token="label-md">SOAT</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Seguros Bolívar</p>
-<p class="font-mono text-mono-md text-light-outline whitespace-nowrap" data-design-text-token="mono-md">SOA-774310</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">14 mar 2027</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vigente</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="SOAT" data-plate="MCT-402" type="button">Actualizar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-state="valid" data-doc-type="Tecnomecánica" data-search="mct-611 oscar giraldo 98.765.432 tecnomecanica cda norte">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-611</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Óscar Giraldo</p>
-<p class="font-mono text-body-xs text-light-primary font-semibold whitespace-nowrap">C.C. 98.765.432</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-on-surface whitespace-nowrap" data-design-text-token="label-md">Tecnomecánica</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">CDA Norte</p>
-<p class="font-mono text-mono-md text-light-outline whitespace-nowrap" data-design-text-token="mono-md">RTM-665109</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">02 feb 2027</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vigente</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="Tecnomecánica" data-plate="MCT-611" type="button">Actualizar</button>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-doc-state="valid" data-doc-type="SOAT" data-search="mct-305 diego torres 1.039.887.456 soat axa">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</p>
-<p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-sm">Diego Torres</p>
-<p class="font-mono text-body-xs text-light-primary font-semibold whitespace-nowrap">C.C. 1.039.887.456</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-label text-label-md text-light-on-surface whitespace-nowrap" data-design-text-token="label-md">SOAT</span>
-</td>
-<td class="px-gutter-md py-3">
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">AXA Colpatria</p>
-<p class="font-mono text-mono-md text-light-outline whitespace-nowrap" data-design-text-token="mono-md">SOA-390211</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="body-md">21 may 2027</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Vigente</span>
-</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="SOAT" data-plate="MCT-305" type="button">Actualizar</button>
-</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -2431,138 +1553,7 @@ Limpiar
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="ledger-body">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-account="Nequi" data-category="Ingreso" data-date="2026-11-22">
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">22 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Liquidación tarifas turno mañana</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Ingreso</span>
-</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">12 unidades</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Nequi Flota</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-success tabular-nums whitespace-nowrap" data-design-text-token="mono-md">+$ 540.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-account="Efectivo" data-category="Mantenimiento" data-date="2026-11-21">
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">21 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Mano de obra cambio embrague</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Mantenimiento</span>
-</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Caja Efectivo</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-error tabular-nums whitespace-nowrap" data-design-text-token="mono-md">-$ 120.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-account="Bancolombia" data-category="Repuestos" data-date="2026-11-20">
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">20 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Compra kit embrague + bandas</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Repuestos</span>
-</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-514</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Bancolombia</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-error tabular-nums whitespace-nowrap" data-design-text-token="mono-md">-$ 207.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-account="Bancolombia" data-category="Documentación" data-date="2026-11-19">
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">19 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Renovación anual SOAT</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-component-id="badge-error" data-component-type="badge" data-component-variant="error" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Documentación</span>
-</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-402</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Bancolombia</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-error tabular-nums whitespace-nowrap" data-design-text-token="mono-md">-$ 560.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-account="Nequi" data-category="Mantenimiento" data-date="2026-11-18">
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">18 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Cambio de aceite y revisión</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Mantenimiento</span>
-</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Nequi Flota</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-light-error tabular-nums whitespace-nowrap" data-design-text-token="mono-md">-$ 65.000</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-account="Efectivo" data-category="Ingreso" data-date="2026-11-18">
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="body-sm">18 nov 2026</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Tarifa diaria efectivo</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Ingreso</span>
-</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">MCT-305</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Caja Efectivo</span>
-</td>
-<td class="px-gutter-md py-3 text-right">
-<span class="font-mono text-mono-md text-success tabular-nums whitespace-nowrap" data-design-text-token="mono-md">+$ 42.000</span>
-</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -2616,7 +1607,7 @@ Limpiar
 <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-md">
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="placa">Placa del motocarro *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md uppercase tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="placa" name="placa" placeholder="Ej: MCT-912" required="" type="text" value="MCT-912"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md uppercase tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="placa" name="placa" placeholder="Ej: MCT-912" required="" type="text" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Color del motocarro *</label>
@@ -2861,49 +1852,8 @@ Limpiar
 </div>
 </div>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
-<label class="flex items-center justify-between gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface hover:bg-light-surface-container-low cursor-pointer">
-<span class="flex items-center gap-gutter-sm">
-<input checked="" class="tarifa-vehiculo rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox" value="MCT-402"/>
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums" data-design-text-token="mono-md">MCT-402</span>
-</span>
-<span class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Carlos Mendoza</span>
-</label>
-<label class="flex items-center justify-between gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface hover:bg-light-surface-container-low cursor-pointer">
-<span class="flex items-center gap-gutter-sm">
-<input checked="" class="tarifa-vehiculo rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox" value="MCT-218"/>
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums" data-design-text-token="mono-md">MCT-218</span>
-</span>
-<span class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Jorge Valencia</span>
-</label>
-<label class="flex items-center justify-between gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface hover:bg-light-surface-container-low cursor-pointer">
-<span class="flex items-center gap-gutter-sm">
-<input checked="" class="tarifa-vehiculo rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox" value="MCT-305"/>
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums" data-design-text-token="mono-md">MCT-305</span>
-</span>
-<span class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Diego Torres</span>
-</label>
-<label class="flex items-center justify-between gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface hover:bg-light-surface-container-low cursor-pointer">
-<span class="flex items-center gap-gutter-sm">
-<input class="tarifa-vehiculo rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox" value="MCT-109"/>
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums" data-design-text-token="mono-md">MCT-109</span>
-</span>
-<span class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Luis Pineda</span>
-</label>
-<label class="flex items-center justify-between gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface hover:bg-light-surface-container-low cursor-pointer">
-<span class="flex items-center gap-gutter-sm">
-<input class="tarifa-vehiculo rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox" value="MCT-514"/>
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums" data-design-text-token="mono-md">MCT-514</span>
-</span>
-<span class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Mateo Ruiz</span>
-</label>
-<label class="flex items-center justify-between gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface hover:bg-light-surface-container-low cursor-pointer">
-<span class="flex items-center gap-gutter-sm">
-<input class="tarifa-vehiculo rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox" value="MCT-611"/>
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums" data-design-text-token="mono-md">MCT-611</span>
-</span>
-<span class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Óscar Giraldo</span>
-</label>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm" id="tarifa-form-vehicles-grid">
+<!-- Populated dynamically by JS -->
 </div>
 </section>
 <!-- Form Footer Actions -->
@@ -3212,7 +2162,7 @@ Limpiar
 </div>
 <div class="md:col-span-3 flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="repuesto-equipo">Equipo asignado</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface-container-low text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2" id="repuesto-equipo" readonly="" type="text" value="MCT-402"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface-container-low text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2" id="repuesto-equipo" readonly="" type="text" value=""/>
 </div>
 </div>
 <!-- Parts Used Table -->
@@ -3227,18 +2177,7 @@ Limpiar
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="parts-tbody">
-<tr>
-<td class="px-gutter-sm py-2.5 font-body text-body-md text-light-on-surface">Aceite 20W-50 Mobil Super</td>
-<td class="px-gutter-sm py-2.5 font-mono text-mono-md text-light-on-surface-variant tabular-nums">MCT-402</td>
-<td class="px-gutter-sm py-2.5 font-mono text-mono-md text-light-on-surface text-right tabular-nums">2</td>
-<td class="px-gutter-sm py-2.5 font-mono text-mono-md text-light-on-surface text-right tabular-nums">$ 56.000</td>
-</tr>
-<tr>
-<td class="px-gutter-sm py-2.5 font-body text-body-md text-light-on-surface">Filtro de aceite Bajaj</td>
-<td class="px-gutter-sm py-2.5 font-mono text-mono-md text-light-on-surface-variant tabular-nums">MCT-402</td>
-<td class="px-gutter-sm py-2.5 font-mono text-mono-md text-light-on-surface text-right tabular-nums">1</td>
-<td class="px-gutter-sm py-2.5 font-mono text-mono-md text-light-on-surface text-right tabular-nums">$ 14.000</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -3503,7 +2442,7 @@ Limpiar
 <form class="flex flex-col gap-gutter-md" id="assign-form">
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Placa del motocarro</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface uppercase" id="modal-plate" type="text" value="MCT-804"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface uppercase" id="modal-plate" placeholder="Ej. MCT-804" type="text" value=""/>
 </label>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Nombre completo del conductor</span>
@@ -3512,7 +2451,7 @@ Limpiar
 </label>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface">Cédula de ciudadanía *</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface px-2.5 py-2 focus:border-light-primary" id="modal-cedula" placeholder="Ej. 1.037.624.890" type="text" value="1.037.624.890"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface px-2.5 py-2 focus:border-light-primary" id="modal-cedula" placeholder="Ej. 1.037.624.890" type="text" value=""/>
 </label>
 
 <div class="grid grid-cols-2 gap-gutter-sm">

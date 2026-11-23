@@ -674,13 +674,6 @@
   // 1. DASHBOARD PRINCIPAL (CON FILTROS DE CUENTA BANCARIA Y CONDUCTOR)
   // =========================================================================
   function initDashboardLogic() {
-    const presets = {
-      today: { from: '2026-11-22', to: '2026-11-22', income: '$ 630.000', delta: '+4,8%', expense: '$ 145.000', expRatio: '23,0%', balance: '$ 485.000', label: 'Resumen de hoy (22 nov 2026)' },
-      '7d': { from: '2026-11-16', to: '2026-11-22', income: '$ 4.180.000', delta: '+8,6%', expense: '$ 1.120.000', expRatio: '26,8%', balance: '$ 3.060.000', label: 'Últimos 7 días (16 nov – 22 nov 2026)' },
-      month: { from: '2026-11-01', to: '2026-11-22', income: '$ 12.640.000', delta: '+11,2%', expense: '$ 3.890.000', expRatio: '30,7%', balance: '$ 8.750.000', label: 'Comparativa por semana (01 nov – 22 nov 2026)' },
-      prev: { from: '2026-10-01', to: '2026-10-31', income: '$ 15.820.000', delta: '+6,4%', expense: '$ 4.650.000', expRatio: '29,4%', balance: '$ 11.170.000', label: 'Mes anterior completo (01 oct – 31 oct 2026)' }
-    };
-
     const fromInput = document.getElementById('date-from');
     const toInput = document.getElementById('date-to');
     const filterAccount = document.getElementById('dashboard-filter-account');
@@ -690,6 +683,10 @@
     const activeBadgeText = document.getElementById('dashboard-active-filter-text');
     const activeBadgeStats = document.getElementById('dashboard-active-filter-stats');
     const txTableBody = document.getElementById('dashboard-tx-table-body');
+    const accountsContainer = document.getElementById('dashboard-accounts-container');
+    const accountsCountEl = document.getElementById('dashboard-accounts-count');
+    const maintTableBody = document.getElementById('dashboard-maint-table-body');
+    const docTableBody = document.getElementById('doc-table-body');
 
     function populateDashboardDrivers() {
       if (!filterDriver) return;
@@ -705,6 +702,245 @@
       filterDriver.value = cur;
     }
 
+    function renderDashboardAccounts() {
+      if (!accountsContainer) return;
+      const accountsList = MotoData.getAccounts ? MotoData.getAccounts() : [];
+      accountsContainer.innerHTML = '';
+      if (accountsCountEl) accountsCountEl.textContent = `${accountsList.length} cuenta${accountsList.length === 1 ? '' : 's'} activa${accountsList.length === 1 ? '' : 's'}`;
+
+      if (accountsList.length === 0) {
+        accountsContainer.innerHTML = `
+          <div class="p-gutter-sm rounded bg-light-surface-container-low border border-dashed border-light-outline-variant text-center py-6">
+            <p class="font-body text-body-sm text-light-on-surface-variant">No hay cuentas bancarias registradas</p>
+            <a href="#gastos" class="inline-flex items-center gap-1 text-xs text-light-primary font-bold hover:underline mt-1">
+              <span class="material-symbols-outlined text-[14px]">add_circle</span>
+              <span>Crear cuenta</span>
+            </a>
+          </div>
+        `;
+        return;
+      }
+
+      accountsList.forEach(acc => {
+        const div = document.createElement('div');
+        div.className = 'p-gutter-sm rounded bg-light-surface-container-low border border-light-outline-variant flex items-center justify-between gap-gutter-sm';
+        div.innerHTML = `
+          <div class="min-w-0">
+            <p class="font-label text-label-lg text-light-on-surface truncate">${acc.name}</p>
+            <p class="font-body text-body-sm text-light-on-surface-variant truncate">${acc.description || `${acc.type || 'Cuenta'} · ${acc.number || ''}`}</p>
+          </div>
+          <p class="font-mono text-mono-md text-light-on-surface tabular-nums shrink-0 font-bold">$ ${(acc.balance || 0).toLocaleString('es-CO')}</p>
+        `;
+        accountsContainer.appendChild(div);
+      });
+    }
+
+    function renderDashboardMaintAndDocs() {
+      // 1. Dashboard Mantenimientos
+      if (maintTableBody) {
+        maintTableBody.innerHTML = '';
+        const orders = MotoData.getMaintenanceOrders ? MotoData.getMaintenanceOrders() : [];
+        if (orders.length === 0) {
+          maintTableBody.innerHTML = `
+            <tr>
+              <td colspan="4" class="px-gutter-md py-6 text-center text-light-on-surface-variant font-body">
+                <div class="flex flex-col items-center justify-center gap-1">
+                  <span class="material-symbols-outlined text-[28px] text-light-outline">build</span>
+                  <p class="text-sm font-semibold text-light-on-surface">Sin mantenimientos pendientes</p>
+                  <p class="text-xs text-light-on-surface-variant">La flota está al día.</p>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          orders.slice(0, 5).forEach(o => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
+            tr.innerHTML = `
+              <td class="px-gutter-md py-3">
+                <p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap font-bold">${o.plate}</p>
+                <p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap">${o.driver || '-'}</p>
+              </td>
+              <td class="px-gutter-md py-3">
+                <p class="font-body text-body-md text-light-on-surface whitespace-nowrap">${o.type || 'Preventivo'}</p>
+                <p class="font-body text-body-sm text-light-outline whitespace-nowrap">${o.desc || '-'}</p>
+              </td>
+              <td class="px-gutter-md py-3">
+                <span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap">${o.date || '-'}</span>
+              </td>
+              <td class="px-gutter-md py-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${o.status === 'done' ? 'bg-success-container text-on-success-container' : 'bg-warning-container text-on-warning-container'}">
+                  ${o.status === 'done' ? 'Realizado' : 'Pendiente'}
+                </span>
+              </td>
+            `;
+            maintTableBody.appendChild(tr);
+          });
+        }
+      }
+
+      // 2. Dashboard Documentos
+      if (docTableBody) {
+        docTableBody.innerHTML = '';
+        const docs = MotoData.getDocuments ? MotoData.getDocuments() : [];
+        if (docs.length === 0) {
+          docTableBody.innerHTML = `
+            <tr>
+              <td colspan="4" class="px-gutter-md py-6 text-center text-light-on-surface-variant font-body">
+                <div class="flex flex-col items-center justify-center gap-1">
+                  <span class="material-symbols-outlined text-[28px] text-light-outline">verified_user</span>
+                  <p class="text-sm font-semibold text-light-on-surface">Sin documentos registrados</p>
+                  <p class="text-xs text-light-on-surface-variant">Registra el SOAT o Tecnomecánica de tus motocarros.</p>
+                </div>
+              </td>
+            </tr>
+          `;
+        } else {
+          docs.slice(0, 5).forEach(d => {
+            const tr = document.createElement('tr');
+            tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
+            tr.dataset.docType = d.type;
+            const isExp = d.status === 'expired';
+            const badgeClass = isExp ? 'bg-light-error-container text-light-on-error-container' : 'bg-success-container text-on-success-container';
+
+            tr.innerHTML = `
+              <td class="px-gutter-md py-3">
+                <p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap font-bold">${d.plate}</p>
+                <p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap">${d.driver || '-'}</p>
+              </td>
+              <td class="px-gutter-md py-3">
+                <p class="font-body text-body-md text-light-on-surface whitespace-nowrap">${d.type}</p>
+                <p class="font-body text-body-sm text-light-outline whitespace-nowrap">${d.entity || '-'}</p>
+              </td>
+              <td class="px-gutter-md py-3">
+                <span class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap">${d.expiry || '-'}</span>
+              </td>
+              <td class="px-gutter-md py-3">
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badgeClass}">
+                  ${d.statusText || (isExp ? 'Vencido' : 'Vigente')}
+                </span>
+              </td>
+            `;
+            docTableBody.appendChild(tr);
+          });
+        }
+      }
+
+      // 3. Alertas de Documentos y Mantenimientos en Banner y Sidebar Badges
+      const docs = MotoData.getDocuments ? MotoData.getDocuments() : [];
+      const orders = MotoData.getMaintenanceOrders ? MotoData.getMaintenanceOrders() : [];
+      const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
+
+      const expiredDocs = docs.filter(d => d.status === 'expired');
+      const expiringDocs = docs.filter(d => d.status === 'expiring');
+      const pendingMaint = orders.filter(o => o.status !== 'done');
+
+      // Sidebar badges
+      const maintBadge = document.getElementById('badge-maint-count');
+      const maintBadgeText = document.getElementById('badge-maint-count-text');
+      if (maintBadge) {
+        if (pendingMaint.length > 0) {
+          maintBadge.classList.remove('hidden');
+          if (maintBadgeText) maintBadgeText.textContent = pendingMaint.length;
+        } else {
+          maintBadge.classList.add('hidden');
+        }
+      }
+
+      const docBadge = document.getElementById('badge-doc-count');
+      const docBadgeText = document.getElementById('badge-doc-count-text');
+      if (docBadge) {
+        const totalAlertDocs = expiredDocs.length + expiringDocs.length;
+        if (totalAlertDocs > 0) {
+          docBadge.classList.remove('hidden');
+          if (docBadgeText) docBadgeText.textContent = totalAlertDocs;
+        } else {
+          docBadge.classList.add('hidden');
+        }
+      }
+
+      // Banner de Alerta Crítica (Vencidos)
+      const alertBannerErr = document.getElementById('alert-banner-error');
+      const alertBannerErrText = document.getElementById('alert-banner-error-text');
+      if (alertBannerErr) {
+        if (expiredDocs.length > 0) {
+          alertBannerErr.classList.remove('hidden');
+          alertBannerErr.classList.add('flex');
+          if (alertBannerErrText) {
+            alertBannerErrText.innerHTML = `<strong>Alerta crítica:</strong> ${expiredDocs[0].type} vencido en <span class="font-mono text-mono-md">${expiredDocs[0].plate}</span> (${expiredDocs[0].driver || 'Conductor'}). Unidad requiere renovación inmediata.`;
+          }
+        } else {
+          alertBannerErr.classList.add('hidden');
+          alertBannerErr.classList.remove('flex');
+        }
+      }
+
+      // Banner de Próximo Vencimiento (Warning)
+      const alertBannerWarn = document.getElementById('alert-banner-warning');
+      const alertBannerWarnText = document.getElementById('alert-banner-warning-text');
+      if (alertBannerWarn) {
+        if (expiringDocs.length > 0) {
+          alertBannerWarn.classList.remove('hidden');
+          alertBannerWarn.classList.add('flex');
+          if (alertBannerWarnText) {
+            alertBannerWarnText.innerHTML = `<strong>Próximo vencimiento:</strong> El ${expiringDocs[0].type} de <span class="font-mono text-mono-md">${expiringDocs[0].plate}</span> (${expiringDocs[0].driver || ''}) vence el ${expiringDocs[0].expiry}.`;
+          }
+        } else {
+          alertBannerWarn.classList.add('hidden');
+          alertBannerWarn.classList.remove('flex');
+        }
+      }
+
+      // Documentation view KPIs
+      const kpiValidCount = document.getElementById('kpi-doc-valid-count');
+      const kpiValidPercent = document.getElementById('kpi-doc-valid-percent');
+      const kpiExpiringCount = document.getElementById('kpi-doc-expiring-count');
+      const kpiExpiredCount = document.getElementById('kpi-doc-expired-count');
+      const kpiDocInv = document.getElementById('kpi-doc-investment');
+
+      const totalDocs = docs.length;
+      const validDocsCount = docs.filter(d => d.status === 'valid').length;
+      let totalDocCost = 0;
+      docs.forEach(d => { totalDocCost += Number(d.cost || 0); });
+
+      if (kpiValidCount) kpiValidCount.textContent = `${validDocsCount} / ${totalDocs}`;
+      if (kpiValidPercent) kpiValidPercent.textContent = totalDocs > 0 ? `${Math.round((validDocsCount / totalDocs) * 100)}% al día` : '100% al día';
+      if (kpiExpiringCount) kpiExpiringCount.textContent = expiringDocs.length;
+      if (kpiExpiredCount) kpiExpiredCount.textContent = expiredDocs.length;
+      if (kpiDocInv) kpiDocInv.textContent = '$ ' + totalDocCost.toLocaleString('es-CO');
+
+      // Maintenance view KPIs
+      const kpiPrevCount = document.getElementById('kpi-maint-prev-count');
+      const kpiCorrCount = document.getElementById('kpi-maint-corr-count');
+      const kpiMaintExp = document.getElementById('kpi-maint-expense');
+      const kpiMaintOrders = document.getElementById('kpi-maint-orders-count');
+      const kpiStockItems = document.getElementById('kpi-stock-items');
+      const kpiStockLow = document.getElementById('kpi-stock-low');
+      const kpiStockVal = document.getElementById('kpi-stock-val');
+
+      const parts = MotoData.getSpareParts ? MotoData.getSpareParts() : [];
+      let totalStockVal = 0;
+      let lowStockCount = 0;
+      parts.forEach(p => {
+        totalStockVal += (p.stock || 0) * (p.price || 0);
+        if ((p.stock || 0) <= (p.min || 0)) lowStockCount++;
+      });
+
+      let totalMaintExpense = 0;
+      orders.forEach(o => { totalMaintExpense += Number(o.cost || 0); });
+
+      const corrCount = orders.filter(o => o.type === 'Correctivo' && o.status !== 'done').length;
+      const prevCount = orders.filter(o => o.type === 'Preventivo' && o.status !== 'done').length;
+
+      if (kpiPrevCount) kpiPrevCount.textContent = prevCount;
+      if (kpiCorrCount) kpiCorrCount.textContent = corrCount;
+      if (kpiMaintExp) kpiMaintExp.textContent = '$ ' + totalMaintExpense.toLocaleString('es-CO');
+      if (kpiMaintOrders) kpiMaintOrders.textContent = `${orders.length} órdenes`;
+      if (kpiStockItems) kpiStockItems.textContent = `${parts.length} ítems`;
+      if (kpiStockLow) kpiStockLow.textContent = `${lowStockCount} bajo stock`;
+      if (kpiStockVal) kpiStockVal.textContent = `Valorizado en $ ${totalStockVal.toLocaleString('es-CO')}`;
+    }
+
     function applyDashboardFilters() {
       const acct = filterAccount ? filterAccount.value : 'all';
       const drv = filterDriver ? filterDriver.value : 'all';
@@ -712,6 +948,8 @@
       const dTo = toInput ? toInput.value : '';
 
       const txs = MotoData.getTransactions ? MotoData.getTransactions() : [];
+      const vehicles = MotoData.getVehicles ? MotoData.getVehicles().filter(v => v.status !== 'sold') : [];
+
       let incTotal = 0;
       let expTotal = 0;
       let matchCount = 0;
@@ -735,14 +973,37 @@
       const netBalance = incTotal - expTotal;
       const hasSpecificFilter = acct !== 'all' || drv !== 'all';
 
-      if (hasSpecificFilter) {
-        const incEl = document.getElementById('kpi-income');
-        const expEl = document.getElementById('kpi-expense');
-        const balEl = document.getElementById('kpi-balance');
-        if (incEl) incEl.textContent = '$ ' + incTotal.toLocaleString('es-CO');
-        if (expEl) expEl.textContent = '$ ' + expTotal.toLocaleString('es-CO');
-        if (balEl) balEl.textContent = '$ ' + netBalance.toLocaleString('es-CO');
+      // Live KPI Cards
+      const incEl = document.getElementById('kpi-income');
+      const expEl = document.getElementById('kpi-expense');
+      const balEl = document.getElementById('kpi-balance');
+      const fleetCountEl = document.getElementById('kpi-fleet-count');
+      const fleetRateEl = document.getElementById('kpi-fleet-rate');
+      const fleetSubEl = document.getElementById('kpi-fleet-sub');
 
+      if (incEl) incEl.textContent = '$ ' + incTotal.toLocaleString('es-CO');
+      if (expEl) expEl.textContent = '$ ' + expTotal.toLocaleString('es-CO');
+      if (balEl) balEl.textContent = '$ ' + netBalance.toLocaleString('es-CO');
+
+      if (fleetCountEl) {
+        const inRoute = vehicles.filter(v => v.status === 'route').length;
+        fleetCountEl.textContent = `${inRoute} / ${vehicles.length}`;
+      }
+      if (fleetRateEl) {
+        let avgRate = 0;
+        if (vehicles.length > 0) {
+          let sum = 0;
+          vehicles.forEach(v => { sum += Number(v.dailyRate || 45000); });
+          avgRate = Math.round(sum / vehicles.length);
+        }
+        fleetRateEl.textContent = `$ ${(avgRate / 1000).toFixed(0)}k/día`;
+      }
+      if (fleetSubEl) {
+        const inWorkshop = vehicles.filter(v => v.status === 'workshop').length;
+        fleetSubEl.textContent = inWorkshop > 0 ? `${inWorkshop} motocarro${inWorkshop === 1 ? '' : 's'} en taller correctivo` : (vehicles.length > 0 ? 'Toda la flota operativa' : 'Sin motocarros registrados');
+      }
+
+      if (hasSpecificFilter) {
         if (activeBadge) {
           activeBadge.classList.remove('hidden');
           activeBadge.classList.add('flex');
@@ -763,7 +1024,7 @@
         txTableBody.innerHTML = '';
         const listToRender = hasSpecificFilter ? matchedTxs : txs.slice(0, 6);
         if (listToRender.length === 0) {
-          txTableBody.innerHTML = '<tr><td colspan="6" class="px-3 py-4 text-center text-light-on-surface-variant font-body">No hay movimientos registrados para los filtros seleccionados.</td></tr>';
+          txTableBody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-light-on-surface-variant font-body">No hay movimientos registrados para los filtros seleccionados.</td></tr>';
         } else {
           listToRender.forEach(t => {
             const tr = document.createElement('tr');
@@ -790,6 +1051,9 @@
           });
         }
       }
+
+      renderDashboardAccounts();
+      renderDashboardMaintAndDocs();
     }
 
     if (filterAccount) filterAccount.addEventListener('change', applyDashboardFilters);
@@ -801,8 +1065,6 @@
       resetFiltersBtn.addEventListener('click', () => {
         if (filterAccount) filterAccount.value = 'all';
         if (filterDriver) filterDriver.value = 'all';
-        if (fromInput) fromInput.value = '2026-11-01';
-        if (toInput) toInput.value = '2026-11-22';
         applyDashboardFilters();
       });
     }
@@ -819,40 +1081,32 @@
             : 'doc-tab px-2.5 py-1 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface';
         });
 
-        // Filter dashboard document rows
-        document.querySelectorAll('#view-dashboard table tbody tr').forEach(r => {
-          if (r.closest('article')?.querySelector('h2')?.textContent.includes('Vencimiento documental')) {
-            const rowText = r.textContent.toLowerCase();
-            const match = filter === 'all' || rowText.includes(filter.toLowerCase());
-            r.classList.toggle('hidden', !match);
-          }
+        document.querySelectorAll('#doc-table-body tr').forEach(r => {
+          const rowType = (r.dataset.docType || r.textContent || '').toLowerCase();
+          const match = filter === 'all' || rowType.includes(filter.toLowerCase());
+          r.classList.toggle('hidden', !match);
         });
       });
     });
 
     document.querySelectorAll('.preset-btn').forEach(btn => {
       btn.addEventListener('click', () => {
-        const key = btn.dataset.preset;
-        const p = presets[key];
-        if (p) {
-          if (fromInput) fromInput.value = p.from;
-          if (toInput) toInput.value = p.to;
-          if (filterAccount) filterAccount.value = 'all';
-          if (filterDriver) filterDriver.value = 'all';
-          const incEl = document.getElementById('kpi-income');
-          const expEl = document.getElementById('kpi-expense');
-          const balEl = document.getElementById('kpi-balance');
-          if (incEl) incEl.textContent = p.income;
-          if (expEl) expEl.textContent = p.expense;
-          if (balEl) balEl.textContent = p.balance;
-          applyDashboardFilters();
-        }
+        document.querySelectorAll('.preset-btn').forEach(b => {
+          b.className = b === btn
+            ? 'preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-secondary-container text-light-on-secondary-container transition-colors'
+            : 'preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors';
+        });
+        applyDashboardFilters();
       });
     });
 
     populateDashboardDrivers();
     applyDashboardFilters();
     window.addEventListener('motocontrol-render-dashboard', () => {
+      populateDashboardDrivers();
+      applyDashboardFilters();
+    });
+    window.addEventListener('motocontrol-data-updated', () => {
       populateDashboardDrivers();
       applyDashboardFilters();
     });
@@ -1165,6 +1419,8 @@
     let activeType = 'all';
     const accountSelect = document.getElementById('account-filter');
     const txTableBody = document.getElementById('tx-table-body');
+    const tariffVehiclesBody = document.getElementById('tariff-vehicles-table-body');
+    const tariffFormGrid = document.getElementById('tarifa-form-vehicles-grid');
 
     function renderTarifasMovements() {
       if (!txTableBody) return;
@@ -1174,11 +1430,13 @@
       const acct = accountSelect ? accountSelect.value : 'all';
       txTableBody.innerHTML = '';
 
+      let matchCount = 0;
       data.transactions.forEach(t => {
         const matchType = activeType === 'all' || t.type === activeType;
         const matchAcct = acct === 'all' || (t.account || '').toLowerCase().includes(acct.toLowerCase());
 
         if (matchType && matchAcct) {
+          matchCount++;
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
           const isInc = t.type === 'income';
@@ -1194,6 +1452,78 @@
           txTableBody.appendChild(tr);
         }
       });
+
+      if (matchCount === 0) {
+        txTableBody.innerHTML = `
+          <tr>
+            <td colspan="4" class="px-gutter-md py-8 text-center text-light-on-surface-variant font-body">
+              <div class="flex flex-col items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[32px] text-light-outline">payments</span>
+                <p class="text-sm font-semibold text-light-on-surface">No hay recaudos registrados</p>
+                <p class="text-xs text-light-on-surface-variant">Usa el botón "Registrar Recaudo / Tarifa" para registrar ingresos de tu flota.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+    }
+
+    function renderTariffVehiclesTable() {
+      if (!tariffVehiclesBody) return;
+      const vehicles = MotoData.getVehicles ? MotoData.getVehicles().filter(v => v.status !== 'sold') : [];
+      tariffVehiclesBody.innerHTML = '';
+
+      if (vehicles.length === 0) {
+        tariffVehiclesBody.innerHTML = `
+          <tr>
+            <td colspan="3" class="px-gutter-md py-8 text-center text-light-on-surface-variant font-body">
+              <div class="flex flex-col items-center justify-center gap-1">
+                <span class="material-symbols-outlined text-[32px] text-light-outline">electric_rickshaw</span>
+                <p class="text-sm font-semibold text-light-on-surface">Sin motocarros registrados</p>
+                <p class="text-xs text-light-on-surface-variant">Registra unidades para configurar su tarifa diaria.</p>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      vehicles.forEach(v => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
+        tr.innerHTML = `
+          <td class="px-gutter-md py-3">
+            <p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap font-bold">${v.plate}</p>
+            <p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap">${v.driver}</p>
+          </td>
+          <td class="px-gutter-md py-3 font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap">
+            $ ${(v.dailyRate || 45000).toLocaleString('es-CO')}
+          </td>
+          <td class="px-gutter-md py-3">
+            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${v.status === 'route' ? 'bg-success-container text-on-success-container' : 'bg-light-surface-container text-light-on-surface-variant'}">
+              ${v.status === 'route' ? 'En ruta' : 'Pendiente'}
+            </span>
+          </td>
+        `;
+        tariffVehiclesBody.appendChild(tr);
+      });
+
+      // Update form-tarifa vehicle checklist
+      if (tariffFormGrid) {
+        tariffFormGrid.innerHTML = '';
+        vehicles.forEach(v => {
+          const lbl = document.createElement('label');
+          lbl.className = 'flex items-center justify-between gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface hover:bg-light-surface-container-low cursor-pointer';
+          lbl.innerHTML = `
+            <span class="flex items-center gap-gutter-sm">
+              <input class="tarifa-vehiculo rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox" value="${v.plate}" checked/>
+              <span class="font-mono text-mono-md text-light-on-surface tabular-nums">${v.plate}</span>
+            </span>
+            <span class="font-body text-body-sm text-light-on-surface-variant">${v.driver}</span>
+          `;
+          tariffFormGrid.appendChild(lbl);
+        });
+      }
     }
 
     document.querySelectorAll('.tx-tab').forEach(tab => {
@@ -1235,10 +1565,15 @@
     if (finForm) {
       finForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const plate = (document.getElementById('fin-modal-plate') || document.getElementById('modal-tx-plate'))?.value || 'MCT-402';
+        const plate = (document.getElementById('fin-modal-plate') || document.getElementById('modal-tx-plate'))?.value;
         const amount = Number(finForm.querySelector('input[type="number"]')?.value || document.getElementById('modal-tx-amount')?.value || 45000);
         const acct = finForm.querySelectorAll('select')[1]?.value || document.getElementById('modal-tx-account')?.value || 'Nequi Flota';
         const concept = finForm.querySelector('input[placeholder*="Ej."]')?.value || 'Recaudo tarifa diaria';
+
+        if (!plate) {
+          alert('Por favor selecciona la placa del motocarro.');
+          return;
+        }
 
         const vehicles = MotoData.getVehicles();
         const v = vehicles.find(veh => veh.plate === plate) || {};
@@ -1261,6 +1596,11 @@
     }
 
     renderTarifasMovements();
+    renderTariffVehiclesTable();
+    window.addEventListener('motocontrol-data-updated', () => {
+      renderTarifasMovements();
+      renderTariffVehiclesTable();
+    });
   }
 
   // =========================================================================
@@ -1302,36 +1642,94 @@
       tab.addEventListener('click', () => switchMaintTab(tab.dataset.mainTab));
     });
 
-    // --- FILTROS DE ÓRDENES DE TALLER (Búsqueda por placa/conductor y filtros por tipo) ---
     let orderFilter = 'all';
     const ordersSearch = document.getElementById('orders-search');
+    const ordersTableBody = document.getElementById('orders-table-body');
 
-    function filterOrders() {
+    function renderOrdersTable() {
+      if (!ordersTableBody) return;
+      const orders = MotoData.getMaintenanceOrders ? MotoData.getMaintenanceOrders() : [];
       const q = (ordersSearch?.value || '').trim().toLowerCase();
-      const currentRows = Array.from(document.querySelectorAll('#orders-table-body tr'));
-      currentRows.forEach(r => {
-        const orderType = (r.dataset.orderType || '').toLowerCase();
-        const searchStr = (r.dataset.search || r.textContent || '').toLowerCase();
+
+      ordersTableBody.innerHTML = '';
+      let visible = 0;
+
+      orders.forEach(o => {
+        const orderType = (o.type || 'Preventivo').toLowerCase();
+        const searchStr = `${o.plate} ${o.driver || ''} ${o.desc || ''} ${orderType}`.toLowerCase();
 
         let okType = false;
         if (orderFilter === 'all') okType = true;
         else if (orderFilter === 'Preventivo') okType = orderType.includes('preventivo');
         else if (orderFilter === 'Correctivo') okType = orderType.includes('correctivo');
-        else if (orderFilter === 'Aceite') okType = orderType.includes('aceite') || searchStr.includes('aceite');
-        else if (orderFilter === 'Frenos') okType = orderType.includes('frenos') || searchStr.includes('frenos');
+        else if (orderFilter === 'Aceite') okType = searchStr.includes('aceite');
+        else if (orderFilter === 'Frenos') okType = searchStr.includes('frenos');
 
         const okQ = !q || searchStr.includes(q);
-        const show = okType && okQ;
-        r.classList.toggle('hidden', !show);
-        r.style.display = show ? '' : 'none';
+
+        if (okType && okQ) {
+          visible++;
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
+          tr.dataset.orderType = o.type;
+          tr.dataset.search = searchStr;
+
+          const isDone = o.status === 'done';
+          const badgeClass = isDone ? 'bg-success-container text-on-success-container' : 'bg-warning-container text-on-warning-container';
+
+          tr.innerHTML = `
+            <td class="px-gutter-md py-3">
+              <p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap font-bold">${o.plate}</p>
+              <p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap">${o.driver || '-'}</p>
+            </td>
+            <td class="px-gutter-md py-3">
+              <span class="font-label text-label-md text-light-primary whitespace-nowrap">${o.type || 'Preventivo'}</span>
+            </td>
+            <td class="px-gutter-md py-3">
+              <p class="font-body text-body-md text-light-on-surface whitespace-nowrap">${o.desc || '-'}</p>
+              <p class="font-body text-body-sm text-light-outline whitespace-nowrap">${o.partsUsed || 'Mano de obra y repuestos'}</p>
+            </td>
+            <td class="px-gutter-md py-3">
+              <p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap">${o.date || '-'}</p>
+              <p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap">${o.km ? `${o.km} km` : '-'}</p>
+            </td>
+            <td class="px-gutter-md py-3 font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap font-semibold">
+              $ ${(o.cost || 0).toLocaleString('es-CO')}
+            </td>
+            <td class="px-gutter-md py-3">
+              <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badgeClass}">
+                ${isDone ? 'Terminado' : 'En taller'}
+              </span>
+            </td>
+          `;
+          ordersTableBody.appendChild(tr);
+        }
       });
+
+      if (visible === 0) {
+        ordersTableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[44px] text-light-outline">build</span>
+                <p class="font-headline text-headline-sm text-light-on-surface">No hay órdenes de mantenimiento en taller</p>
+                <p class="text-sm text-light-on-surface-variant max-w-sm">Programa órdenes preventivas (cambio de aceite, frenos) o correctivos de taller para tu flota.</p>
+                <button type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs mt-2" onclick="document.getElementById('maint-modal')?.classList.remove('hidden'); document.getElementById('maint-modal')?.classList.add('flex');">
+                  <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                  <span>Registrar Primer Mantenimiento</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
     }
 
     if (ordersSearch) {
-      ordersSearch.addEventListener('input', filterOrders);
-      ordersSearch.addEventListener('change', filterOrders);
-      ordersSearch.addEventListener('search', filterOrders);
-      ordersSearch.addEventListener('keyup', filterOrders);
+      ordersSearch.addEventListener('input', renderOrdersTable);
+      ordersSearch.addEventListener('change', renderOrdersTable);
+      ordersSearch.addEventListener('search', renderOrdersTable);
+      ordersSearch.addEventListener('keyup', renderOrdersTable);
     }
 
     document.querySelectorAll('.order-filter-btn').forEach(btn => {
@@ -1343,7 +1741,7 @@
             ? 'order-filter-btn px-3 py-1.5 rounded font-label text-label-md bg-light-secondary-container text-light-on-secondary-container font-bold shadow-xs'
             : 'order-filter-btn px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container';
         });
-        filterOrders();
+        renderOrdersTable();
       });
     });
 
@@ -1381,7 +1779,7 @@
           <td class="px-gutter-md py-3"><span class="font-label text-label-sm px-2 py-0.5 rounded bg-light-surface-container">${p.category}</span></td>
           <td class="px-gutter-md py-3 font-mono text-mono-md ${isLow ? 'text-light-error font-bold' : 'text-light-on-surface'} tabular-nums">${p.stock} und.</td>
           <td class="px-gutter-md py-3 font-mono text-mono-md text-light-outline tabular-nums">${p.min} und.</td>
-          <td class="px-gutter-md py-3 font-mono text-mono-md text-light-on-surface tabular-nums">$ ${p.price.toLocaleString('es-CO')}</td>
+          <td class="px-gutter-md py-3 font-mono text-mono-md text-light-on-surface tabular-nums">$ ${(p.price || 0).toLocaleString('es-CO')}</td>
           <td class="px-gutter-md py-3">
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${isLow ? 'bg-light-error-container text-light-on-error-container' : 'bg-success-container text-on-success-container'}">
               ${isLow ? 'Bajo stock' : 'Disponible'}
@@ -1400,7 +1798,7 @@
       partModal.classList.toggle('flex', show);
     }
 
-    document.getElementById('add-part-btn')?.addEventListener('click', () => togglePartModal(true));
+    document.getElementById('open-part-modal-btn')?.addEventListener('click', () => togglePartModal(true));
     (document.getElementById('close-spare-part-modal-btn') || document.getElementById('close-part-modal-btn'))?.addEventListener('click', () => togglePartModal(false));
     (document.getElementById('cancel-spare-part-btn') || document.getElementById('cancel-part-btn'))?.addEventListener('click', () => togglePartModal(false));
 
@@ -1473,12 +1871,21 @@
     if (maintForm) {
       maintForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const plate = document.getElementById('maint-modal-plate')?.value || 'MCT-402';
+        const plate = document.getElementById('maint-modal-plate')?.value;
         const cost = Number(maintForm.querySelector('input[type="number"]')?.value || 150000);
         const desc = maintForm.querySelector('input[type="text"]')?.value || 'Mantenimiento preventivo';
 
+        if (!plate) {
+          alert('Por favor selecciona la placa del motocarro.');
+          return;
+        }
+
+        const vehicles = MotoData.getVehicles();
+        const v = vehicles.find(veh => veh.plate === plate) || {};
+
         MotoData.addMaintenanceOrder({
           plate: plate,
+          driver: v.driver || 'Conductor',
           cost: cost,
           desc: desc,
           type: 'Preventivo',
@@ -1487,9 +1894,16 @@
         });
 
         toggleMaintModal(false);
+        renderOrdersTable();
         alert(`Orden de mantenimiento programada para ${plate}.`);
       });
     }
+
+    renderOrdersTable();
+    window.addEventListener('motocontrol-data-updated', () => {
+      renderOrdersTable();
+      renderStockTable();
+    });
   }
 
   // =========================================================================
@@ -1708,19 +2122,23 @@
     const dateTo = document.getElementById('filter-date-to');
     const clearBtn = document.getElementById('btn-clear-gastos-filters');
     const countEl = document.getElementById('ledger-count');
+    const ledgerBody = document.getElementById('ledger-body');
 
-    function applyFilters() {
+    function renderLedgerTable() {
+      if (!ledgerBody) return;
+      const txs = MotoData.getTransactions ? MotoData.getTransactions() : [];
       const a = acctFilter ? acctFilter.value.toLowerCase() : 'all';
       const c = catFilter ? catFilter.value.toLowerCase() : 'all';
       const dFrom = dateFrom ? dateFrom.value : '';
       const dTo = dateTo ? dateTo.value : '';
+
+      ledgerBody.innerHTML = '';
       let visible = 0;
 
-      const currentRows = Array.from(document.querySelectorAll('#ledger-body tr'));
-      currentRows.forEach(r => {
-        const rowAccount = (r.dataset.account || '').toLowerCase();
-        const rowCat = (r.dataset.category || '').toLowerCase();
-        const rowDate = r.dataset.date || '';
+      txs.forEach(t => {
+        const rowAccount = (t.account || '').toLowerCase();
+        const rowCat = (t.category || (t.type === 'income' ? 'Ingreso' : 'Gasto')).toLowerCase();
+        const rowDate = t.date || '';
 
         const okAccount = a === 'all' || rowAccount.includes(a);
         const okCat = c === 'all' || rowCat.includes(c);
@@ -1728,27 +2146,72 @@
         if (dFrom && rowDate && rowDate < dFrom) okDate = false;
         if (dTo && rowDate && rowDate > dTo) okDate = false;
 
-        const show = okAccount && okCat && okDate;
-        r.classList.toggle('hidden', !show);
-        r.style.display = show ? '' : 'none';
-        if (show) visible++;
+        if (okAccount && okCat && okDate) {
+          visible++;
+          const tr = document.createElement('tr');
+          tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
+          tr.dataset.account = t.account;
+          tr.dataset.category = t.category;
+          tr.dataset.date = t.date;
+          const isInc = t.type === 'income';
+
+          tr.innerHTML = `
+            <td class="px-gutter-md py-3">
+              <span class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap">${t.date || '-'}</span>
+            </td>
+            <td class="px-gutter-md py-3">
+              <p class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.concept || '-'}</p>
+              <p class="font-mono text-body-xs text-light-outline">${t.plate || 'General'}${t.driver ? ' · ' + t.driver : ''}</p>
+            </td>
+            <td class="px-gutter-md py-3">
+              <span class="font-label text-label-sm px-2 py-0.5 rounded ${isInc ? 'bg-success-container text-on-success-container' : 'bg-light-surface-container text-light-on-surface-variant'}">${t.category || (isInc ? 'Ingreso' : 'Operativo')}</span>
+            </td>
+            <td class="px-gutter-md py-3">
+              <span class="font-body text-body-sm text-light-on-surface whitespace-nowrap">${t.account || '-'}</span>
+            </td>
+            <td class="px-gutter-md py-3 text-right">
+              <span class="font-mono text-mono-md font-semibold ${isInc ? 'text-success' : 'text-light-error'} tabular-nums whitespace-nowrap">
+                ${isInc ? '+' : '-'} $ ${(t.amount || 0).toLocaleString('es-CO')}
+              </span>
+            </td>
+          `;
+          ledgerBody.appendChild(tr);
+        }
       });
+
+      if (visible === 0) {
+        ledgerBody.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[44px] text-light-outline">account_balance_wallet</span>
+                <p class="font-headline text-headline-sm text-light-on-surface">No hay movimientos en el libro contable</p>
+                <p class="text-sm text-light-on-surface-variant max-w-sm">Registra ingresos por tarifas diarias o gastos de taller, repuestos y pólizas para llevar el control financiero.</p>
+                <a href="#form-movimiento" class="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs mt-2">
+                  <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                  <span>Registrar Primer Movimiento</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
 
       if (countEl) countEl.textContent = `Mostrando ${visible} movimiento${visible === 1 ? '' : 's'}`;
     }
 
-    if (acctFilter) acctFilter.addEventListener('change', applyFilters);
-    if (catFilter) catFilter.addEventListener('change', applyFilters);
-    if (dateFrom) dateFrom.addEventListener('change', applyFilters);
-    if (dateTo) dateTo.addEventListener('change', applyFilters);
+    if (acctFilter) acctFilter.addEventListener('change', renderLedgerTable);
+    if (catFilter) catFilter.addEventListener('change', renderLedgerTable);
+    if (dateFrom) dateFrom.addEventListener('change', renderLedgerTable);
+    if (dateTo) dateTo.addEventListener('change', renderLedgerTable);
 
     if (clearBtn) {
       clearBtn.addEventListener('click', () => {
         if (acctFilter) acctFilter.value = 'all';
         if (catFilter) catFilter.value = 'all';
-        if (dateFrom) dateFrom.value = '2026-11-01';
-        if (dateTo) dateTo.value = '2026-11-22';
-        applyFilters();
+        if (dateFrom) dateFrom.value = '';
+        if (dateTo) dateTo.value = '';
+        renderLedgerTable();
       });
     }
 
@@ -1760,6 +2223,24 @@
       const txs = MotoData.getTransactions ? MotoData.getTransactions() : [];
 
       grid.innerHTML = '';
+
+      if (accountsList.length === 0) {
+        grid.innerHTML = `
+          <div class="md:col-span-3 p-gutter-lg rounded-md border border-dashed border-light-outline-variant bg-light-surface-container-lowest text-center py-10">
+            <div class="flex flex-col items-center justify-center gap-2 max-w-md mx-auto">
+              <span class="material-symbols-outlined text-[40px] text-light-outline">account_balance</span>
+              <p class="font-headline text-headline-sm text-light-on-surface">No tienes cuentas de dinero configuradas</p>
+              <p class="text-sm text-light-on-surface-variant">Crea tus cuentas de Bancolombia, Nequi, Daviplata o Caja Efectivo para registrar y conciliar tus fondos.</p>
+              <button type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs mt-2" onclick="document.getElementById('new-account-modal')?.classList.remove('hidden'); document.getElementById('new-account-modal')?.classList.add('flex'); document.getElementById('acct-name')?.focus();">
+                <span class="material-symbols-outlined text-[18px]">account_balance</span>
+                <span>Crear Primera Cuenta</span>
+              </button>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
       accountsList.forEach(acc => {
         let inc = 0;
         let exp = 0;
@@ -1839,16 +2320,16 @@
         newAccountForm.reset();
         renderAccountsCards();
         populateDynamicSelects();
-        applyFilters();
+        renderLedgerTable();
         alert(`¡Cuenta "${name}" agregada exitosamente con saldo inicial de $ ${balance.toLocaleString('es-CO')}!`);
       });
     }
 
     renderAccountsCards();
-    applyFilters();
+    renderLedgerTable();
     window.addEventListener('motocontrol-data-updated', () => {
       renderAccountsCards();
-      applyFilters();
+      renderLedgerTable();
     });
   }
 
