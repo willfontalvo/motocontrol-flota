@@ -12,7 +12,64 @@ const DEFAULT_INITIAL_DATA = {
   documents: [],
   accounts: [],
   spareParts: [],
-  maintenanceTypes: []
+  maintenanceTypes: [
+    {
+      id: 'mt-aceite',
+      name: 'Cambio de Aceite de Motor',
+      classification: 'Preventivo',
+      controlType: 'dias',
+      frequencyDays: 30, // Cada 30 días
+      frequencyKm: 3000,
+      estLabor: 15000,
+      desc: 'Cambio de aceite 4T y limpieza de filtro'
+    },
+    {
+      id: 'mt-frenos',
+      name: 'Mantenimiento de Frenos',
+      classification: 'Preventivo',
+      controlType: 'dias',
+      frequencyDays: 60, // Cada 60 días
+      frequencyKm: 6000,
+      estLabor: 25000,
+      desc: 'Revisión y graduación de bandas, zapatas y líquido DOT4'
+    },
+    {
+      id: 'mt-general',
+      name: 'Revisión Preventiva General',
+      classification: 'Preventivo',
+      controlType: 'dias',
+      frequencyDays: 90, // Cada 90 días (3 meses)
+      frequencyKm: 10000,
+      estLabor: 40000,
+      desc: 'Ajuste general de chasis, tornillería, bujía y carburación'
+    },
+    {
+      id: 'mt-arrastre',
+      name: 'Kit de Arrastre y Transmisión',
+      classification: 'Preventivo',
+      controlType: 'dias',
+      frequencyDays: 180, // Cada 180 días (6 meses)
+      frequencyKm: 15000,
+      estLabor: 35000,
+      desc: 'Tensión y lubricación de cadena, piñones y crucetas'
+    },
+    {
+      id: 'mt-llantas',
+      name: 'Cambio de Llantas',
+      classification: 'Preventivo',
+      controlType: 'dias',
+      frequencyDays: 365, // Hasta 365 días (1 año)
+      frequencyKm: 25000,
+      estLabor: 20000,
+      desc: 'Reemplazo de llantas por desgaste, alineación y balanceo'
+    }
+  ],
+  settings: {
+    alertEmails: '',
+    emailAlertsEnabled: true,
+    notifyDaysBefore: [30, 15, 5, 1],
+    notifyMaintDaysBefore: [5, 2]
+  }
 };
 
 window.MotoData = {
@@ -67,7 +124,12 @@ window.MotoData = {
         if (!this.data.documents) this.data.documents = [];
         if (!this.data.accounts) this.data.accounts = [];
         if (!this.data.spareParts) this.data.spareParts = [];
-        if (!this.data.maintenanceTypes) this.data.maintenanceTypes = [];
+        if (!this.data.maintenanceTypes || this.data.maintenanceTypes.length === 0) {
+          this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
+        }
+        if (!this.data.settings) {
+          this.data.settings = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.settings));
+        }
       }
     } catch (e) {
       this.data = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA));
@@ -375,18 +437,88 @@ window.MotoData = {
     }
   },
 
-  // 5. Agregar Nuevo Tipo de Mantenimiento / Servicio
+  // 5. Agregar y Administrar Tipos de Mantenimiento / Servicio
   addMaintenanceType(typeData) {
     if (!this.data.maintenanceTypes) this.data.maintenanceTypes = [];
     const newType = {
       id: 'mt-' + Date.now(),
       name: typeData.name.trim(),
       classification: typeData.classification || 'Preventivo',
-      frequencyKm: Number(typeData.frequencyKm || 0),
+      controlType: typeData.controlType || 'dias',
+      frequencyDays: Number(typeData.frequencyDays || 30),
+      frequencyKm: Number(typeData.frequencyKm || 3000),
       estLabor: Number(typeData.estLabor || 0),
       desc: typeData.desc || ''
     };
     this.data.maintenanceTypes.push(newType);
+    this.persist();
+  },
+
+  updateMaintenanceType(id, updatedData) {
+    if (!this.data.maintenanceTypes) return;
+    const idx = this.data.maintenanceTypes.findIndex(m => m.id === id);
+    if (idx !== -1) {
+      this.data.maintenanceTypes[idx] = {
+        ...this.data.maintenanceTypes[idx],
+        ...updatedData
+      };
+      this.persist();
+    }
+  },
+
+  quickUpdateDocumentByPlate(plate, docData) {
+    if (!this.data.documents) this.data.documents = [];
+    const cleanPlate = (plate || '').trim().toUpperCase();
+    const docType = docData.type || 'SOAT';
+
+    const existing = this.data.documents.find(d => 
+      (d.plate || '').toUpperCase() === cleanPlate && 
+      (d.type || '').toLowerCase() === (docType || '').toLowerCase()
+    );
+
+    if (existing) {
+      existing.expiry = docData.expiry;
+      if (docData.number) existing.number = docData.number;
+      if (docData.entity) existing.entity = docData.entity;
+      if (docData.cost) existing.cost = Number(docData.cost);
+      existing.status = docData.status || 'valid';
+      existing.statusText = docData.statusText || 'Vigente';
+      existing.lastUpdated = new Date().toISOString();
+    } else {
+      const v = this.data.vehicles ? this.data.vehicles.find(veh => (veh.plate || '').toUpperCase() === cleanPlate) : null;
+      this.data.documents.unshift({
+        id: 'doc-' + Date.now(),
+        plate: cleanPlate,
+        driver: v ? v.driver : 'Conductor',
+        type: docType,
+        number: docData.number || 'Certificado Oficial',
+        entity: docData.entity || (docType === 'SOAT' ? 'Seguradora RUNT' : (docType === 'Tecnomecánica' ? 'CDA Certificado' : (docType.includes('Gobernación') ? 'Gobernación' : 'Alcaldía / Tránsito'))),
+        expiry: docData.expiry,
+        cost: Number(docData.cost || 0),
+        status: docData.status || 'valid',
+        statusText: docData.statusText || 'Vigente',
+        lastUpdated: new Date().toISOString()
+      });
+    }
+    this.persist();
+    return true;
+  },
+
+  getSettings() {
+    if (!this.data.settings) {
+      this.data.settings = {
+        alertEmails: '',
+        emailAlertsEnabled: true,
+        notifyDaysBefore: [30, 15, 5, 1],
+        notifyMaintDaysBefore: [5, 2]
+      };
+    }
+    return this.data.settings;
+  },
+
+  saveSettings(newSettings) {
+    if (!this.data.settings) this.data.settings = {};
+    this.data.settings = { ...this.data.settings, ...newSettings };
     this.persist();
   },
 
@@ -446,10 +578,12 @@ window.MotoData = {
       documents: [],
       accounts: [],
       spareParts: [],
-      maintenanceTypes: []
+      maintenanceTypes: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes)),
+      settings: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.settings))
     };
     try {
       localStorage.removeItem('motocontrol_data');
+      localStorage.setItem('motocontrol_clean_v5', 'true');
     } catch (e) {}
     this.saveToLocal();
     if (this.isFirebaseActive && this.db) {

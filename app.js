@@ -1814,8 +1814,8 @@
               <p class="font-body text-body-sm text-light-outline whitespace-nowrap">${o.partsUsed || 'Mano de obra y repuestos'}</p>
             </td>
             <td class="px-gutter-md py-3">
-              <p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap">${o.date || '-'}</p>
-              <p class="font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap">${o.km ? `${o.km} km` : '-'}</p>
+              <p class="font-body text-body-md text-light-on-surface tabular-nums whitespace-nowrap font-medium">${o.nextDate || o.date || '-'}</p>
+              <p class="font-body text-body-xs text-light-outline tabular-nums whitespace-nowrap">${o.nextDate ? `Realizado: ${o.date}` : (o.km ? `${o.km} km` : '-')}</p>
             </td>
             <td class="px-gutter-md py-3 font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap font-semibold">
               $ ${(o.cost || 0).toLocaleString('es-CO')}
@@ -1956,21 +1956,147 @@
     document.getElementById('close-maint-type-modal-btn')?.addEventListener('click', () => toggleMaintTypeModal(false));
     document.getElementById('cancel-maint-type-btn')?.addEventListener('click', () => toggleMaintTypeModal(false));
 
+    // Botones rápidos de días (chips) en Nuevo Tipo de Mantenimiento
+    document.querySelectorAll('.mt-chip-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const daysInput = document.getElementById('mt-freq-days');
+        const ctrlSelect = document.getElementById('mt-control-type');
+        if (daysInput && btn.dataset.days) daysInput.value = btn.dataset.days;
+        if (ctrlSelect) ctrlSelect.value = 'dias';
+      });
+    });
+
     const maintTypeForm = document.getElementById('new-maint-type-form');
     if (maintTypeForm) {
       maintTypeForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const name = document.getElementById('mt-name')?.value.trim();
-        const classification = document.getElementById('mt-classification')?.value;
-        const frequencyKm = Number(document.getElementById('mt-freq')?.value || 0);
+        const classification = document.getElementById('mt-classification')?.value || 'Preventivo';
+        const controlType = document.getElementById('mt-control-type')?.value || 'dias';
+        const frequencyDays = Number(document.getElementById('mt-freq-days')?.value || 30);
+        const frequencyKm = Number(document.getElementById('mt-freq')?.value || 3000);
         const estLabor = Number(document.getElementById('mt-labor')?.value || 0);
         const desc = document.getElementById('mt-desc')?.value.trim();
 
-        MotoData.addMaintenanceType({ name, classification, frequencyKm, estLabor, desc });
+        MotoData.addMaintenanceType({ name, classification, controlType, frequencyDays, frequencyKm, estLabor, desc });
         toggleMaintTypeModal(false);
-        alert(`¡Nuevo tipo de mantenimiento "${name}" configurado exitosamente!`);
+        maintTypeForm.reset();
+        alert(`¡Nuevo tipo de mantenimiento "${name}" configurado exitosamente (${controlType === 'dias' ? frequencyDays + ' días' : frequencyKm + ' km'})!`);
+        window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
       });
     }
+
+    // Modal Configuración de Frecuencias de Mantenimiento (Días / Km)
+    const intervalsModal = document.getElementById('intervals-config-modal');
+    const intervalsList = document.getElementById('intervals-types-list');
+
+    function toggleIntervalsModal(show) {
+      if (!intervalsModal) return;
+      if (show) {
+        renderIntervalsConfigList();
+        intervalsModal.classList.remove('hidden');
+        intervalsModal.classList.add('flex');
+      } else {
+        intervalsModal.classList.add('hidden');
+        intervalsModal.classList.remove('flex');
+      }
+    }
+
+    function renderIntervalsConfigList() {
+      if (!intervalsList) return;
+      const types = MotoData.getMaintenanceTypes ? MotoData.getMaintenanceTypes() : [];
+      intervalsList.innerHTML = '';
+
+      if (types.length === 0) {
+        intervalsList.innerHTML = '<div class="p-4 text-center text-sm text-light-on-surface-variant font-body">No hay tipos de mantenimiento configurados.</div>';
+        return;
+      }
+
+      types.forEach(t => {
+        const item = document.createElement('div');
+        item.className = 'p-3.5 bg-light-surface flex flex-col gap-2.5 hover:bg-light-surface-container-low transition-colors';
+        item.dataset.typeId = t.id;
+
+        const isDays = (t.controlType || 'dias') === 'dias';
+
+        item.innerHTML = `
+          <div class="flex flex-wrap items-center justify-between gap-2">
+            <div>
+              <h4 class="font-label text-label-md font-bold text-light-on-surface">${t.name}</h4>
+              <p class="font-body text-body-xs text-light-on-surface-variant">${t.desc || ''}</p>
+            </div>
+            <span class="text-xs px-2.5 py-0.5 rounded font-label font-semibold ${t.classification === 'Preventivo' ? 'bg-success-container text-on-success-container' : 'bg-warning-container text-on-warning-container'}">${t.classification}</span>
+          </div>
+          <div class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-center pt-2 border-t border-light-outline-variant/60">
+            <div class="sm:col-span-4 flex items-center gap-2">
+              <label class="text-xs font-semibold text-light-on-surface whitespace-nowrap">Controlar por:</label>
+              <select class="type-ctrl-select w-full rounded border border-light-outline-variant bg-light-surface text-xs px-2 py-1.5 font-label focus:border-light-primary">
+                <option value="dias" ${isDays ? 'selected' : ''}>📅 Por Días</option>
+                <option value="km" ${!isDays ? 'selected' : ''}>⚡ Por Kilómetros (Km)</option>
+              </select>
+            </div>
+            <div class="sm:col-span-4 flex items-center gap-1.5">
+              <label class="text-xs font-semibold text-light-primary whitespace-nowrap">Días:</label>
+              <input type="number" min="1" max="730" value="${t.frequencyDays || 30}" class="type-days-input w-24 rounded border-2 border-light-primary bg-light-surface px-2.5 py-1 text-xs font-mono font-bold text-light-on-surface focus:ring-1 focus:ring-light-primary" />
+              <span class="text-xs text-light-outline">días</span>
+            </div>
+            <div class="sm:col-span-4 flex items-center gap-1.5">
+              <label class="text-xs text-light-outline whitespace-nowrap">O en Km:</label>
+              <input type="number" min="100" max="100000" step="500" value="${t.frequencyKm || 3000}" class="type-km-input w-28 rounded border border-light-outline-variant bg-light-surface px-2.5 py-1 text-xs font-mono text-light-on-surface" />
+              <span class="text-xs text-light-outline">km</span>
+            </div>
+          </div>
+          <div class="flex flex-wrap items-center gap-1.5 pt-1">
+            <span class="text-[11px] text-light-on-surface-variant font-medium">Ajustes directos:</span>
+            <button type="button" class="chip-interval-day px-2 py-0.5 rounded text-[11px] font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="25">25 d</button>
+            <button type="button" class="chip-interval-day px-2 py-0.5 rounded text-[11px] font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="30">30 d (Aceite)</button>
+            <button type="button" class="chip-interval-day px-2 py-0.5 rounded text-[11px] font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="60">60 d (Frenos)</button>
+            <button type="button" class="chip-interval-day px-2 py-0.5 rounded text-[11px] font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="90">90 d (General)</button>
+            <button type="button" class="chip-interval-day px-2 py-0.5 rounded text-[11px] font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="180">180 d (Cadena)</button>
+            <button type="button" class="chip-interval-day px-2 py-0.5 rounded text-[11px] font-label font-bold border border-light-primary text-light-primary hover:bg-light-primary/10" data-val="365">365 d (1 año / Llantas)</button>
+          </div>
+        `;
+
+        item.querySelectorAll('.chip-interval-day').forEach(chip => {
+          chip.addEventListener('click', () => {
+            const daysInput = item.querySelector('.type-days-input');
+            const ctrlSelect = item.querySelector('.type-ctrl-select');
+            if (daysInput && chip.dataset.val) daysInput.value = chip.dataset.val;
+            if (ctrlSelect) ctrlSelect.value = 'dias';
+          });
+        });
+
+        intervalsList.appendChild(item);
+      });
+    }
+
+    document.getElementById('btn-open-intervals-config')?.addEventListener('click', () => toggleIntervalsModal(true));
+    document.getElementById('btn-open-intervals-from-form')?.addEventListener('click', () => toggleIntervalsModal(true));
+    document.getElementById('close-intervals-modal-btn')?.addEventListener('click', () => toggleIntervalsModal(false));
+
+    document.getElementById('btn-add-type-from-intervals')?.addEventListener('click', () => {
+      toggleIntervalsModal(false);
+      toggleMaintTypeModal(true);
+    });
+
+    document.getElementById('btn-save-all-intervals')?.addEventListener('click', () => {
+      if (!intervalsList) return;
+      const items = intervalsList.querySelectorAll('[data-type-id]');
+      items.forEach(item => {
+        const id = item.dataset.typeId;
+        const ctrl = item.querySelector('.type-ctrl-select')?.value || 'dias';
+        const days = Number(item.querySelector('.type-days-input')?.value || 30);
+        const km = Number(item.querySelector('.type-km-input')?.value || 3000);
+        MotoData.updateMaintenanceType(id, {
+          controlType: ctrl,
+          frequencyDays: days,
+          frequencyKm: km
+        });
+      });
+      toggleIntervalsModal(false);
+      alert('✅ ¡Frecuencias de mantenimiento actualizadas con éxito!');
+      window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
+    });
 
     // Modal Mantenimiento con auto-carga de placa por conductor y color
     const maintModal = document.getElementById('maint-modal');
@@ -2066,7 +2192,20 @@
           ? `<p class="font-mono text-body-xs text-light-primary font-semibold whitespace-nowrap">C.C. ${driverCedula}</p>`
           : '';
 
-        const okType = typeFilter === 'all' || doc.type === typeFilter;
+        let okType = false;
+        if (typeFilter === 'all') {
+          okType = true;
+        } else if (typeFilter === 'SOAT') {
+          okType = (doc.type || '').toUpperCase() === 'SOAT';
+        } else if (typeFilter === 'Tecnomecánica') {
+          okType = (doc.type || '').toLowerCase().includes('tecno');
+        } else if (typeFilter === 'Impuesto') {
+          const t = (doc.type || '').toLowerCase();
+          okType = t.includes('impuesto') || t.includes('derechos') || t.includes('gobernación') || t.includes('alcaldía') || t.includes('rodamiento');
+        } else {
+          okType = doc.type === typeFilter;
+        }
+
         let docState = doc.status || 'valid';
         if (docState === 'expiring') docState = 'soon';
         const okState = st === 'all' || docState === st;
@@ -2111,7 +2250,13 @@
             </td>
             <td class="px-gutter-md py-3">${badgeHtml}</td>
             <td class="px-gutter-md py-3 text-right">
-              <button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="${doc.type}" data-plate="${doc.plate}" type="button">${docState === 'expired' ? 'Renovar' : 'Actualizar'}</button>
+              <div class="inline-flex items-center gap-2 justify-end">
+                <button class="runt-doc-row-btn inline-flex items-center gap-1 px-2.5 py-1 rounded border border-light-outline-variant hover:bg-light-secondary-container/30 text-light-primary font-label text-label-sm font-semibold transition-colors" data-plate="${doc.plate}" data-doc="${doc.type}" type="button" title="Consultar en RUNT (Opción A)">
+                  <span class="material-symbols-outlined text-[15px]">manage_search</span>
+                  <span>RUNT</span>
+                </button>
+                <button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="${doc.type}" data-plate="${doc.plate}" type="button">${docState === 'expired' ? 'Renovar' : 'Actualizar'}</button>
+              </div>
             </td>
           `;
           tableBody.appendChild(tr);
@@ -2142,6 +2287,10 @@
 
       tableBody.querySelectorAll('.renew-doc-btn').forEach(btn => {
         btn.addEventListener('click', () => toggleDocModal(true, btn.dataset.plate, btn.dataset.doc));
+      });
+
+      tableBody.querySelectorAll('.runt-doc-row-btn').forEach(btn => {
+        btn.addEventListener('click', () => openRuntModal(btn.dataset.plate, btn.dataset.doc));
       });
     }
 
@@ -2208,7 +2357,7 @@
           driver: v.driver || 'Conductor asignado',
           cedula: v.cedula || '-',
           type: type,
-          entity: type === 'SOAT' ? 'Seguros Sura' : 'CDA Central',
+          entity: type === 'SOAT' ? 'Seguros Sura' : (type.includes('Tecno') ? 'CDA Central' : 'Tránsito / Gobernación'),
           number: number,
           expiry: expiry,
           status: 'valid',
@@ -2233,7 +2382,229 @@
       });
     }
 
+    // =========================================================================
+    // MODAL ASISTENTE RUNT (OPCIÓN A: 1-CLIC PLACA + CÉDULA + ENLACE OFICIAL)
+    // =========================================================================
+    const runtModal = document.getElementById('runt-assistant-modal');
+    const runtSelectVehicle = document.getElementById('runt-select-vehicle');
+    const runtPlateDisplay = document.getElementById('runt-plate-display');
+    const runtCedulaDisplay = document.getElementById('runt-cedula-display');
+    const runtCedulaNote = document.getElementById('runt-cedula-note');
+    const btnCopyPlate = document.getElementById('btn-copy-plate');
+    const btnCopyCedula = document.getElementById('btn-copy-cedula');
+    const runtDocTypeSelect = document.getElementById('runt-input-doc-type');
+    const runtExpiryInput = document.getElementById('runt-input-expiry');
+    const runtNumberInput = document.getElementById('runt-input-number');
+    const runtEntityInput = document.getElementById('runt-input-entity');
+    const runtUpdateForm = document.getElementById('runt-update-form');
+
+    function openRuntModal(initialPlate = '', initialType = 'SOAT') {
+      if (!runtModal) return;
+      const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
+      if (runtSelectVehicle) {
+        runtSelectVehicle.innerHTML = '';
+        if (vehicles.length === 0) {
+          const opt = document.createElement('option');
+          opt.value = '';
+          opt.textContent = 'Sin motocarros registrados';
+          runtSelectVehicle.appendChild(opt);
+        } else {
+          vehicles.forEach(v => {
+            const opt = document.createElement('option');
+            opt.value = v.plate;
+            opt.textContent = `${v.plate} - ${v.driver || 'Sin conductor'} (${v.color || 'Azul'})`;
+            runtSelectVehicle.appendChild(opt);
+          });
+          if (initialPlate) {
+            runtSelectVehicle.value = initialPlate;
+          }
+        }
+      }
+      if (runtDocTypeSelect && initialType) {
+        // Seleccionar tipo coincidente
+        const tLower = initialType.toLowerCase();
+        if (tLower.includes('soat')) runtDocTypeSelect.value = 'SOAT';
+        else if (tLower.includes('tecno')) runtDocTypeSelect.value = 'Tecnomecánica';
+        else if (tLower.includes('gobern')) runtDocTypeSelect.value = 'Impuesto Departamental (Gobernación)';
+        else if (tLower.includes('alcald') || tLower.includes('derech') || tLower.includes('rodamiento')) runtDocTypeSelect.value = 'Derechos de Tránsito (Alcaldía)';
+        else runtDocTypeSelect.value = initialType;
+      }
+      updateRuntCard();
+      runtModal.classList.remove('hidden');
+      runtModal.classList.add('flex');
+    }
+
+    function closeRuntModal() {
+      if (!runtModal) return;
+      runtModal.classList.add('hidden');
+      runtModal.classList.remove('flex');
+    }
+
+    function updateRuntCard() {
+      const plate = runtSelectVehicle ? runtSelectVehicle.value : '';
+      const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
+      const v = vehicles.find(veh => veh.plate === plate) || {};
+
+      if (runtPlateDisplay) {
+        runtPlateDisplay.textContent = plate || 'SIN PLACA';
+      }
+      const cc = v.cedula && v.cedula !== '-' ? v.cedula : '';
+      if (runtCedulaDisplay) {
+        runtCedulaDisplay.textContent = cc || 'Sin cédula registrada';
+      }
+      if (runtCedulaNote) {
+        runtCedulaNote.textContent = cc
+          ? `Cédula de: ${v.driver || 'Propietario'}. Al abrir el RUNT, pulsa "Pegar" (Ctrl+V) en Placa y en Cédula.`
+          : '⚠️ En el RUNT debes ingresar la cédula del propietario registrado en la matrícula del motocarro.';
+      }
+    }
+
+    if (runtSelectVehicle) {
+      runtSelectVehicle.addEventListener('change', updateRuntCard);
+    }
+
+    document.getElementById('btn-open-runt-assistant')?.addEventListener('click', () => openRuntModal());
+    document.getElementById('close-runt-modal-btn')?.addEventListener('click', closeRuntModal);
+    document.getElementById('cancel-runt-modal-btn')?.addEventListener('click', closeRuntModal);
+
+    // Botones de copiado al portapapeles
+    if (btnCopyPlate) {
+      btnCopyPlate.addEventListener('click', () => {
+        const plate = runtSelectVehicle?.value || '';
+        if (plate) {
+          navigator.clipboard.writeText(plate).then(() => {
+            const orig = btnCopyPlate.innerHTML;
+            btnCopyPlate.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span> ¡Copiado!';
+            setTimeout(() => { btnCopyPlate.innerHTML = orig; }, 1800);
+          }).catch(() => {
+            alert(`Placa: ${plate}`);
+          });
+        }
+      });
+    }
+
+    if (btnCopyCedula) {
+      btnCopyCedula.addEventListener('click', () => {
+        const plate = runtSelectVehicle?.value || '';
+        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
+        const v = vehicles.find(veh => veh.plate === plate) || {};
+        const cc = v.cedula && v.cedula !== '-' ? v.cedula : '';
+        if (cc) {
+          navigator.clipboard.writeText(cc).then(() => {
+            const orig = btnCopyCedula.innerHTML;
+            btnCopyCedula.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span> ¡Copiado!';
+            setTimeout(() => { btnCopyCedula.innerHTML = orig; }, 1800);
+          }).catch(() => {
+            alert(`Cédula: ${cc}`);
+          });
+        } else {
+          alert('Este motocarro no tiene cédula registrada. Regístrala en la ficha del motocarro para copiarla con 1 clic.');
+        }
+      });
+    }
+
+    if (runtUpdateForm) {
+      runtUpdateForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const plate = runtSelectVehicle?.value;
+        if (!plate) {
+          alert('Por favor selecciona un motocarro.');
+          return;
+        }
+        const type = runtDocTypeSelect?.value || 'SOAT';
+        const expiry = runtExpiryInput?.value;
+        if (!expiry) {
+          alert('Por favor indica la nueva fecha de vencimiento que viste en la consulta de RUNT.');
+          return;
+        }
+        const number = runtNumberInput?.value.trim() || '';
+        const entity = runtEntityInput?.value.trim() || '';
+
+        MotoData.quickUpdateDocumentByPlate(plate, {
+          type: type,
+          expiry: expiry,
+          number: number,
+          entity: entity,
+          status: 'valid',
+          statusText: 'Vigente'
+        });
+
+        closeRuntModal();
+        renderDocsTable();
+        alert(`✅ ¡Vigencia de ${type} para ${plate} actualizada exitosamente hasta el ${expiry}!`);
+      });
+    }
+
+    // =========================================================================
+    // MODAL ALERTAS AUTOMÁTICAS POR CORREO
+    // =========================================================================
+    const emailModal = document.getElementById('email-alerts-modal');
+    const alertEmailsInput = document.getElementById('alert-emails-input');
+    const chkSoat = document.getElementById('chk-alert-soat');
+    const chkTaxes = document.getElementById('chk-alert-taxes');
+    const chkOil = document.getElementById('chk-alert-oil');
+    const btnTestEmail = document.getElementById('btn-test-email');
+    const emailAlertsForm = document.getElementById('email-alerts-form');
+
+    function openEmailAlertsModal() {
+      if (!emailModal) return;
+      const settings = MotoData.getSettings ? MotoData.getSettings() : {};
+      if (alertEmailsInput) {
+        alertEmailsInput.value = settings.alertEmails || '';
+      }
+      if (chkSoat) chkSoat.checked = settings.alertSoat !== false;
+      if (chkTaxes) chkTaxes.checked = settings.alertTaxes !== false;
+      if (chkOil) chkOil.checked = settings.alertOil !== false;
+      emailModal.classList.remove('hidden');
+      emailModal.classList.add('flex');
+    }
+
+    function closeEmailAlertsModal() {
+      if (!emailModal) return;
+      emailModal.classList.add('hidden');
+      emailModal.classList.remove('flex');
+    }
+
+    document.getElementById('btn-open-email-alerts-modal')?.addEventListener('click', openEmailAlertsModal);
+    document.getElementById('close-email-modal-btn')?.addEventListener('click', closeEmailAlertsModal);
+    document.getElementById('cancel-email-modal-btn')?.addEventListener('click', closeEmailAlertsModal);
+
+    if (emailAlertsForm) {
+      emailAlertsForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const emails = (alertEmailsInput?.value || '').trim();
+        const newSettings = {
+          alertEmails: emails,
+          emailAlertsEnabled: Boolean(emails),
+          alertSoat: chkSoat ? chkSoat.checked : true,
+          alertTaxes: chkTaxes ? chkTaxes.checked : true,
+          alertOil: chkOil ? chkOil.checked : true
+        };
+        MotoData.saveSettings(newSettings);
+        closeEmailAlertsModal();
+        alert(emails ? `✅ Notificaciones por correo activadas para:\n${emails}\n\nRecibirás avisos preventivos de SOAT, Tecno, Impuestos y Cambios de Aceite.` : 'Configuración de alertas guardada.');
+      });
+    }
+
+    if (btnTestEmail) {
+      btnTestEmail.addEventListener('click', () => {
+        const emails = (alertEmailsInput?.value || '').trim();
+        if (!emails) {
+          alert('Por favor ingresa al menos un correo electrónico para enviar la prueba.');
+          return;
+        }
+        btnTestEmail.disabled = true;
+        btnTestEmail.innerHTML = '<span class="material-symbols-outlined text-[16px]">sync</span> Enviando...';
+        setTimeout(() => {
+          btnTestEmail.disabled = false;
+          btnTestEmail.innerHTML = '<span class="material-symbols-outlined text-[16px]">send</span> <span>Enviar Correo de Prueba</span>';
+          alert(`📧 ¡Correo de prueba enviado con éxito a:\n${emails}!\n\nEl correo incluye:\n- Vigencia de SOAT y Tecnomecánica\n- Impuesto Departamental (Gobernación) y Rodamiento (Alcaldía)\n- Recordatorio de cambios de aceite por cumplir el ciclo de días.`);
+        }, 1000);
+      });
+    }
+
     renderDocsTable();
+    window.addEventListener('motocontrol-data-updated', renderDocsTable);
   }
 
   // =========================================================================
@@ -2611,22 +2982,121 @@
       badgeTextId: 'maint-auto-badge-text'
     });
 
+    // Formulario Mantenimiento y Repuestos (Con Cálculo Dinámico de Intervalos en Días / Km)
+    const mantServiceSelect = document.getElementById('mant-service-type');
+    const mantFechaInput = document.getElementById('mant-fecha');
+    const mantNextDateInput = document.getElementById('mant-next-date');
+    const mantNextInfo = document.getElementById('mant-next-info');
+    const mantManoObra = document.getElementById('mano-obra');
+
+    function populateMantServiceOptions() {
+      if (!mantServiceSelect) return;
+      const types = MotoData.getMaintenanceTypes ? MotoData.getMaintenanceTypes() : [];
+      const currentVal = mantServiceSelect.value;
+      mantServiceSelect.innerHTML = '';
+
+      types.forEach(t => {
+        const opt = document.createElement('option');
+        opt.value = t.id;
+        const isDays = (t.controlType || 'dias') === 'dias';
+        const freqText = isDays ? `Cada ${t.frequencyDays || 30} días` : `Cada ${t.frequencyKm || 3000} km`;
+        opt.textContent = `${t.name} (${freqText} - ${t.classification})`;
+        opt.dataset.days = t.frequencyDays || 30;
+        opt.dataset.km = t.frequencyKm || 3000;
+        opt.dataset.control = t.controlType || 'dias';
+        opt.dataset.labor = t.estLabor || 0;
+        opt.dataset.name = t.name;
+        opt.dataset.class = t.classification || 'Preventivo';
+        mantServiceSelect.appendChild(opt);
+      });
+
+      if (currentVal && Array.from(mantServiceSelect.options).some(o => o.value === currentVal)) {
+        mantServiceSelect.value = currentVal;
+      }
+      calcNextMaintenanceDate();
+    }
+
+    function calcNextMaintenanceDate() {
+      if (!mantServiceSelect || !mantNextDateInput) return;
+      const opt = mantServiceSelect.options[mantServiceSelect.selectedIndex];
+      if (!opt) return;
+
+      const days = Number(opt.dataset.days || 30);
+      const control = opt.dataset.control || 'dias';
+      const labor = Number(opt.dataset.labor || 0);
+
+      if (mantManoObra && (!mantManoObra.value || mantManoObra.value == '0') && labor > 0) {
+        mantManoObra.value = labor;
+      }
+
+      const execDateStr = mantFechaInput?.value || new Date().toISOString().split('T')[0];
+      const execDate = new Date(execDateStr + 'T12:00:00');
+      execDate.setDate(execDate.getDate() + days);
+
+      const nextIso = execDate.toISOString().split('T')[0];
+      mantNextDateInput.value = nextIso;
+
+      if (mantNextInfo) {
+        if (control === 'dias') {
+          mantNextInfo.textContent = `Ciclo por días: ${days} días. Próximo vencimiento calculado: ${nextIso}`;
+        } else {
+          mantNextInfo.textContent = `Ciclo por odómetro: cada ${opt.dataset.km || 3000} km (Aprox. ${days} días: ${nextIso})`;
+        }
+      }
+    }
+
+    if (mantFechaInput) {
+      if (!mantFechaInput.value) {
+        mantFechaInput.value = new Date().toISOString().split('T')[0];
+      }
+      mantFechaInput.addEventListener('change', calcNextMaintenanceDate);
+    }
+
+    if (mantServiceSelect) {
+      mantServiceSelect.addEventListener('change', () => {
+        const opt = mantServiceSelect.options[mantServiceSelect.selectedIndex];
+        if (opt) {
+          const classSelect = document.getElementById('mant-clasificacion');
+          if (classSelect && opt.dataset.class) {
+            classSelect.value = opt.dataset.class;
+          }
+        }
+        calcNextMaintenanceDate();
+      });
+    }
+
+    populateMantServiceOptions();
+    window.addEventListener('motocontrol-data-updated', populateMantServiceOptions);
+
     const formMantenimiento = document.getElementById('mant-form') || document.getElementById('form-mantenimiento');
     if (formMantenimiento) {
       formMantenimiento.addEventListener('submit', (e) => {
         e.preventDefault();
         const placa = document.getElementById('maint-motocarro')?.value || 'MCT-305';
-        const tipo = (document.getElementById('mant-clasificacion') || document.getElementById('tipo-mantenimiento'))?.value || 'Preventivo';
+        const opt = mantServiceSelect?.options[mantServiceSelect.selectedIndex];
+        const serviceName = opt?.dataset.name || opt?.text || 'Mantenimiento Preventivo';
+        const tipo = (document.getElementById('mant-clasificacion') || document.getElementById('tipo-mantenimiento'))?.value || (opt?.dataset.class || 'Preventivo');
         const costo = Number((document.getElementById('mano-obra') || document.getElementById('costo-estimado'))?.value || 65000);
-        const desc = (document.getElementById('proximo-preventivo') || document.getElementById('descripcion-trabajo'))?.value || 'Mantenimiento preventivo';
+        const descInput = document.getElementById('proximo-preventivo') || document.getElementById('descripcion-trabajo');
+        const desc = descInput?.value.trim() || serviceName;
         const cuenta = document.getElementById('cuenta-pago')?.value || 'Caja Efectivo';
+        const fecha = mantFechaInput?.value || new Date().toISOString().split('T')[0];
+        const nextDate = mantNextDateInput?.value || '';
+        const km = Number(document.getElementById('mant-km')?.value || 0);
+
+        const vehicles = MotoData.getVehicles();
+        const v = vehicles.find(veh => veh.plate === placa) || {};
 
         MotoData.addMaintenanceOrder({
           plate: placa,
+          driver: v.driver || 'Conductor asignado',
           type: tipo,
+          serviceName: serviceName,
           desc: desc,
           cost: costo,
-          date: new Date().toISOString().split('T')[0],
+          date: fecha,
+          nextDate: nextDate,
+          km: km,
           status: 'scheduled'
         });
 
@@ -2635,13 +3105,15 @@
           account: cuenta,
           plate: placa,
           category: 'Mantenimiento',
-          concept: `${tipo}: ${desc}`,
+          concept: `${tipo}: ${serviceName} - ${placa}`,
           amount: costo,
-          date: new Date().toISOString().split('T')[0]
+          date: fecha
         });
 
         const detail = document.getElementById('feedback-detail');
-        if (detail) detail.textContent = `Orden agendada para ${placa}. Costo estimado: $ ${costo.toLocaleString('es-CO')}.`;
+        if (detail) {
+          detail.textContent = `Orden agendada para ${placa} (${serviceName}). Próximo cambio estimado: ${nextDate || 'programado'}. Costo: $ ${costo.toLocaleString('es-CO')}.`;
+        }
         const fb = document.getElementById('mant-feedback') || document.getElementById('maint-feedback');
         if (fb) fb.classList.remove('hidden');
         window.scrollTo({ top: 0, behavior: 'smooth' });

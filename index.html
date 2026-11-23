@@ -947,6 +947,10 @@ Limpiar
 <span class="material-symbols-outlined text-[18px]">build</span>
 <span>Registrar Mantenimiento</span>
 </a>
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface hover:bg-light-surface-container font-label text-label-md transition-colors" id="btn-open-intervals-config" type="button">
+<span class="material-symbols-outlined text-[18px] text-light-primary">tune</span>
+<span>Configurar Tiempos (Días / Km)</span>
+</button>
 <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface hover:bg-light-surface-container font-label text-label-md transition-colors" id="btn-open-new-maint-type" type="button">
 <span class="material-symbols-outlined text-[18px] text-light-primary">post_add</span>
 <span>Nuevo Tipo de Servicio</span>
@@ -1318,10 +1322,11 @@ Limpiar
 <input class="w-full pl-9 pr-3 py-2 rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface placeholder:text-light-outline focus:border-light-primary focus:ring-light-primary" id="doc-search" placeholder="Buscar por placa, conductor o póliza..." type="search"/>
 </div>
 <div class="flex flex-wrap items-center gap-gutter-sm">
-<div aria-label="Filtrar por tipo de documento" class="flex items-center gap-1 bg-light-surface-container-low p-1 rounded border border-light-outline-variant" role="tablist">
+<div aria-label="Filtrar por tipo de documento" class="flex flex-wrap items-center gap-1 bg-light-surface-container-low p-1 rounded border border-light-outline-variant" role="tablist">
 <button aria-selected="true" class="doc-type-tab px-3 py-1 rounded font-label text-label-sm bg-light-surface-container-lowest text-light-on-surface" data-type-filter="all" role="tab" type="button">Todos</button>
 <button aria-selected="false" class="doc-type-tab px-3 py-1 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface" data-type-filter="SOAT" role="tab" type="button">SOAT</button>
 <button aria-selected="false" class="doc-type-tab px-3 py-1 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface" data-type-filter="Tecnomecánica" role="tab" type="button">Tecnomecánica</button>
+<button aria-selected="false" class="doc-type-tab px-3 py-1 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface" data-type-filter="Impuesto" role="tab" type="button">Impuestos (Gobernación / Alcaldía)</button>
 </div>
 <select aria-label="Filtrar por vigencia" class="px-3 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest font-label text-label-sm text-light-on-surface" id="doc-state-filter">
 <option value="all">Todas las vigencias</option>
@@ -1336,12 +1341,22 @@ Limpiar
 <header class="flex flex-wrap items-center justify-between gap-gutter-sm">
 <div>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Control de pólizas y certificados</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="doc-count-label">Mostrando 8 registros documentales</p>
+<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="doc-count-label">0 registros documentales</p>
 </div>
+<div class="flex flex-wrap items-center gap-2">
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface hover:bg-light-surface-container font-label text-label-md transition-colors" id="btn-open-runt-assistant" type="button">
+<span class="material-symbols-outlined text-[18px] text-light-primary">policy</span>
+<span>🔍 Consultar RUNT (Opción A)</span>
+</button>
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface hover:bg-light-surface-container font-label text-label-md transition-colors" id="btn-open-email-alerts-modal" type="button">
+<span class="material-symbols-outlined text-[18px] text-light-primary">notifications_active</span>
+<span>Configurar Alertas por Correo</span>
+</button>
 <a class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container shadow-xs transition-colors" href="#form-soat">
 <span class="material-symbols-outlined text-[18px]">note_add</span>
-<span>Registrar SOAT / Tecno</span>
+<span>Registrar SOAT / Tecno / Impuesto</span>
 </a>
+</div>
 </header>
 <div class="w-full overflow-x-auto border border-light-outline-variant rounded min-w-0">
 <div data-component-id="table-standard" data-component-type="table" data-component-variant="standard">
@@ -2010,29 +2025,30 @@ Limpiar
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mant-fecha">Fecha de ejecución *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-fecha" name="fecha" required="" type="date" value="2026-11-22"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-fecha" name="fecha" required="" type="date" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mant-km">Kilometraje al ingreso *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-km" min="0" name="km" required="" type="number" value="28450"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mant-km">Kilometraje al ingreso</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-km" min="0" name="km" type="number" value="0"/>
 </div>
 </div>
-<!-- Independent Maintenance Services -->
+<!-- Dynamic Service Type Selection with Interval Calculation -->
 <div class="flex flex-col gap-gutter-xs pt-gutter-xs">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Servicios independientes aplicados</span>
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-gutter-sm">
-<label class="flex items-center gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface-container-low cursor-pointer">
-<input checked="" class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox"/>
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Cambio de aceite</span>
-</label>
-<label class="flex items-center gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface-container-low cursor-pointer">
-<input class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox"/>
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Mantenimiento de frenos</span>
-</label>
-<label class="flex items-center gap-gutter-sm p-gutter-sm rounded border border-light-outline-variant bg-light-surface-container-low cursor-pointer">
-<input class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" type="checkbox"/>
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Ajuste general / motor</span>
-</label>
+<div class="flex items-center justify-between">
+<label class="font-label text-label-md text-light-on-surface font-semibold" for="mant-service-type">Tipo de Servicio Realizado *</label>
+<button type="button" class="text-xs text-light-primary hover:underline font-label cursor-pointer" id="btn-open-intervals-from-form">Ajustar frecuencias (Días / Km)</button>
+</div>
+<select class="w-full rounded border-2 border-light-primary bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-service-type">
+</select>
+<div class="p-2.5 rounded bg-light-surface-container-low border border-light-outline-variant flex flex-wrap items-center justify-between gap-2 mt-1">
+<div class="flex items-center gap-1.5 text-xs text-light-on-surface font-body">
+<span class="material-symbols-outlined text-[16px] text-light-primary">timer</span>
+<span id="mant-next-info">Próximo servicio programado automáticamente</span>
+</div>
+<div class="flex items-center gap-1.5">
+<label for="mant-next-date" class="text-xs text-light-outline font-medium">Próxima fecha estimada:</label>
+<input type="date" id="mant-next-date" class="px-2 py-1 rounded border border-light-outline-variant bg-light-surface text-xs font-mono font-bold text-light-primary"/>
+</div>
 </div>
 </div>
 </section>
@@ -2053,11 +2069,6 @@ Limpiar
 <div class="md:col-span-6 flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="repuesto-select">Repuesto en inventario</label>
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2 focus:border-light-primary focus:ring-light-primary" id="repuesto-select">
-<option value="Aceite 20W-50 Mobil Super|28000">Aceite 20W-50 Mobil Super ($ 28.000 · Stock: 14)</option>
-<option value="Filtro de aceite Bajaj|14000">Filtro de aceite Bajaj ($ 14.000 · Stock: 9)</option>
-<option value="Pastillas de freno delanteras|36000">Pastillas de freno delanteras ($ 36.000 · Stock: 6)</option>
-<option value="Bujía NGK Iridium|18000">Bujía NGK Iridium ($ 18.000 · Stock: 11)</option>
-<option value="Kit de arrastre completo|115000">Kit de arrastre completo ($ 115.000 · Stock: 3)</option>
 </select>
 </div>
 <div class="md:col-span-3 flex flex-col gap-gutter-xs">
@@ -2174,6 +2185,8 @@ Limpiar
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-tipo">
 <option selected="" value="SOAT">SOAT (Seguro Obligatorio)</option>
 <option value="Tecnomecánica">Revisión Técnico-Mecánica (CDA)</option>
+<option value="Impuesto Departamental">Impuesto Departamental (Gobernación)</option>
+<option value="Derechos de Tránsito">Derechos de Tránsito / Rodamiento (Alcaldía)</option>
 <option value="Tarjeta de Operación">Tarjeta de Operación</option>
 </select>
 </div>
@@ -2534,8 +2547,10 @@ Limpiar
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Documento</span>
 <select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" id="modal-doc-type">
-<option>SOAT</option>
-<option>Tecnomecánica</option>
+<option value="SOAT">SOAT (Seguro Obligatorio)</option>
+<option value="Tecnomecánica">Revisión Técnico-Mecánica</option>
+<option value="Impuesto Departamental">Impuesto Vehicular (Gobernación)</option>
+<option value="Derechos de Tránsito">Derechos de Tránsito (Alcaldía)</option>
 </select>
 </label>
 </div>
@@ -2891,8 +2906,29 @@ Crear Cuenta y Acceder
 </select>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface" for="mt-freq">Frecuencia recomendada (Km)</label>
-<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="mt-freq" min="0" placeholder="Ej. 5000" step="500" type="number" value="5000"/>
+<label class="font-label text-label-md text-light-on-surface font-semibold" for="mt-control-type">Control principal *</label>
+<select class="rounded border-2 border-light-primary bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="mt-control-type">
+<option value="dias" selected>Por Días (Tiempo transcurrido)</option>
+<option value="km">Por Kilómetros (Odómetro)</option>
+</select>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-md text-light-on-surface font-semibold" for="mt-freq-days">Frecuencia en Días (hasta 365 días / 1 año) *</label>
+<input class="rounded border-2 border-light-primary bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="mt-freq-days" min="1" max="730" placeholder="Ej. 30" type="number" value="30"/>
+<div class="flex flex-wrap gap-1 mt-1">
+<button type="button" class="mt-chip-btn text-[11px] px-2 py-0.5 rounded bg-light-surface-container-high text-light-on-surface hover:bg-light-primary hover:text-light-on-primary transition-colors" data-days="25">25 d</button>
+<button type="button" class="mt-chip-btn text-[11px] px-2 py-0.5 rounded bg-light-surface-container-high text-light-on-surface hover:bg-light-primary hover:text-light-on-primary transition-colors" data-days="30">30 d (Aceite)</button>
+<button type="button" class="mt-chip-btn text-[11px] px-2 py-0.5 rounded bg-light-surface-container-high text-light-on-surface hover:bg-light-primary hover:text-light-on-primary transition-colors" data-days="60">60 d (Frenos)</button>
+<button type="button" class="mt-chip-btn text-[11px] px-2 py-0.5 rounded bg-light-surface-container-high text-light-on-surface hover:bg-light-primary hover:text-light-on-primary transition-colors" data-days="90">90 d (General)</button>
+<button type="button" class="mt-chip-btn text-[11px] px-2 py-0.5 rounded bg-light-surface-container-high text-light-on-surface hover:bg-light-primary hover:text-light-on-primary transition-colors" data-days="180">180 d (Cadena)</button>
+<button type="button" class="mt-chip-btn text-[11px] px-2 py-0.5 rounded bg-light-surface-container-high text-light-on-surface hover:bg-light-primary hover:text-light-on-primary transition-colors" data-days="365">365 d (1 año - Llantas)</button>
+</div>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-md text-light-on-surface" for="mt-freq">Equivalente o control por Km</label>
+<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="mt-freq" min="0" placeholder="Ej. 3000" step="500" type="number" value="3000"/>
 </div>
 </div>
 <div class="flex flex-col gap-1">
@@ -3129,7 +3165,191 @@ Crear Cuenta y Acceder
 </form>
 </div>
 </div>
-<!-- App Data and Firebase Manager -->
+
+<!-- MODAL: Asistente Consulta RUNT Oficial (Opción A) -->
+<div aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="runt-assistant-modal" role="dialog">
+<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-xl p-gutter-lg flex flex-col gap-gutter-md max-h-[90vh] overflow-y-auto shadow-2xl">
+<header class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[26px] text-light-primary">policy</span>
+<div>
+<h2 class="font-headline text-headline-sm text-light-on-surface">Consulta Asistida RUNT (Opción A)</h2>
+<p class="font-body text-body-sm text-light-on-surface-variant">Consulta oficial gratuita de SOAT, Tecno e Impuestos sin cobros de APIs</p>
+</div>
+</div>
+<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low" id="close-runt-modal-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</header>
+<div class="bg-light-surface-container-low p-gutter-md rounded-md border border-light-outline-variant flex flex-col gap-gutter-sm">
+<div class="flex items-center justify-between">
+<span class="font-label text-label-sm font-bold text-light-primary flex items-center gap-1">
+<span class="material-symbols-outlined text-[16px]">pin</span>
+<span>1. Datos del Motocarro para la Consulta:</span>
+</span>
+<span class="text-xs text-light-outline font-body">Copia con un clic</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface-variant" for="runt-select-vehicle">Motocarro:</label>
+<select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-1.5 font-mono text-mono-md font-bold focus:border-light-primary" id="runt-select-vehicle">
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface-variant">Cédula Conductor / Propietario:</label>
+<input class="rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-2.5 py-1.5 font-mono text-mono-md" id="runt-display-cedula" readonly="" type="text" value=""/>
+</div>
+</div>
+<div class="flex flex-wrap items-center gap-2 pt-1">
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-light-surface border border-light-outline-variant text-light-primary font-label text-label-sm hover:bg-light-primary hover:text-light-on-primary transition-colors shadow-xs" id="btn-copy-plate" type="button">
+<span class="material-symbols-outlined text-[15px]">content_copy</span>
+<span id="btn-copy-plate-text">Copiar Placa</span>
+</button>
+<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-light-surface border border-light-outline-variant text-light-primary font-label text-label-sm hover:bg-light-primary hover:text-light-on-primary transition-colors shadow-xs" id="btn-copy-cedula" type="button">
+<span class="material-symbols-outlined text-[15px]">badge</span>
+<span id="btn-copy-cedula-text">Copiar Cédula</span>
+</button>
+<a class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded bg-light-primary text-light-on-primary font-label text-label-sm font-bold hover:bg-light-primary-container shadow-xs ml-auto transition-colors" href="https://www.runt.gov.co/consultaCiudadana/#/consultaVehiculo" rel="noopener noreferrer" target="_blank">
+<span class="material-symbols-outlined text-[16px]">open_in_new</span>
+<span>Abrir Portal Oficial RUNT</span>
+</a>
+</div>
+</div>
+<form class="flex flex-col gap-gutter-sm border-t border-light-outline-variant pt-gutter-sm" id="runt-update-form">
+<div class="flex items-center gap-1.5 text-light-on-surface font-label text-label-sm font-bold">
+<span class="material-symbols-outlined text-[18px] text-success">update</span>
+<span>2. Registrar / Actualizar Fecha en MotoControl:</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface-variant font-medium" for="runt-doc-type">Tipo de Vigencia *</label>
+<select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-2 font-body text-body-sm focus:border-light-primary" id="runt-doc-type" required="">
+<option selected="" value="SOAT">SOAT (Seguro Obligatorio)</option>
+<option value="Tecnomecánica">Revisión Técnico-Mecánica (CDA)</option>
+<option value="Impuesto Departamental">Impuesto Vehicular (Gobernación)</option>
+<option value="Derechos de Tránsito">Derechos de Tránsito / Rodamiento (Alcaldía)</option>
+</select>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface-variant font-semibold" for="runt-expiry-date">Nueva Fecha de Vencimiento *</label>
+<input class="rounded border-2 border-light-primary bg-light-surface text-light-on-surface px-2.5 py-2 font-mono text-mono-md font-bold focus:border-light-primary" id="runt-expiry-date" required="" type="date"/>
+</div>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface-variant" for="runt-entity">Aseguradora / CDA / Entidad</label>
+<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-1.5 font-body text-body-sm focus:border-light-primary" id="runt-entity" placeholder="Ej. Seguros del Estado, SURA, CDA..." type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface-variant" for="runt-number">Número Póliza / Certificado</label>
+<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-1.5 font-mono text-mono-sm uppercase focus:border-light-primary" id="runt-number" placeholder="Ej. POL-2026-8812" type="text"/>
+</div>
+</div>
+<div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs">
+<button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-runt-modal-btn" type="button">Cerrar</button>
+<button class="px-gutter-md py-2 rounded bg-success text-on-success font-label text-label-md font-bold hover:bg-success/90 shadow-sm" type="submit">
+Guardar y Actualizar Vigencia
+</button>
+</div>
+</form>
+</div>
+</div>
+
+<!-- MODAL: Configuración de Alertas por Correo Electrónico -->
+<div aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="email-alerts-modal" role="dialog">
+<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-lg p-gutter-lg flex flex-col gap-gutter-md max-h-[90vh] overflow-y-auto shadow-2xl">
+<header class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[26px] text-light-primary">forward_to_inbox</span>
+<div>
+<h2 class="font-headline text-headline-sm text-light-on-surface">Configuración de Alertas por Correo</h2>
+<p class="font-body text-body-sm text-light-on-surface-variant">Recibe avisos automáticos de SOAT, Tecno, Impuestos y Aceite</p>
+</div>
+</div>
+<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low" id="close-email-modal-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</header>
+<form class="flex flex-col gap-gutter-md" id="email-alerts-form">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-md text-light-on-surface font-semibold flex items-center justify-between" for="alert-emails-input">
+<span>Correos Destinatarios de Alerta *</span>
+<span class="text-xs font-normal text-light-outline">Separados por coma</span>
+</label>
+<input class="rounded border-2 border-light-primary bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="alert-emails-input" placeholder="ejemplo: gerencia@motocontrol.com, taller@gmail.com" type="text" value=""/>
+<p class="text-xs text-light-on-surface-variant font-body">A estos correos llegarán los avisos anticipados de vencimiento.</p>
+</div>
+<div class="bg-light-surface-container-low p-gutter-md rounded border border-light-outline-variant flex flex-col gap-gutter-sm">
+<span class="font-label text-label-sm font-bold text-light-on-surface">Eventos a Notificar por Correo:</span>
+<label class="flex items-start gap-2.5 cursor-pointer">
+<input checked="" class="mt-1 rounded text-light-primary focus:ring-light-primary" id="chk-alert-soat" type="checkbox"/>
+<div>
+<p class="font-label text-label-sm font-semibold text-light-on-surface">SOAT y Revisión Tecnomecánica</p>
+<p class="font-body text-body-xs text-light-on-surface-variant">Avisa con 30 días, 15 días y 5 días de anticipación antes de la fecha límite.</p>
+</div>
+</label>
+<label class="flex items-start gap-2.5 cursor-pointer">
+<input checked="" class="mt-1 rounded text-light-primary focus:ring-light-primary" id="chk-alert-taxes" type="checkbox"/>
+<div>
+<p class="font-label text-label-sm font-semibold text-light-on-surface">Impuestos (Gobernación y Alcaldía)</p>
+<p class="font-body text-body-xs text-light-on-surface-variant">Avisos preventivos para aprovechar descuentos por pronto pago de rodamiento y vehicular.</p>
+</div>
+</label>
+<label class="flex items-start gap-2.5 cursor-pointer">
+<input checked="" class="mt-1 rounded text-light-primary focus:ring-light-primary" id="chk-alert-oil" type="checkbox"/>
+<div>
+<p class="font-label text-label-sm font-semibold text-light-on-surface">Cambios de Aceite y Preventivos por Días</p>
+<p class="font-body text-body-xs text-light-on-surface-variant">Avisa cuando falten 5 y 2 días para cumplir el ciclo programado (ej. 30 días).</p>
+</div>
+</label>
+</div>
+<div class="flex items-center justify-between gap-gutter-sm pt-gutter-xs border-t border-light-outline-variant">
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant text-light-primary hover:bg-light-secondary-container/40 font-label text-label-sm transition-colors" id="btn-test-email" type="button">
+<span class="material-symbols-outlined text-[16px]">send</span>
+<span>Enviar Correo de Prueba</span>
+</button>
+<div class="flex items-center gap-2">
+<button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-email-modal-btn" type="button">Cancelar</button>
+<button class="px-gutter-md py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-sm" type="submit">Guardar Configuración</button>
+</div>
+</div>
+</form>
+</div>
+</div>
+
+<!-- MODAL: Configuración de Frecuencias de Mantenimiento (Días / Km) -->
+<div aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="intervals-config-modal" role="dialog">
+<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-2xl p-gutter-lg flex flex-col gap-gutter-md max-h-[90vh] overflow-y-auto shadow-2xl">
+<header class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[26px] text-light-primary">more_time</span>
+<div>
+<h2 class="font-headline text-headline-sm text-light-on-surface">Configurar Tiempos de Mantenimiento</h2>
+<p class="font-body text-body-sm text-light-on-surface-variant">Personaliza la frecuencia en días (hasta 365 días / 1 año) o en Km para cada servicio</p>
+</div>
+</div>
+<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low" id="close-intervals-modal-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</header>
+<div class="flex flex-col gap-gutter-md">
+<p class="text-xs text-light-on-surface-variant font-body bg-light-surface-container-low p-2.5 rounded border border-light-outline-variant">
+💡 <strong>Recomendación para tu flota:</strong> El cambio de aceite se lleva por días (ej: 25 o 30 días), y el cambio de llantas hasta un año (365 días). Puedes ajustar el tiempo exacto que desees para cada uno:
+</p>
+<div class="divide-y divide-light-outline-variant border border-light-outline-variant rounded-md overflow-hidden" id="intervals-types-list">
+</div>
+<div class="flex items-center justify-between gap-gutter-sm pt-gutter-xs border-t border-light-outline-variant">
+<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant text-light-primary font-label text-label-md hover:bg-light-surface-container" id="btn-add-type-from-intervals" type="button">
+<span class="material-symbols-outlined text-[16px]">add_circle</span>
+<span>Añadir Otro Tipo de Servicio</span>
+</button>
+<button class="px-gutter-md py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-sm" id="btn-save-all-intervals" type="button">
+Guardar Cambios de Tiempos
+</button>
+</div>
+</div>
+</div>
+</div>
 <script src="firebase_manager.js"></script>
 <!-- Views Logic Scripts -->
 <script src="app.js"></script>
