@@ -289,6 +289,22 @@
           fbStatusMsg.className = 'p-3 rounded text-xs font-body border border-success bg-success-container text-on-success-container flex items-center gap-2';
           fbStatusMsg.innerHTML = '<span class="material-symbols-outlined text-[18px]">cloud_done</span> <span><strong>Conectado:</strong> Base de datos sincronizada en tiempo real con Cloud Firestore.</span>';
           fbStatusMsg.classList.remove('hidden');
+        } else if (window.MotoData && window.MotoData.lastFirebaseError) {
+          const err = window.MotoData.lastFirebaseError;
+          const isPerm = err.includes('Reglas') || err.includes('permission') || err.includes('insufficient');
+          fbStatusMsg.className = 'p-3 rounded text-xs font-body border border-light-error bg-light-error-container text-light-on-error-container flex flex-col gap-1.5';
+          fbStatusMsg.innerHTML = `
+            <div class="flex items-center gap-1.5 font-bold">
+              <span class="material-symbols-outlined text-[18px]">error</span>
+              <span>Error de sincronización con Firestore</span>
+            </div>
+            <p class="text-xs"><strong>Causa reportada:</strong> ${err}</p>
+            ${isPerm ? `
+            <div class="mt-1 p-2 bg-light-surface rounded border border-light-outline-variant text-[11px] text-light-on-surface">
+              <strong>Solución:</strong> En Firebase Console &gt; Firestore Database &gt; Reglas, asegúrate de permitir lectura/escritura (<code>allow read, write: if true;</code>) y pulsar <strong>Publicar</strong>.
+            </div>` : ''}
+          `;
+          fbStatusMsg.classList.remove('hidden');
         } else {
           fbStatusMsg.className = 'p-3 rounded text-xs font-body border border-warning bg-warning-container text-on-warning-container flex items-center gap-2';
           fbStatusMsg.innerHTML = '<span class="material-symbols-outlined text-[18px]">cloud_queue</span> <span><strong>Modo Local activo:</strong> Haz clic en "Conectar Firebase" para sincronizar tus datos en la nube.</span>';
@@ -1232,6 +1248,17 @@
       const q = (searchInput?.value || '').trim().toLowerCase();
       let visibleCount = 0;
 
+      // Actualizar contadores de pestañas de flota dinámicamente
+      const fleetActiveVehs = data.vehicles.filter(v => v.status !== 'sold');
+      const azulCount = fleetActiveVehs.filter(v => !(v.color || '').toLowerCase().includes('salm')).length;
+      const salmonCount = fleetActiveVehs.filter(v => (v.color || '').toLowerCase().includes('salm')).length;
+      const todosEl = document.getElementById('count-todos');
+      const azulEl = document.getElementById('count-azul');
+      const salmonEl = document.getElementById('count-salmon');
+      if (todosEl) todosEl.textContent = fleetActiveVehs.length;
+      if (azulEl) azulEl.textContent = azulCount;
+      if (salmonEl) salmonEl.textContent = salmonCount;
+
       // Contar motocarros por conductor para detectar turno intercalado (>=2 motocarros)
       const driverVehicleCount = {};
       data.vehicles.forEach(veh => {
@@ -1967,6 +1994,11 @@
       const stockBody = document.getElementById('stock-table-body');
       if (!stockBody) return;
       const parts = MotoData.getSpareParts ? MotoData.getSpareParts() : [];
+      const stockAllEl = document.getElementById('count-stock-all');
+      const stockLowEl = document.getElementById('count-stock-low');
+      if (stockAllEl) stockAllEl.textContent = parts.length;
+      if (stockLowEl) stockLowEl.textContent = parts.filter(p => p.stock <= p.min).length;
+
       stockBody.innerHTML = '';
       if (parts.length === 0) {
         stockBody.innerHTML = `

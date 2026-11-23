@@ -654,7 +654,7 @@ Limpiar
 <input class="w-full pl-9 pr-3 py-2 rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface placeholder:text-light-outline focus:border-light-primary focus:ring-light-primary" id="fleet-search" placeholder="Buscar por placa, conductor o teléfono..." type="search"/>
 </div>
 <div aria-label="Filtrar por estado" class="flex flex-wrap items-center gap-gutter-sm" role="tablist">
-<button aria-selected="true" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-secondary-container text-light-on-secondary-container transition-colors duration-state-change" data-status-filter="all" role="tab" type="button">Todos (8)</button>
+<button aria-selected="true" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-secondary-container text-light-on-secondary-container transition-colors duration-state-change" data-status-filter="all" role="tab" type="button">Todos (<span id="count-todos">0</span>)</button>
 <button aria-selected="false" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors duration-state-change" data-status-filter="active" role="tab" type="button">En ruta</button>
 <button aria-selected="false" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors duration-state-change" data-status-filter="workshop" role="tab" type="button">En taller</button>
 <button aria-selected="false" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors duration-state-change" data-status-filter="unassigned" role="tab" type="button">Sin conductor</button>
@@ -1066,8 +1066,8 @@ Limpiar
 <input class="w-full pl-9 pr-3 py-2 rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface placeholder:text-light-outline focus:border-light-primary focus:ring-light-primary" id="stock-search" placeholder="Buscar repuesto por código o nombre..." type="search"/>
 </div>
 <div class="flex flex-wrap items-center gap-gutter-xs">
-<button class="stock-filter-btn px-3 py-1.5 rounded font-label text-label-md bg-light-secondary-container text-light-on-secondary-container" data-stock-filter="all" type="button">Todos (6)</button>
-<button class="stock-filter-btn px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container" data-stock-filter="low" type="button">Stock bajo (3)</button>
+<button class="stock-filter-btn px-3 py-1.5 rounded font-label text-label-md bg-light-secondary-container text-light-on-secondary-container" data-stock-filter="all" type="button">Todos (<span id="count-stock-all">0</span>)</button>
+<button class="stock-filter-btn px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container" data-stock-filter="low" type="button">Stock bajo (<span id="count-stock-low">0</span>)</button>
 <button class="stock-filter-btn px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container" data-stock-filter="ok" type="button">Disponibles</button>
 </div>
 </div>

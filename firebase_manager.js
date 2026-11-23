@@ -166,6 +166,10 @@ window.MotoData = {
       if (fbConfigStr) {
         try {
           config = JSON.parse(fbConfigStr);
+          if (config.authDomain && config.authDomain.endsWith('.cor')) {
+            config.authDomain = config.authDomain.replace(/\.cor$/i, '.com');
+            localStorage.setItem('motocontrol_firebase_config', JSON.stringify(config));
+          }
         } catch (e) {}
       } else {
         localStorage.setItem('motocontrol_firebase_config', JSON.stringify(defaultConfig));
@@ -182,7 +186,7 @@ window.MotoData = {
   async initFirebase(config) {
     if (!window.firebase) {
       console.warn('Firebase SDK not loaded.');
-      this.updateConnectionStatus(false, 'SDK de Firebase no cargado');
+      this.updateConnectionStatus(false, 'SDK de Firebase no cargado en la página');
       return { success: false, error: 'El SDK de Firebase no está disponible en la página' };
     }
     try {
@@ -192,15 +196,27 @@ window.MotoData = {
       }
       firebase.initializeApp(config);
       this.db = firebase.firestore();
+
+      // Habilitar long polling automático para sortear restricciones de red o proxies en Windows
+      try {
+        this.db.settings({ experimentalAutoDetectLongPolling: true });
+      } catch (se) {}
+
+      // Sincronizar inmediatamente y verificar comunicación real con Firestore
+      const syncResult = await this.syncWithFirestore();
+      if (syncResult && !syncResult.success) {
+        this.isFirebaseActive = false;
+        return syncResult;
+      }
+
       this.isFirebaseActive = true;
+      this.lastFirebaseError = null;
       this.updateConnectionStatus(true);
-      
-      // Sincronizar con Firestore
-      await this.syncWithFirestore();
       return { success: true };
     } catch (err) {
       console.error('Firebase initialization error:', err);
       this.isFirebaseActive = false;
+      this.lastFirebaseError = err.message;
       this.updateConnectionStatus(false, err.message);
       return { success: false, error: err.message };
     }
@@ -247,25 +263,33 @@ window.MotoData = {
     if (!badge || !badgeText || !badgeDot) return;
 
     if (connected) {
+      this.lastFirebaseError = null;
       badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-container text-on-success-container text-xs font-label cursor-pointer shadow-xs';
       badgeText.textContent = 'Firebase Conectado';
       badgeDot.className = 'w-2 h-2 rounded-full bg-success animate-pulse';
       badge.title = 'Conectado exitosamente a Cloud Firestore';
-    } else if (errorMsg === 'Reglas de Firestore bloqueadas' || errorMsg.includes('permission-denied') || errorMsg.includes('Missing or insufficient permissions')) {
-      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-container text-on-warning-container text-xs font-label cursor-pointer shadow-xs';
-      badgeText.textContent = 'Firestore: Activar Reglas';
-      badgeDot.className = 'w-2 h-2 rounded-full bg-warning animate-ping';
-      badge.title = 'La base de datos existe pero requiere habilitar las reglas de lectura/escritura en Firebase Console';
     } else {
-      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-light-surface-container-high text-light-on-surface-variant text-xs font-label cursor-pointer hover:bg-light-surface-container-highest transition-colors';
-      badgeText.textContent = errorMsg ? 'Error Firebase' : 'Modo Local (Listo para Firebase)';
-      badgeDot.className = errorMsg ? 'w-2 h-2 rounded-full bg-light-error' : 'w-2 h-2 rounded-full bg-light-outline';
-      badge.title = errorMsg ? `Detalle: ${errorMsg}` : 'Haz clic para configurar Firebase';
+      this.lastFirebaseError = errorMsg || null;
+      const isPerm = errorMsg === 'Reglas de Firestore bloqueadas' || 
+                     errorMsg.includes('permission') || 
+                     errorMsg.includes('Missing or insufficient');
+
+      if (isPerm) {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-container text-on-warning-container text-xs font-label cursor-pointer shadow-xs';
+        badgeText.textContent = 'Firestore: Activar Reglas';
+        badgeDot.className = 'w-2 h-2 rounded-full bg-warning animate-ping';
+        badge.title = 'Reglas de seguridad bloqueadas. Clic para ver cómo habilitarlas.';
+      } else {
+        badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-light-surface-container-high text-light-on-surface-variant text-xs font-label cursor-pointer hover:bg-light-surface-container-highest transition-colors';
+        badgeText.textContent = errorMsg ? 'Error Firebase' : 'Modo Local (Listo para Firebase)';
+        badgeDot.className = errorMsg ? 'w-2 h-2 rounded-full bg-light-error' : 'w-2 h-2 rounded-full bg-light-outline';
+        badge.title = errorMsg ? `Detalle: ${errorMsg}. Haz clic para ver y corregir.` : 'Haz clic para configurar Firebase';
+      }
     }
   },
 
   async syncWithFirestore() {
-    if (!this.isFirebaseActive || !this.db) return;
+    if (!this.db) return { success: false, error: 'Instancia de Firestore no lista' };
     try {
       const docRef = this.db.collection('motocontrol_app').doc('fleet_data');
       const docSnap = await docRef.get();
@@ -285,14 +309,23 @@ window.MotoData = {
       } else {
         await docRef.set(this.data);
       }
+      this.isFirebaseActive = true;
+      this.lastFirebaseError = null;
       this.updateConnectionStatus(true);
+      return { success: true };
     } catch (e) {
       console.warn('Firestore sync status:', e);
-      if (e.code === 'permission-denied' || (e.message && e.message.includes('permission'))) {
-        this.updateConnectionStatus(false, 'Reglas de Firestore bloqueadas');
-      } else {
-        this.updateConnectionStatus(false, e.message);
+      this.isFirebaseActive = false;
+      let errorMsg = e.message || 'Error al comunicar con Firestore';
+      const isPerm = e.code === 'permission-denied' || 
+                     (e.message && (e.message.includes('permission') || e.message.includes('Missing or insufficient')));
+      if (isPerm) {
+        errorMsg = 'Reglas de Firestore bloqueadas (requiere habilitar lectura/escritura)';
       }
+      this.lastFirebaseError = errorMsg;
+      this.lastFirebaseErrorCode = e.code;
+      this.updateConnectionStatus(false, errorMsg);
+      return { success: false, error: errorMsg, code: e.code };
     }
   },
 
