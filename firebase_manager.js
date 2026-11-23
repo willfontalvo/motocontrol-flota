@@ -6,57 +6,13 @@
 
 // Default Seed Data with Motocarro Colors (Azul / Salmón), Cédulas, Spare Parts & Maintenance Types
 const DEFAULT_INITIAL_DATA = {
-  vehicles: [
-    { plate: 'MCT-402', color: 'Azul', model: 'Bajaj RE 4S (2024)', driver: 'Carlos Mendoza', cedula: '1.037.624.890', phone: '310 456 7890', license: 'A2 / B1', venceLicencia: '12 nov 2028', status: 'route', statusText: 'En ruta', dailyRate: 45000, soatExpiry: '15 dic 2026', tecnoExpiry: '04 mar 2027', km: 28400 },
-    { plate: 'MCT-218', color: 'Salmón', model: 'Bajaj RE 4S (2023)', driver: 'Jorge Valencia', cedula: '71.890.123', phone: '312 987 6543', license: 'A2', venceLicencia: '25 ago 2027', status: 'route', statusText: 'En ruta', dailyRate: 45000, soatExpiry: '28 nov 2026', tecnoExpiry: '18 ene 2027', km: 34150 },
-    { plate: 'MCT-305', color: 'Azul', model: 'TVS King Deluxe (2024)', driver: 'Diego Torres', cedula: '1.020.456.789', phone: '315 222 3344', license: 'A2 / C1', venceLicencia: '04 jun 2028', status: 'workshop', statusText: 'En taller', dailyRate: 42000, soatExpiry: '02 feb 2027', tecnoExpiry: '10 dic 2026', km: 19800 },
-    { plate: 'MCT-514', color: 'Salmón', model: 'Bajaj RE 205 (2022)', driver: 'Mateo Ruiz', cedula: '1.017.554.321', phone: '318 555 4433', license: 'A2', venceLicencia: '18 ene 2026', status: 'workshop', statusText: 'En taller', dailyRate: 42000, soatExpiry: '19 nov 2026', tecnoExpiry: '19 nov 2026', km: 42100 },
-    { plate: 'MCT-611', color: 'Azul', model: 'Piaggio Ape City (2024)', driver: 'Óscar Giraldo', cedula: '98.765.432', phone: '311 333 9988', license: 'A2 / B1', venceLicencia: '30 mar 2029', status: 'route', statusText: 'En ruta', dailyRate: 48000, soatExpiry: '14 ene 2027', tecnoExpiry: '22 mar 2027', km: 15200 },
-    { plate: 'MCT-109', color: 'Salmón', model: 'Bajaj RE 4S (2021)', driver: 'Sin conductor', cedula: '-', phone: '-', license: '-', venceLicencia: '-', status: 'idle', statusText: 'Sin conductor', dailyRate: 40000, soatExpiry: '08 nov 2026', tecnoExpiry: '15 nov 2026', km: 51200 },
-    { plate: 'MCT-720', color: 'Azul', model: 'TVS King Duramax (2024)', driver: 'Andrés Mejía', cedula: '1.035.778.990', phone: '314 777 8899', license: 'A2', venceLicencia: '14 sep 2027', status: 'route', statusText: 'En ruta', dailyRate: 45000, soatExpiry: '20 feb 2027', tecnoExpiry: '15 abr 2027', km: 12600 },
-    { plate: 'MCT-833', color: 'Salmón', model: 'Bajaj RE 4S (2023)', driver: 'Fabián Ospina', cedula: '1.040.332.110', phone: '316 444 1122', license: 'A2', venceLicencia: '08 oct 2028', status: 'route', statusText: 'En ruta', dailyRate: 45000, soatExpiry: '05 ene 2027', tecnoExpiry: '12 feb 2027', km: 26800 }
-  ],
-  transactions: [
-    { id: 'tx-1', date: '2026-11-22', time: '18:40', type: 'income', account: 'Nequi Flota', plate: 'MCT-611', driver: 'Óscar Giraldo', category: 'Tarifa diaria', concept: 'Recaudo turno completo', amount: 48000 },
-    { id: 'tx-2', date: '2026-11-22', time: '17:15', type: 'income', account: 'Bancolombia Ahorros', plate: 'MCT-402', driver: 'Carlos Mendoza', category: 'Tarifa diaria', concept: 'Recaudo tarifa diaria', amount: 45000 },
-    { id: 'tx-3', date: '2026-11-22', time: '16:30', type: 'expense', account: 'Caja Efectivo', plate: 'MCT-514', driver: 'Mateo Ruiz', category: 'Mantenimiento', concept: 'Kit de embrague y mano de obra', amount: 85000 },
-    { id: 'tx-4', date: '2026-11-22', time: '14:20', type: 'income', account: 'Nequi Flota', plate: 'MCT-218', driver: 'Jorge Valencia', category: 'Tarifa diaria', concept: 'Recaudo tarifa diaria', amount: 45000 },
-    { id: 'tx-5', date: '2026-11-22', time: '11:00', type: 'expense', account: 'Bancolombia Ahorros', plate: 'MCT-305', driver: 'Diego Torres', category: 'Repuestos', concept: 'Aceite 4T y juego de bandas freno', amount: 60000 },
-    { id: 'tx-6', date: '2026-11-21', time: '19:00', type: 'income', account: 'Nequi Flota', plate: 'MCT-720', driver: 'Andrés Mejía', category: 'Tarifa diaria', concept: 'Liquidación diaria', amount: 45000 }
-  ],
-  maintenanceOrders: [
-    { id: 'm-1', plate: 'MCT-514', type: 'Correctivo', desc: 'Kit de embrague y guaya acelerador', date: '2026-11-22', cost: 85000, status: 'completed' },
-    { id: 'm-2', plate: 'MCT-305', type: 'Preventivo', desc: 'Cambio de aceite 20W50 y bandas traseras', date: '2026-11-22', cost: 60000, status: 'in_progress' },
-    { id: 'm-3', plate: 'MCT-218', type: 'Preventivo', desc: 'Mantenimiento preventivo 35.000 km y filtro', date: '2026-11-28', cost: 120000, status: 'scheduled' }
-  ],
-  documents: [
-    { id: 'doc-1', plate: 'MCT-109', driver: 'Luis Pineda', cedula: '1.028.990.112', type: 'Tecnomecánica', entity: 'CDA Central', number: 'RTM-884120', expiry: '2026-11-18', status: 'expired', statusText: 'Vencido hace 5 días', cost: 195000 },
-    { id: 'doc-2', plate: 'MCT-218', driver: 'Jorge Valencia', cedula: '71.890.123', type: 'SOAT', entity: 'Seguros Sura', number: 'SOA-550192', expiry: '2026-11-26', status: 'expiring', statusText: 'Vence en 3 días', cost: 615000 },
-    { id: 'doc-3', plate: 'MCT-514', driver: 'Mateo Ruiz', cedula: '1.017.554.321', type: 'Tecnomecánica', entity: 'CDA Norte', number: 'RTM-912044', expiry: '2026-12-12', status: 'expiring', statusText: 'Vence en 19 días', cost: 195000 },
-    { id: 'doc-4', plate: 'MCT-402', driver: 'Carlos Mendoza', cedula: '1.037.624.890', type: 'SOAT', entity: 'Seguros Bolívar', number: 'SOA-774310', expiry: '2027-03-14', status: 'valid', statusText: 'Vigente', cost: 615000 },
-    { id: 'doc-5', plate: 'MCT-611', driver: 'Óscar Giraldo', cedula: '98.765.432', type: 'Tecnomecánica', entity: 'CDA Norte', number: 'RTM-665109', expiry: '2027-02-02', status: 'valid', statusText: 'Vigente', cost: 195000 },
-    { id: 'doc-6', plate: 'MCT-720', driver: 'Andrés Mejía', cedula: '1.035.778.990', type: 'SOAT', entity: 'Seguros del Estado', number: 'SOA-331092', expiry: '2027-02-20', status: 'valid', statusText: 'Vigente', cost: 615000 }
-  ],
-  accounts: [
-    { name: 'Nequi Flota', balance: 1420000, type: 'Digital' },
-    { name: 'Bancolombia Ahorros', balance: 3850000, type: 'Bancaria' },
-    { name: 'Caja Efectivo', balance: 640000, type: 'Efectivo' }
-  ],
-  spareParts: [
-    { code: 'REP-001', name: 'Aceite 4T 20W50 Mineral (Galón)', category: 'Lubricantes', stock: 12, minStock: 4, unitPrice: 35000, supplier: 'Lubricantes del Caribe' },
-    { code: 'REP-002', name: 'Kit de embrague (Discos + Prensa)', category: 'Transmisión', stock: 2, minStock: 3, unitPrice: 85000, supplier: 'MotoPartes S.A.S.' },
-    { code: 'REP-003', name: 'Juego de bandas de freno traseras', category: 'Frenos', stock: 1, minStock: 4, unitPrice: 28000, supplier: 'Frenos del Valle' },
-    { code: 'REP-004', name: 'Filtro de aire original RE 4S', category: 'Filtros', stock: 8, minStock: 3, unitPrice: 18000, supplier: 'Bajaj Mayorista' },
-    { code: 'REP-005', name: 'Guaya acelerador y clutch reforzada', category: 'Guayas', stock: 5, minStock: 2, unitPrice: 15000, supplier: 'MotoPartes S.A.S.' },
-    { code: 'REP-006', name: 'Llanta 4.00-8 6PR con neumático', category: 'Llantas', stock: 0, minStock: 2, unitPrice: 120000, supplier: 'Llantas de la Sabana' }
-  ],
-  maintenanceTypes: [
-    { id: 'mt-1', name: 'Cambio de aceite y filtro', classification: 'Preventivo', frequencyKm: 3000, estLabor: 15000, desc: 'Drenaje de aceite 4T, cambio de filtro y arandela' },
-    { id: 'mt-2', name: 'Mantenimiento preventivo general (cada 10.000 km)', classification: 'Preventivo', frequencyKm: 10000, estLabor: 60000, desc: 'Calibración válvulas, bujía, frenos, tensión de cadena' },
-    { id: 'mt-3', name: 'Revisión y cambio de bandas / frenos', classification: 'Preventivo', frequencyKm: 5000, estLabor: 25000, desc: 'Graduación y cambio de zapatas delanteras y traseras' },
-    { id: 'mt-4', name: 'Reparación de embrague / caja', classification: 'Correctivo', frequencyKm: 0, estLabor: 70000, desc: 'Sustitución de discos de embrague, prensa y guaya' },
-    { id: 'mt-5', name: 'Sincronización y lavado de carburador', classification: 'Preventivo', frequencyKm: 8000, estLabor: 30000, desc: 'Limpieza de chicleres, nivel de flotador y filtro de gasolina' }
-  ]
+  vehicles: [],
+  transactions: [],
+  maintenanceOrders: [],
+  documents: [],
+  accounts: [],
+  spareParts: [],
+  maintenanceTypes: []
 };
 
 window.MotoData = {
@@ -419,6 +375,28 @@ window.MotoData = {
     if (!doc.id) doc.id = 'doc-' + Date.now();
     this.data.documents.unshift(doc);
     this.persist();
+  },
+
+  async clearAllData() {
+    this.data = {
+      vehicles: [],
+      transactions: [],
+      maintenanceOrders: [],
+      documents: [],
+      accounts: [],
+      spareParts: [],
+      maintenanceTypes: []
+    };
+    this.saveToLocal();
+    if (this.isFirebaseActive && this.db) {
+      try {
+        await this.db.collection('motocontrol_app').doc('fleet_data').set(this.data);
+      } catch (e) {
+        console.error('Error clearing Firestore:', e);
+      }
+    }
+    window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
+    window.dispatchEvent(new CustomEvent('motocontrol-render-dashboard'));
   },
 
   getAccounts() {

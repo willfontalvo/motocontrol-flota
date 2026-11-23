@@ -441,6 +441,21 @@
     document.getElementById('btn-sidebar-logout')?.addEventListener('click', doLogout);
     document.getElementById('btn-header-logout')?.addEventListener('click', doLogout);
 
+    function doResetDatabase() {
+      const msg = '¿Deseas vaciar todos los datos de demostración y dejar la base de datos totalmente en blanco?\n\n' +
+                  'Se borrarán los motocarros, repuestos, movimientos y documentos de prueba para que puedas registrar tu flota real desde cero.';
+      if (confirm(msg)) {
+        if (window.MotoData && window.MotoData.clearAllData) {
+          window.MotoData.clearAllData().then(() => {
+            alert('¡Base de datos restablecida a cero! Tu sistema ahora está completamente en blanco.');
+            window.location.reload();
+          });
+        }
+      }
+    }
+    document.getElementById('btn-reset-db-header')?.addEventListener('click', doResetDatabase);
+    document.getElementById('btn-reset-db-sidebar')?.addEventListener('click', doResetDatabase);
+
     checkAuth();
   }
 
@@ -954,6 +969,24 @@
         }
       });
 
+      if (visibleCount === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[48px] text-light-outline">electric_rickshaw</span>
+                <p class="font-headline text-headline-sm text-light-on-surface">No hay motocarros registrados en la flota</p>
+                <p class="text-sm text-light-on-surface-variant max-w-sm">Registra tu primer motocarro indicando su placa, color (Azul o Salmón) y conductor asignado.</p>
+                <a href="#form-motocarro" class="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs mt-2">
+                  <span class="material-symbols-outlined text-[18px]">add_circle</span>
+                  <span>Registrar Primer Motocarro</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
+
       if (countLabel) {
         countLabel.textContent = `Mostrando ${visibleCount} de ${data.vehicles.length} motocarros`;
       }
@@ -1320,6 +1353,24 @@
       if (!stockBody) return;
       const parts = MotoData.getSpareParts ? MotoData.getSpareParts() : [];
       stockBody.innerHTML = '';
+      if (parts.length === 0) {
+        stockBody.innerHTML = `
+          <tr>
+            <td colspan="7" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[44px] text-light-outline">inventory_2</span>
+                <p class="font-headline text-headline-sm text-light-on-surface">Inventario de repuestos vacío</p>
+                <p class="text-sm text-light-on-surface-variant max-w-sm">Ingresa aceites, bandas, filtros o repuestos para controlar las existencias de tu flota.</p>
+                <button type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs mt-2" onclick="document.getElementById('spare-part-modal')?.classList.remove('hidden'); document.getElementById('spare-part-modal')?.classList.add('flex');">
+                  <span class="material-symbols-outlined text-[18px]">add_box</span>
+                  <span>Ingresar Primer Repuesto</span>
+                </button>
+              </div>
+            </td>
+          </tr>
+        `;
+        return;
+      }
       parts.forEach(p => {
         const isLow = p.stock <= p.min;
         const tr = document.createElement('tr');
@@ -1528,6 +1579,24 @@
           tableBody.appendChild(tr);
         }
       });
+
+      if (visible === 0) {
+        tableBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
+              <div class="flex flex-col items-center justify-center gap-2">
+                <span class="material-symbols-outlined text-[44px] text-light-outline">description</span>
+                <p class="font-headline text-headline-sm text-light-on-surface">No hay pólizas ni certificados registrados</p>
+                <p class="text-sm text-light-on-surface-variant max-w-sm">Registra la vigencia del SOAT y Tecnomecánica CDA de tus motocarros para recibir alertas automáticas.</p>
+                <a href="#form-soat" class="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs mt-2">
+                  <span class="material-symbols-outlined text-[18px]">note_add</span>
+                  <span>Registrar Primer Documento</span>
+                </a>
+              </div>
+            </td>
+          </tr>
+        `;
+      }
 
       if (countLabel) {
         countLabel.textContent = `Mostrando ${visible} registro${visible === 1 ? '' : 's'} documental${visible === 1 ? '' : 'es'}`;
