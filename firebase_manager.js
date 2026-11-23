@@ -110,9 +110,26 @@ window.MotoData = {
 
   checkSavedFirebaseConfig() {
     try {
+      const defaultConfig = {
+        apiKey: "AIzaSyD2JAuU8IlGMwWC-XniKF-7JKBY1Nm6NiY",
+        authDomain: "motocontrol-flota.firebaseapp.com",
+        projectId: "motocontrol-flota",
+        storageBucket: "motocontrol-flota.firebasestorage.app",
+        messagingSenderId: "790738974246",
+        appId: "1:790738974246:web:113b64310f1f12af70d8e7"
+      };
+
+      let config = defaultConfig;
       const fbConfigStr = localStorage.getItem('motocontrol_firebase_config');
       if (fbConfigStr) {
-        const config = JSON.parse(fbConfigStr);
+        try {
+          config = JSON.parse(fbConfigStr);
+        } catch (e) {}
+      } else {
+        localStorage.setItem('motocontrol_firebase_config', JSON.stringify(defaultConfig));
+      }
+
+      if (config && config.apiKey && config.projectId) {
         this.initFirebase(config);
       }
     } catch (e) {
