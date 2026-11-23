@@ -240,10 +240,7 @@
 <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-light-surface-container-low border border-light-outline-variant" id="header-user-badge">
 <div class="w-6 h-6 rounded-full bg-light-primary text-light-on-primary flex items-center justify-center text-xs font-bold shrink-0" id="header-user-avatar">AR</div>
 <span class="font-label text-label-sm text-light-on-surface font-medium truncate max-w-[120px]" id="header-user-name">Andrés Rojas</span>
-<button id="btn-reset-db-header" class="inline-flex items-center gap-1 px-2.5 py-1 rounded border border-light-outline-variant bg-light-surface text-light-on-surface-variant hover:text-light-error hover:border-light-error/50 font-label text-label-xs transition-colors ml-1" title="Vaciar datos de prueba y empezar flota en blanco" type="button">
-<span class="material-symbols-outlined text-[15px]">delete_sweep</span>
-<span>Empezar en blanco</span>
-</button>
+
 <button id="btn-header-logout" class="p-0.5 rounded text-light-on-surface-variant hover:text-light-error ml-0.5" title="Cerrar sesión" type="button">
 <span class="material-symbols-outlined text-[16px]">logout</span>
 </button>
@@ -587,10 +584,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">electric_rickshaw</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">16</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-design-text-token="label-sm">14 en ruta</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="fleet-kpi-total">0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="fleet-kpi-in-route">0 en ruta</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">1 en taller · 1 disponible</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="fleet-kpi-sub">0 en taller · 0 disponible</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -598,10 +595,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">badge</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">15</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-secondary-container text-light-on-secondary-container whitespace-nowrap" data-design-text-token="label-sm">Turno fijo</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="fleet-kpi-drivers">0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="fleet-kpi-drivers-badge">0 asignados</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Licencias A2 y B1 verificadas</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="fleet-kpi-drivers-sub">Conductores registrados</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -609,21 +606,21 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-success">payments</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 45.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm">Estándar</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="fleet-kpi-rate">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="fleet-kpi-rate-badge">Estándar</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Dominicales $ 35.000 por turno</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="fleet-kpi-rate-sub">Tarifa base por motocarro</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
 <span class="font-label text-label-md text-light-on-surface-variant" data-design-text-token="label-md">Unidades al día</span>
-<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-warning">verified</span>
+<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-success">verified</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">14 / 16</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-design-text-token="label-sm">2 alertas</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="fleet-kpi-active">0 / 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="fleet-kpi-alerts-badge">0 alertas</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">SOAT y Tecnomecánica vigentes</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="fleet-kpi-docs-sub">SOAT y Tecnomecánica vigentes</p>
 </article>
 </section>
 <div class="flex flex-wrap items-center justify-between gap-gutter-md p-gutter-md bg-light-surface-container-lowest border border-light-outline-variant rounded-md shadow-xs">
@@ -730,10 +727,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">payments</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 45.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-secondary-container text-light-on-secondary-container whitespace-nowrap" data-design-text-token="label-sm">Lun–Sáb</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-tarifas-base-rate">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="kpi-tarifas-base-rate-badge">Sin tarifa</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Tarifa dominical $ 35.000</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-tarifas-base-rate-sub">Tarifa diaria por unidad</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -741,10 +738,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-success">trending_up</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 12.640.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-success-container text-on-success-container tabular-nums whitespace-nowrap" data-design-text-token="label-sm">94% al día</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-tarifas-income">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="label-sm" id="kpi-tarifas-income-badge">0 recaudos</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">14 unidades activas liquidando</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-tarifas-income-sub">0 unidades liquidando</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -752,10 +749,10 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-error">receipt_long</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 3.890.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container tabular-nums whitespace-nowrap" data-design-text-token="label-sm">18 registros</span>
+<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md" id="kpi-tarifas-expense">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant tabular-nums whitespace-nowrap" data-design-text-token="label-sm" id="kpi-tarifas-expense-badge">0 registros</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Taller, repuestos y pólizas</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-tarifas-expense-sub">Taller, repuestos y pólizas</p>
 </article>
 <article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-sm" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <header class="flex items-center justify-between gap-gutter-sm">
@@ -763,53 +760,15 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">account_balance_wallet</span>
 </header>
 <div class="flex items-center justify-between gap-gutter-sm flex-wrap">
-<p class="font-headline text-headline-md text-light-primary tabular-nums" data-design-text-token="headline-md">$ 8.750.000</p>
-<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm">3 cuentas</span>
+<p class="font-headline text-headline-md text-light-primary tabular-nums" data-design-text-token="headline-md" id="kpi-tarifas-balance">$ 0</p>
+<span class="font-label text-label-sm px-2 py-0.5 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-sm" id="kpi-tarifas-balance-badge">0 cuentas</span>
 </div>
-<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm">Bancolombia, Nequi y Efectivo</p>
+<p class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="kpi-tarifas-balance-sub">Disponible consolidado</p>
 </article>
 </section>
 <!-- Accounts Where Money Enters or Leaves -->
-<section aria-label="Cuentas de ingreso y egreso" class="grid grid-cols-1 md:grid-cols-3 gap-gutter-md items-stretch">
-<article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md" data-component-id="card-action" data-component-type="card" data-component-variant="action">
-<header class="flex items-start justify-between gap-gutter-sm">
-<div>
-<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Bancolombia Ahorros</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Cuenta principal · Recaudo y SOAT</p>
-</div>
-<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">account_balance</span>
-</header>
-<div class="flex items-baseline justify-between gap-gutter-sm">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 5.120.000</p>
-<span class="font-body text-body-sm text-success tabular-nums" data-design-text-token="body-sm">+$ 4.2M / -$ 1.8M</span>
-</div>
-</article>
-<article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md" data-component-id="card-action" data-component-type="card" data-component-variant="action">
-<header class="flex items-start justify-between gap-gutter-sm">
-<div>
-<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Nequi Flota</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Tarifas diarias por transferencia</p>
-</div>
-<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">smartphone</span>
-</header>
-<div class="flex items-baseline justify-between gap-gutter-sm">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 2.480.000</p>
-<span class="font-body text-body-sm text-success tabular-nums" data-design-text-token="body-sm">+$ 6.1M / -$ 940k</span>
-</div>
-</article>
-<article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md" data-component-id="card-action" data-component-type="card" data-component-variant="action">
-<header class="flex items-start justify-between gap-gutter-sm">
-<div>
-<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Caja Efectivo</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Pagos menores y taller local</p>
-</div>
-<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">point_of_sale</span>
-</header>
-<div class="flex items-baseline justify-between gap-gutter-sm">
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 1.150.000</p>
-<span class="font-body text-body-sm text-success tabular-nums" data-design-text-token="body-sm">+$ 2.3M / -$ 1.1M</span>
-</div>
-</article>
+<section aria-label="Cuentas de ingreso y egreso" id="tarifas-accounts-cards-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter-md items-stretch">
+  <!-- Populated dynamically by JS -->
 </section>
 <!-- Tariff Rules & Financial Movements Grid -->
 <section class="grid grid-cols-1 xl:grid-cols-12 gap-gutter-lg items-stretch">
@@ -1440,54 +1399,7 @@ Limpiar
 </div>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter-md items-stretch" id="accounts-cards-grid">
-<article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md" data-component-id="card-action" data-component-type="card" data-component-variant="action">
-<header class="flex items-start justify-between gap-gutter-sm">
-<div>
-<h3 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Bancolombia Ahorros</h3>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Cuenta principal · Recaudo y pólizas</p>
-</div>
-<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">account_balance</span>
-</header>
-<div>
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 5.120.000</p>
-</div>
-<footer class="pt-gutter-sm border-t border-light-outline-variant flex items-center justify-between gap-gutter-sm">
-<span class="font-body text-body-sm text-success tabular-nums" data-design-text-token="body-sm">+$ 4.200.000</span>
-<span class="font-body text-body-sm text-light-error tabular-nums" data-design-text-token="body-sm">-$ 1.840.000</span>
-</footer>
-</article>
-<article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md" data-component-id="card-action" data-component-type="card" data-component-variant="action">
-<header class="flex items-start justify-between gap-gutter-sm">
-<div>
-<h3 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Nequi Flota</h3>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Billetera digital · Tarifas diarias</p>
-</div>
-<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">smartphone</span>
-</header>
-<div>
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 2.480.000</p>
-</div>
-<footer class="pt-gutter-sm border-t border-light-outline-variant flex items-center justify-between gap-gutter-sm">
-<span class="font-body text-body-sm text-success tabular-nums" data-design-text-token="body-sm">+$ 6.120.000</span>
-<span class="font-body text-body-sm text-light-error tabular-nums" data-design-text-token="body-sm">-$ 940.000</span>
-</footer>
-</article>
-<article class="h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md" data-component-id="card-action" data-component-type="card" data-component-variant="action">
-<header class="flex items-start justify-between gap-gutter-sm">
-<div>
-<h3 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Caja Efectivo</h3>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Efectivo en oficina · Taller y varios</p>
-</div>
-<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">point_of_sale</span>
-</header>
-<div>
-<p class="font-headline text-headline-md text-light-on-surface tabular-nums" data-design-text-token="headline-md">$ 1.150.000</p>
-</div>
-<footer class="pt-gutter-sm border-t border-light-outline-variant flex items-center justify-between gap-gutter-sm">
-<span class="font-body text-body-sm text-success tabular-nums" data-design-text-token="body-sm">+$ 2.320.000</span>
-<span class="font-body text-body-sm text-light-error tabular-nums" data-design-text-token="body-sm">-$ 1.110.000</span>
-</footer>
-</article>
+  <!-- Populated dynamically by JS -->
 </div>
 </section>
 <!-- Expenses & Movements Filter Bar -->
@@ -1495,9 +1407,7 @@ Limpiar
 <div class="flex flex-wrap items-center gap-gutter-sm">
 <select aria-label="Cuenta" class="px-3 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest font-label text-label-sm text-light-on-surface" id="filter-account">
 <option value="all">Todas las cuentas</option>
-<option value="Bancolombia">Bancolombia Ahorros</option>
-<option value="Nequi">Nequi Flota</option>
-<option value="Efectivo">Caja Efectivo</option>
+</select>
 </select>
 <select aria-label="Categoría de gasto" class="px-3 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest font-label text-label-sm text-light-on-surface" id="filter-category">
 <option value="all">Todas las categorías</option>
@@ -1887,7 +1797,7 @@ Limpiar
 </div>
 </div>
 </div>
-<span class="font-mono text-mono-md px-gutter-sm py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container tabular-nums whitespace-nowrap" data-design-text-token="mono-md">Saldo total: $ 8.750.000</span>
+<span class="font-mono text-mono-md px-gutter-sm py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container tabular-nums whitespace-nowrap" data-design-text-token="mono-md" id="mov-saldo-total">Saldo total: $ 0</span>
 </div>
 </header>
 <main class="flex-1 px-gutter-md lg:px-page-margin py-gutter-lg">
@@ -1934,17 +1844,11 @@ Limpiar
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mov-cuenta">Cuenta donde ingresa o sale el dinero *</label>
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-cuenta">
-<option value="Bancolombia Ahorros">Bancolombia Ahorros ($ 5.120.000)</option>
-<option selected="" value="Nequi Flota">Nequi Flota ($ 2.480.000)</option>
-<option value="Caja Efectivo">Caja Efectivo ($ 1.150.000)</option>
 </select>
 </div>
 <div class="hidden flex-col gap-gutter-xs" id="cuenta-destino-wrap">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mov-cuenta-destino">Cuenta destino *</label>
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-cuenta-destino">
-<option selected="" value="Bancolombia Ahorros">Bancolombia Ahorros</option>
-<option value="Nequi Flota">Nequi Flota</option>
-<option value="Caja Efectivo">Caja Efectivo</option>
 </select>
 </div>
 <div class="flex flex-col gap-gutter-xs">

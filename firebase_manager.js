@@ -26,30 +26,48 @@ window.MotoData = {
 
   loadFromLocal() {
     try {
+      const CLEAN_FLAG = 'motocontrol_clean_v5';
       const stored = localStorage.getItem('motocontrol_data');
+      const isCleaned = localStorage.getItem(CLEAN_FLAG) === 'true';
+
+      let containsLegacyDemo = false;
       if (stored) {
-        this.data = JSON.parse(stored);
-        // Migración automática de campos faltantes
-        if (this.data && this.data.vehicles) {
-          const colors = ['Azul', 'Salmón'];
-          const sampleCedulas = ['1.037.624.890', '71.890.123', '1.020.456.789', '1.017.554.321', '98.765.432', '-', '1.035.778.990', '1.040.332.110'];
-          this.data.vehicles.forEach((v, idx) => {
-            if (!v.color) v.color = colors[idx % 2];
-            if (!v.cedula && v.driver !== 'Sin conductor') v.cedula = sampleCedulas[idx % sampleCedulas.length];
-            if (!v.license) v.license = 'A2';
-            if (!v.venceLicencia) v.venceLicencia = 'Vigente';
-          });
+        try {
+          const parsed = JSON.parse(stored);
+          const demoPlates = ['MCT-305', 'MCT-218', 'MCT-402', 'MCT-514', 'MCT-109', 'MCT-611'];
+          const hasDemoVehicles = parsed.vehicles && parsed.vehicles.some(v => demoPlates.includes(v.plate));
+          const hasDemoTx = parsed.transactions && parsed.transactions.some(t => 
+            (t.concept && t.concept.includes('Liquidación')) || 
+            (t.concept && t.concept.includes('embrague')) ||
+            (t.amount === 540000 || t.amount === 560000)
+          );
+          const hasDemoOrders = parsed.maintenanceOrders && parsed.maintenanceOrders.some(o => demoPlates.includes(o.plate));
+          const hasDemoDocs = parsed.documents && parsed.documents.some(d => demoPlates.includes(d.plate));
+          const hasDemoAccounts = parsed.accounts && parsed.accounts.some(a => [5120000, 2480000, 1150000].includes(a.balance));
+
+          if (hasDemoVehicles || hasDemoTx || hasDemoOrders || hasDemoDocs || hasDemoAccounts) {
+            containsLegacyDemo = true;
+          }
+        } catch (e) {
+          containsLegacyDemo = true;
         }
-        if (!this.data.spareParts || this.data.spareParts.length === 0) {
-          this.data.spareParts = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.spareParts));
-        }
-        if (!this.data.maintenanceTypes || this.data.maintenanceTypes.length === 0) {
-          this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
-        }
-        this.saveToLocal();
-      } else {
+      }
+
+      // Si nunca se ha purgado o si contiene restos de demostración, forzar estado limpio vacío
+      if (!isCleaned || containsLegacyDemo || !stored) {
+        console.log('[MotoControl] Base de datos limpia iniciada en blanco.');
         this.data = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA));
-        this.saveToLocal();
+        localStorage.setItem('motocontrol_data', JSON.stringify(this.data));
+        localStorage.setItem(CLEAN_FLAG, 'true');
+      } else {
+        this.data = JSON.parse(stored);
+        if (!this.data.vehicles) this.data.vehicles = [];
+        if (!this.data.transactions) this.data.transactions = [];
+        if (!this.data.maintenanceOrders) this.data.maintenanceOrders = [];
+        if (!this.data.documents) this.data.documents = [];
+        if (!this.data.accounts) this.data.accounts = [];
+        if (!this.data.spareParts) this.data.spareParts = [];
+        if (!this.data.maintenanceTypes) this.data.maintenanceTypes = [];
       }
     } catch (e) {
       this.data = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA));
@@ -123,13 +141,20 @@ window.MotoData = {
     if (!badge || !badgeText || !badgeDot) return;
 
     if (connected) {
-      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-container text-on-success-container text-xs font-label cursor-pointer';
+      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-success-container text-on-success-container text-xs font-label cursor-pointer shadow-xs';
       badgeText.textContent = 'Firebase Conectado';
       badgeDot.className = 'w-2 h-2 rounded-full bg-success animate-pulse';
+      badge.title = 'Conectado exitosamente a Cloud Firestore';
+    } else if (errorMsg === 'Reglas de Firestore bloqueadas' || errorMsg.includes('permission-denied') || errorMsg.includes('Missing or insufficient permissions')) {
+      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-warning-container text-on-warning-container text-xs font-label cursor-pointer shadow-xs';
+      badgeText.textContent = 'Firestore: Activar Reglas';
+      badgeDot.className = 'w-2 h-2 rounded-full bg-warning animate-ping';
+      badge.title = 'La base de datos existe pero requiere habilitar las reglas de lectura/escritura en Firebase Console';
     } else {
-      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-light-surface-container-high text-light-on-surface-variant text-xs font-label cursor-pointer hover:bg-light-surface-container-highest';
+      badge.className = 'inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-light-surface-container-high text-light-on-surface-variant text-xs font-label cursor-pointer hover:bg-light-surface-container-highest transition-colors';
       badgeText.textContent = errorMsg ? 'Error Firebase' : 'Modo Local (Listo para Firebase)';
       badgeDot.className = errorMsg ? 'w-2 h-2 rounded-full bg-light-error' : 'w-2 h-2 rounded-full bg-light-outline';
+      badge.title = errorMsg ? `Detalle: ${errorMsg}` : 'Haz clic para configurar Firebase';
     }
   },
 
@@ -140,16 +165,28 @@ window.MotoData = {
       const docSnap = await docRef.get();
       if (docSnap.exists) {
         const cloudData = docSnap.data();
-        if (cloudData && cloudData.vehicles) {
+        const demoPlates = ['MCT-305', 'MCT-218', 'MCT-402', 'MCT-514'];
+        const isCloudDemo = cloudData && cloudData.vehicles && cloudData.vehicles.some(v => demoPlates.includes(v.plate));
+
+        if (!isCloudDemo && cloudData && Array.isArray(cloudData.vehicles)) {
           this.data = cloudData;
           this.saveToLocal();
           window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
+        } else if (isCloudDemo) {
+          // Si Firestore contiene el dataset antiguo de prueba, sobreescribir con base en blanco
+          await docRef.set(this.data);
         }
       } else {
         await docRef.set(this.data);
       }
+      this.updateConnectionStatus(true);
     } catch (e) {
-      console.error('Error syncing with Firestore:', e);
+      console.warn('Firestore sync status:', e);
+      if (e.code === 'permission-denied' || (e.message && e.message.includes('permission'))) {
+        this.updateConnectionStatus(false, 'Reglas de Firestore bloqueadas');
+      } else {
+        this.updateConnectionStatus(false, e.message);
+      }
     }
   },
 
@@ -537,6 +574,9 @@ window.AuthManager = {
     try {
       localStorage.setItem('motocontrol_registered_users', JSON.stringify(users));
       localStorage.setItem('motocontrol_auth_user', JSON.stringify(newUser));
+      if (window.MotoData && window.MotoData.clearAllData) {
+        window.MotoData.clearAllData();
+      }
     } catch (e) {}
     return { success: true, user: newUser };
   },

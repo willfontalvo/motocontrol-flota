@@ -660,14 +660,24 @@
       const cur = sel.value;
       const hasAll = id.includes('filter');
       sel.innerHTML = hasAll ? '<option value="all">Todas las cuentas</option>' : '';
-      accounts.forEach(a => {
-        const opt = document.createElement('option');
-        opt.value = a.name;
-        opt.textContent = `${a.name} (${a.type || 'Bancaria'})`;
-        sel.appendChild(opt);
-      });
+      if (accounts.length === 0 && !hasAll) {
+        sel.innerHTML = '<option value="">Sin cuentas registradas (Crea una en Gastos)</option>';
+      } else {
+        accounts.forEach(a => {
+          const opt = document.createElement('option');
+          opt.value = a.name;
+          opt.textContent = `${a.name} (${a.type || 'Bancaria'})`;
+          sel.appendChild(opt);
+        });
+      }
       if (cur) sel.value = cur;
     });
+
+    const saldoTotalEl = document.getElementById('mov-saldo-total');
+    if (saldoTotalEl) {
+      const sumAccounts = accounts.reduce((acc, cur) => acc + Number(cur.balance || 0), 0);
+      saldoTotalEl.textContent = `Saldo total: $ ${sumAccounts.toLocaleString('es-CO')}`;
+    }
   }
 
   // =========================================================================
@@ -1245,6 +1255,37 @@
         countLabel.textContent = `Mostrando ${visibleCount} de ${data.vehicles.length} motocarros`;
       }
 
+      // Actualizar KPIs de la vista Flota
+      const activeVehs = data.vehicles.filter(v => v.status !== 'sold');
+      const inRoute = activeVehs.filter(v => v.status === 'route').length;
+      const inWorkshop = activeVehs.filter(v => v.status === 'workshop').length;
+      const available = activeVehs.filter(v => v.status === 'available').length;
+      const driversAssigned = new Set(activeVehs.filter(v => v.driver && v.driver !== 'Sin conductor').map(v => v.driver)).size;
+
+      const kpiTotalEl = document.getElementById('fleet-kpi-total');
+      const kpiInRouteEl = document.getElementById('fleet-kpi-in-route');
+      const kpiSubEl = document.getElementById('fleet-kpi-sub');
+      const kpiDriversEl = document.getElementById('fleet-kpi-drivers');
+      const kpiDriversBadgeEl = document.getElementById('fleet-kpi-drivers-badge');
+      const kpiDriversSubEl = document.getElementById('fleet-kpi-drivers-sub');
+      const kpiRateEl = document.getElementById('fleet-kpi-rate');
+      const kpiActiveEl = document.getElementById('fleet-kpi-active');
+      const kpiAlertsBadgeEl = document.getElementById('fleet-kpi-alerts-badge');
+
+      if (kpiTotalEl) kpiTotalEl.textContent = activeVehs.length;
+      if (kpiInRouteEl) kpiInRouteEl.textContent = `${inRoute} en ruta`;
+      if (kpiSubEl) kpiSubEl.textContent = `${inWorkshop} en taller · ${available} disponible`;
+      if (kpiDriversEl) kpiDriversEl.textContent = driversAssigned;
+      if (kpiDriversBadgeEl) kpiDriversBadgeEl.textContent = `${driversAssigned} asignados`;
+      if (kpiRateEl) {
+        const avgRate = activeVehs.length > 0
+          ? Math.round(activeVehs.reduce((sum, v) => sum + (v.dailyRate || 45000), 0) / activeVehs.length)
+          : 0;
+        kpiRateEl.textContent = `$ ${avgRate.toLocaleString('es-CO')}`;
+      }
+      if (kpiActiveEl) kpiActiveEl.textContent = `${inRoute} / ${activeVehs.length}`;
+      if (kpiAlertsBadgeEl) kpiAlertsBadgeEl.textContent = `${inWorkshop} alertas`;
+
       tableBody.querySelectorAll('.reassign-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           toggleAssignModal(true, btn.dataset.plate, btn.dataset.driver, btn.dataset.cedula);
@@ -1591,15 +1632,98 @@
 
         toggleFinModal(false);
         renderTarifasMovements();
+        renderTarifasKPIs();
         alert(`Recaudo de $ ${amount.toLocaleString('es-CO')} registrado para el motocarro ${plate}.`);
       });
     }
 
+    function renderTarifasKPIs() {
+      const txs = MotoData.getTransactions ? MotoData.getTransactions() : [];
+      const vehicles = MotoData.getVehicles ? MotoData.getVehicles().filter(v => v.status !== 'sold') : [];
+      const accounts = MotoData.getAccounts ? MotoData.getAccounts() : [];
+
+      let income = 0;
+      let incomeCount = 0;
+      let expense = 0;
+      let expenseCount = 0;
+
+      txs.forEach(t => {
+        if (t.type === 'income') {
+          income += Number(t.amount || 0);
+          incomeCount++;
+        } else if (t.type === 'expense') {
+          expense += Number(t.amount || 0);
+          expenseCount++;
+        }
+      });
+      const balance = income - expense;
+
+      const baseRate = vehicles.length > 0 ? (vehicles[0].dailyRate || 45000) : 0;
+      const baseRateEl = document.getElementById('kpi-tarifas-base-rate');
+      const baseRateBadgeEl = document.getElementById('kpi-tarifas-base-rate-badge');
+      if (baseRateEl) baseRateEl.textContent = `$ ${baseRate.toLocaleString('es-CO')}`;
+      if (baseRateBadgeEl) baseRateBadgeEl.textContent = vehicles.length > 0 ? 'Estándar' : 'Sin tarifa';
+
+      const incomeEl = document.getElementById('kpi-tarifas-income');
+      const incomeBadgeEl = document.getElementById('kpi-tarifas-income-badge');
+      const incomeSubEl = document.getElementById('kpi-tarifas-income-sub');
+      if (incomeEl) incomeEl.textContent = `$ ${income.toLocaleString('es-CO')}`;
+      if (incomeBadgeEl) incomeBadgeEl.textContent = `${incomeCount} recaudos`;
+      if (incomeSubEl) incomeSubEl.textContent = `${vehicles.filter(v => v.status === 'route').length} unidades liquidando`;
+
+      const expenseEl = document.getElementById('kpi-tarifas-expense');
+      const expenseBadgeEl = document.getElementById('kpi-tarifas-expense-badge');
+      if (expenseEl) expenseEl.textContent = `$ ${expense.toLocaleString('es-CO')}`;
+      if (expenseBadgeEl) expenseBadgeEl.textContent = `${expenseCount} registros`;
+
+      const balanceEl = document.getElementById('kpi-tarifas-balance');
+      const balanceBadgeEl = document.getElementById('kpi-tarifas-balance-badge');
+      if (balanceEl) balanceEl.textContent = `$ ${balance.toLocaleString('es-CO')}`;
+      if (balanceBadgeEl) balanceBadgeEl.textContent = `${accounts.length} cuentas`;
+
+      const acctsGrid = document.getElementById('tarifas-accounts-cards-grid');
+      if (acctsGrid) {
+        acctsGrid.innerHTML = '';
+        if (accounts.length === 0) {
+          acctsGrid.innerHTML = `
+            <div class="col-span-full p-gutter-md rounded bg-light-surface-container-low border border-dashed border-light-outline-variant text-center py-6">
+              <p class="font-body text-body-sm text-light-on-surface-variant">No hay cuentas bancarias configuradas</p>
+              <a href="#gastos" class="inline-flex items-center gap-1 text-xs text-light-primary font-bold hover:underline mt-1">
+                <span class="material-symbols-outlined text-[14px]">add_circle</span>
+                <span>Crear cuenta bancaria o digital</span>
+              </a>
+            </div>
+          `;
+        } else {
+          accounts.forEach(acc => {
+            const art = document.createElement('article');
+            art.className = 'h-full bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md shadow-xs';
+            const iconName = acc.type === 'Digital' ? 'smartphone' : (acc.type === 'Efectivo' ? 'point_of_sale' : 'account_balance');
+            art.innerHTML = `
+              <header class="flex items-start justify-between gap-gutter-sm">
+                <div>
+                  <h2 class="font-headline text-headline-sm text-light-on-surface">${acc.name}</h2>
+                  <p class="font-body text-body-sm text-light-on-surface-variant">${acc.description || `${acc.type} · ${acc.number || ''}`}</p>
+                </div>
+                <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">${iconName}</span>
+              </header>
+              <div class="flex items-baseline justify-between gap-gutter-sm">
+                <p class="font-headline text-headline-md text-light-on-surface tabular-nums font-bold">$ ${(acc.balance || 0).toLocaleString('es-CO')}</p>
+              </div>
+            `;
+            acctsGrid.appendChild(art);
+          });
+        }
+      }
+    }
+
     renderTarifasMovements();
     renderTariffVehiclesTable();
+    renderTarifasKPIs();
     window.addEventListener('motocontrol-data-updated', () => {
       renderTarifasMovements();
       renderTariffVehiclesTable();
+      renderTarifasKPIs();
     });
   }
 
