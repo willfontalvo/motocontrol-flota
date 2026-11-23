@@ -79,10 +79,35 @@ const DEFAULT_INITIAL_DATA = {
 window.MotoData = {
   db: null,
   isFirebaseActive: false,
+  data: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA)),
 
   init() {
     this.loadFromLocal();
     this.checkSavedFirebaseConfig();
+  },
+
+  getCleanData() {
+    if (!this.data || typeof this.data !== 'object' || Array.isArray(this.data)) {
+      this.loadFromLocal();
+    }
+    if (!this.data || typeof this.data !== 'object') {
+      this.data = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA));
+    }
+    if (!Array.isArray(this.data.vehicles)) this.data.vehicles = [];
+    if (!Array.isArray(this.data.transactions)) this.data.transactions = [];
+    if (!Array.isArray(this.data.maintenanceOrders)) this.data.maintenanceOrders = [];
+    if (!Array.isArray(this.data.documents)) this.data.documents = [];
+    if (!Array.isArray(this.data.accounts) || this.data.accounts.length === 0) {
+      this.data.accounts = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.accounts));
+    }
+    if (!Array.isArray(this.data.spareParts)) this.data.spareParts = [];
+    if (!Array.isArray(this.data.maintenanceTypes) || this.data.maintenanceTypes.length === 0) {
+      this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
+    }
+    if (!this.data.settings || typeof this.data.settings !== 'object') {
+      this.data.settings = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.settings));
+    }
+    return this.data;
   },
 
   loadFromLocal() {
@@ -293,6 +318,8 @@ window.MotoData = {
     try {
       const docRef = this.db.collection('motocontrol_app').doc('fleet_data');
       const docSnap = await docRef.get();
+      const currentData = this.getCleanData();
+
       if (docSnap.exists) {
         const cloudData = docSnap.data();
         const demoPlates = ['MCT-305', 'MCT-218', 'MCT-402', 'MCT-514'];
@@ -304,10 +331,10 @@ window.MotoData = {
           window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
         } else if (isCloudDemo) {
           // Si Firestore contiene el dataset antiguo de prueba, sobreescribir con base en blanco
-          await docRef.set(this.data);
+          await docRef.set(currentData);
         }
       } else {
-        await docRef.set(this.data);
+        await docRef.set(currentData);
       }
       this.isFirebaseActive = true;
       this.lastFirebaseError = null;
@@ -330,11 +357,12 @@ window.MotoData = {
   },
 
   async persist() {
+    const dataToSave = this.getCleanData();
     this.saveToLocal();
     window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
     if (this.isFirebaseActive && this.db) {
       try {
-        await this.db.collection('motocontrol_app').doc('fleet_data').set(this.data);
+        await this.db.collection('motocontrol_app').doc('fleet_data').set(dataToSave);
       } catch (e) {
         console.error('Error persisting to Firestore:', e);
       }
@@ -665,7 +693,7 @@ window.MotoData = {
     this.saveToLocal();
     if (this.isFirebaseActive && this.db) {
       try {
-        await this.db.collection('motocontrol_app').doc('fleet_data').set(this.data);
+        await this.db.collection('motocontrol_app').doc('fleet_data').set(this.getCleanData());
       } catch (e) {
         console.error('Error clearing Firestore:', e);
       }
@@ -798,3 +826,10 @@ window.AuthManager = {
     } catch (e) {}
   }
 };
+
+// Auto-inicializar MotoData inmediatamente al cargar el script para garantizar que this.data siempre exista
+try {
+  if (window.MotoData && typeof window.MotoData.init === 'function') {
+    window.MotoData.init();
+  }
+} catch (e) {}
