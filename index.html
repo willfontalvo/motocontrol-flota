@@ -1630,12 +1630,22 @@ Limpiar
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-md">
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="tarifa-asignada">Tarifa diaria asignada *</label>
-<select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="tarifa-asignada" name="tarifa">
-<option selected="" value="Estándar">Tarifa Estándar — $ 55.000 / día</option>
-<option value="Dominical">Tarifa Dominical — $ 45.000 / día</option>
-<option value="Nocturna">Tarifa Nocturna — $ 62.000 / día</option>
-</select>
+<div class="flex items-center justify-between">
+<label class="font-label text-label-md text-light-on-surface font-semibold" for="tarifa-asignada">Tarifa diaria asignada ($ / día) *</label>
+<span class="text-xs text-light-on-surface-variant font-mono">Libre para ajustar cada año</span>
+</div>
+<div class="relative">
+<span class="absolute left-3 top-1/2 -translate-y-1/2 font-mono font-bold text-light-outline text-body-md">$</span>
+<input class="w-full rounded border-2 border-light-primary bg-light-surface text-light-on-surface font-mono text-mono-md font-bold pl-8 pr-3 py-2.5 focus:border-light-primary focus:ring-1 focus:ring-light-primary" id="tarifa-asignada" min="0" name="tarifa" placeholder="Ej. 45000, 50000, 55000" required="" step="1000" type="number" value="50000"/>
+</div>
+<div class="flex flex-wrap items-center gap-1.5 pt-1">
+<span class="text-[11px] text-light-on-surface-variant font-medium">Valores rápidos:</span>
+<button class="chip-tarifa-btn text-[11px] px-2 py-0.5 rounded font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="40000" type="button">$ 40.000</button>
+<button class="chip-tarifa-btn text-[11px] px-2 py-0.5 rounded font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="45000" type="button">$ 45.000</button>
+<button class="chip-tarifa-btn text-[11px] px-2 py-0.5 rounded font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="50000" type="button">$ 50.000</button>
+<button class="chip-tarifa-btn text-[11px] px-2 py-0.5 rounded font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="55000" type="button">$ 55.000</button>
+<button class="chip-tarifa-btn text-[11px] px-2 py-0.5 rounded font-label font-semibold border border-light-outline-variant hover:bg-light-secondary-container/40" data-val="60000" type="button">$ 60.000</button>
+</div>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="cuenta-recaudo">Cuenta donde ingresa el recaudo *</label>

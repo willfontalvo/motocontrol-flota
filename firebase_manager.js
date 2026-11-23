@@ -10,7 +10,11 @@ const DEFAULT_INITIAL_DATA = {
   transactions: [],
   maintenanceOrders: [],
   documents: [],
-  accounts: [],
+  accounts: [
+    { id: 'acc-1', name: 'Caja Efectivo', type: 'Efectivo', balance: 0 },
+    { id: 'acc-2', name: 'Nequi Flota', type: 'Digital', balance: 0 },
+    { id: 'acc-3', name: 'Bancolombia Ahorros', type: 'Bancaria', balance: 0 }
+  ],
   spareParts: [],
   maintenanceTypes: [
     {
@@ -122,7 +126,9 @@ window.MotoData = {
         if (!this.data.transactions) this.data.transactions = [];
         if (!this.data.maintenanceOrders) this.data.maintenanceOrders = [];
         if (!this.data.documents) this.data.documents = [];
-        if (!this.data.accounts) this.data.accounts = [];
+        if (!this.data.accounts || this.data.accounts.length === 0) {
+          this.data.accounts = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.accounts));
+        }
         if (!this.data.spareParts) this.data.spareParts = [];
         if (!this.data.maintenanceTypes || this.data.maintenanceTypes.length === 0) {
           this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
@@ -176,23 +182,61 @@ window.MotoData = {
   async initFirebase(config) {
     if (!window.firebase) {
       console.warn('Firebase SDK not loaded.');
-      return false;
+      this.updateConnectionStatus(false, 'SDK de Firebase no cargado');
+      return { success: false, error: 'El SDK de Firebase no está disponible en la página' };
     }
     try {
-      if (!firebase.apps.length) {
-        firebase.initializeApp(config);
+      // Si ya existía una app inicializada, la cerramos limpiamente para recargar credenciales
+      if (firebase.apps && firebase.apps.length > 0) {
+        await Promise.all(firebase.apps.map(app => app.delete().catch(() => {})));
       }
+      firebase.initializeApp(config);
       this.db = firebase.firestore();
       this.isFirebaseActive = true;
       this.updateConnectionStatus(true);
       
       // Sincronizar con Firestore
       await this.syncWithFirestore();
-      return true;
+      return { success: true };
     } catch (err) {
       console.error('Firebase initialization error:', err);
+      this.isFirebaseActive = false;
       this.updateConnectionStatus(false, err.message);
-      return false;
+      return { success: false, error: err.message };
+    }
+  },
+
+  async saveFirebaseConfig(config) {
+    try {
+      if (!config || !config.apiKey || !config.projectId) {
+        return { success: false, error: 'Se requiere al menos API Key y Project ID.' };
+      }
+
+      // Auto-corregir errores tipográficos comunes en dominios (ej: .cor en lugar de .com)
+      if (config.authDomain && config.authDomain.endsWith('.cor')) {
+        config.authDomain = config.authDomain.replace(/\.cor$/i, '.com');
+      }
+      if (config.storageBucket && !config.storageBucket.includes('.')) {
+        config.storageBucket = config.storageBucket + '.firebasestorage.app';
+      }
+
+      localStorage.setItem('motocontrol_firebase_config', JSON.stringify(config));
+      return await this.initFirebase(config);
+    } catch (e) {
+      console.error('Error saving firebase config:', e);
+      return { success: false, error: e.message };
+    }
+  },
+
+  clearFirebaseConfig() {
+    try {
+      localStorage.removeItem('motocontrol_firebase_config');
+      this.isFirebaseActive = false;
+      this.db = null;
+      this.updateConnectionStatus(false);
+      return { success: true };
+    } catch (e) {
+      return { success: false, error: e.message };
     }
   },
 
@@ -576,7 +620,7 @@ window.MotoData = {
       transactions: [],
       maintenanceOrders: [],
       documents: [],
-      accounts: [],
+      accounts: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.accounts)),
       spareParts: [],
       maintenanceTypes: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes)),
       settings: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.settings))

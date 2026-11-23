@@ -264,32 +264,122 @@
   const openFbBtn = document.getElementById('firebase-status-badge');
   const closeFbBtn = document.getElementById('close-fb-modal-btn');
   const cancelFbBtn = document.getElementById('cancel-fb-btn');
+  const clearFbBtn = document.getElementById('clear-fb-btn');
+  const fbStatusMsg = document.getElementById('fb-status-msg');
 
   function toggleFbModal(show) {
     if (!fbModal) return;
-    fbModal.classList.toggle('hidden', !show);
-    fbModal.classList.toggle('flex', show);
+    if (show) {
+      // Cargar credenciales guardadas en el formulario
+      try {
+        const storedStr = localStorage.getItem('motocontrol_firebase_config');
+        if (storedStr) {
+          const cfg = JSON.parse(storedStr);
+          if (cfg.apiKey) document.getElementById('fb-apiKey').value = cfg.apiKey;
+          if (cfg.authDomain) document.getElementById('fb-authDomain').value = cfg.authDomain.replace(/\.cor$/i, '.com');
+          if (cfg.projectId) document.getElementById('fb-projectId').value = cfg.projectId;
+          if (cfg.storageBucket) document.getElementById('fb-storageBucket').value = cfg.storageBucket;
+          if (cfg.messagingSenderId) document.getElementById('fb-messagingSenderId').value = cfg.messagingSenderId;
+          if (cfg.appId) document.getElementById('fb-appId').value = cfg.appId;
+        }
+      } catch (e) {}
+
+      if (fbStatusMsg) {
+        if (window.MotoData && window.MotoData.isFirebaseActive) {
+          fbStatusMsg.className = 'p-3 rounded text-xs font-body border border-success bg-success-container text-on-success-container flex items-center gap-2';
+          fbStatusMsg.innerHTML = '<span class="material-symbols-outlined text-[18px]">cloud_done</span> <span><strong>Conectado:</strong> Base de datos sincronizada en tiempo real con Cloud Firestore.</span>';
+          fbStatusMsg.classList.remove('hidden');
+        } else {
+          fbStatusMsg.className = 'p-3 rounded text-xs font-body border border-warning bg-warning-container text-on-warning-container flex items-center gap-2';
+          fbStatusMsg.innerHTML = '<span class="material-symbols-outlined text-[18px]">cloud_queue</span> <span><strong>Modo Local activo:</strong> Haz clic en "Conectar Firebase" para sincronizar tus datos en la nube.</span>';
+          fbStatusMsg.classList.remove('hidden');
+        }
+      }
+      fbModal.classList.remove('hidden');
+      fbModal.classList.add('flex');
+    } else {
+      fbModal.classList.add('hidden');
+      fbModal.classList.remove('flex');
+    }
   }
 
   if (openFbBtn) openFbBtn.addEventListener('click', () => toggleFbModal(true));
   if (closeFbBtn) closeFbBtn.addEventListener('click', () => toggleFbModal(false));
   if (cancelFbBtn) cancelFbBtn.addEventListener('click', () => toggleFbModal(false));
 
+  if (clearFbBtn) {
+    clearFbBtn.addEventListener('click', () => {
+      if (confirm('¿Deseas desconectar Firebase y volver a trabajar únicamente en almacenamiento local (LocalStorage)?')) {
+        if (window.MotoData && window.MotoData.clearFirebaseConfig) {
+          window.MotoData.clearFirebaseConfig();
+        }
+        toggleFbModal(false);
+        alert('Firebase desconectado. Modo Local activo.');
+      }
+    });
+  }
+
   const fbForm = document.getElementById('firebase-config-form');
   if (fbForm) {
-    fbForm.addEventListener('submit', (e) => {
+    fbForm.addEventListener('submit', async (e) => {
       e.preventDefault();
       const apiKey = (document.getElementById('fb-apiKey') || document.getElementById('fb-api-key'))?.value.trim();
+      let authDomain = document.getElementById('fb-authDomain')?.value.trim();
       const projectId = (document.getElementById('fb-projectId') || document.getElementById('fb-project-id'))?.value.trim();
+      let storageBucket = (document.getElementById('fb-storageBucket') || document.getElementById('fb-storage-bucket'))?.value.trim();
+      const messagingSenderId = document.getElementById('fb-messagingSenderId')?.value.trim();
       const appId = (document.getElementById('fb-appId') || document.getElementById('fb-app-id'))?.value.trim();
-      const storageBucket = (document.getElementById('fb-storageBucket') || document.getElementById('fb-storage-bucket'))?.value.trim();
 
-      if (apiKey && projectId) {
-        MotoData.saveFirebaseConfig({ apiKey, projectId, appId, storageBucket });
-        toggleFbModal(false);
-        alert('Configuración de Firebase guardada. Conectando con Cloud Firestore...');
-      } else {
+      if (!apiKey || !projectId) {
         alert('Por favor ingresa al menos API Key y Project ID.');
+        return;
+      }
+
+      // Auto-corregir .cor a .com
+      if (authDomain && authDomain.endsWith('.cor')) {
+        authDomain = authDomain.replace(/\.cor$/i, '.com');
+        const authDomInput = document.getElementById('fb-authDomain');
+        if (authDomInput) authDomInput.value = authDomain;
+      }
+      if (storageBucket && !storageBucket.includes('.')) {
+        storageBucket += '.firebasestorage.app';
+        const stInput = document.getElementById('fb-storageBucket');
+        if (stInput) stInput.value = storageBucket;
+      }
+
+      const submitBtn = fbForm.querySelector('button[type="submit"]');
+      const originalBtnText = submitBtn ? submitBtn.innerHTML : 'Conectar Firebase';
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.innerHTML = '<span class="material-symbols-outlined text-[16px] animate-spin">sync</span> Conectando...';
+      }
+
+      if (window.MotoData && window.MotoData.saveFirebaseConfig) {
+        const res = await window.MotoData.saveFirebaseConfig({
+          apiKey,
+          authDomain,
+          projectId,
+          storageBucket,
+          messagingSenderId,
+          appId
+        });
+
+        if (submitBtn) {
+          submitBtn.disabled = false;
+          submitBtn.innerHTML = originalBtnText;
+        }
+
+        if (res && res.success) {
+          toggleFbModal(false);
+          alert('✅ ¡Conectado exitosamente a Firebase Cloud Firestore!\n\nTu base de datos ahora está respaldada y sincronizada en tiempo real.');
+        } else {
+          if (fbStatusMsg) {
+            fbStatusMsg.className = 'p-3 rounded text-xs font-body border border-light-error bg-light-error-container text-light-on-error-container';
+            fbStatusMsg.innerHTML = `<strong>Error de conexión:</strong> ${res && res.error ? res.error : 'Verifica tus credenciales y que las reglas de Firestore permitan lectura y escritura.'}`;
+            fbStatusMsg.classList.remove('hidden');
+          }
+          alert(`⚠️ No se pudo completar la conexión con Firebase:\n\n${res && res.error ? res.error : 'Revisa tus credenciales o las reglas de seguridad en Firebase Console.'}`);
+        }
       }
     });
   }
@@ -648,7 +738,14 @@
     });
 
     // Poblado de selects de cuentas bancarias
-    const accounts = MotoData.getAccounts ? MotoData.getAccounts() : [];
+    let accounts = MotoData.getAccounts ? MotoData.getAccounts() : [];
+    if (!accounts || accounts.length === 0) {
+      accounts = [
+        { id: 'acc-1', name: 'Caja Efectivo', type: 'Efectivo', balance: 0 },
+        { id: 'acc-2', name: 'Nequi Flota', type: 'Digital', balance: 0 },
+        { id: 'acc-3', name: 'Bancolombia Ahorros', type: 'Bancaria', balance: 0 }
+      ];
+    }
     const accountSelectIds = [
       'filter-account', 'dashboard-filter-account', 'mov-cuenta', 'mov-cuenta-destino',
       'cuenta-recaudo', 'cuenta-pago', 'doc-cuenta', 'sp-account', 'buy-account', 'sell-account'
@@ -660,16 +757,12 @@
       const cur = sel.value;
       const hasAll = id.includes('filter');
       sel.innerHTML = hasAll ? '<option value="all">Todas las cuentas</option>' : '';
-      if (accounts.length === 0 && !hasAll) {
-        sel.innerHTML = '<option value="">Sin cuentas registradas (Crea una en Gastos)</option>';
-      } else {
-        accounts.forEach(a => {
-          const opt = document.createElement('option');
-          opt.value = a.name;
-          opt.textContent = `${a.name} (${a.type || 'Bancaria'})`;
-          sel.appendChild(opt);
-        });
-      }
+      accounts.forEach(a => {
+        const opt = document.createElement('option');
+        opt.value = a.name;
+        opt.textContent = `${a.name} (${a.type || 'Bancaria'})`;
+        sel.appendChild(opt);
+      });
       if (cur) sel.value = cur;
     });
 
@@ -2890,11 +2983,19 @@
       });
     }
 
+    // Botones rápidos de tarifa diaria sugerida
+    document.querySelectorAll('.chip-tarifa-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const inp = document.getElementById('tarifa-asignada');
+        if (inp && btn.dataset.val) inp.value = btn.dataset.val;
+      });
+    });
+
     if (formMoto) {
       formMoto.addEventListener('submit', (e) => {
         e.preventDefault();
         const placa = (document.getElementById('placa')?.value || 'MCT-999').toUpperCase().trim();
-        const colorRadio = document.querySelector('input[name=\"colorVehiculo\"]:checked') || document.querySelector('input[name=\"color-motocarro\"]:checked');
+        const colorRadio = document.querySelector('input[name="colorVehiculo"]:checked') || document.querySelector('input[name="color-motocarro"]:checked');
         const color = colorRadio ? colorRadio.value : 'Azul';
         const modelo = (document.getElementById('marca-modelo') || document.getElementById('modelo'))?.value || 'Bajaj RE 4S';
         const anio = document.getElementById('anio')?.value || '2026';
@@ -2903,7 +3004,8 @@
         const tel = sinConductorToggle?.checked ? '-' : (telefono?.value.trim() || '-');
         const lic = document.getElementById('licencia')?.value || 'A2';
         const venceLic = document.getElementById('vence-licencia')?.value || '2028-04-15';
-        const tarifa = Number(document.getElementById('tarifa-asignada')?.value || 45000);
+        const tarifa = Number(document.getElementById('tarifa-asignada')?.value || 50000);
+        const cuenta = document.getElementById('cuenta-recaudo')?.value || 'Caja Efectivo';
 
         MotoData.addVehicle({
           plate: placa,
@@ -2915,6 +3017,7 @@
           license: lic,
           venceLicencia: venceLic,
           dailyRate: tarifa,
+          account: cuenta,
           status: conductor === 'Sin conductor' ? 'idle' : 'route',
           statusText: conductor === 'Sin conductor' ? 'Sin conductor' : 'En ruta',
           soatExpiry: 'Vigente',
@@ -2922,7 +3025,7 @@
           km: 100
         });
 
-        alert(`¡Motocarro ${placa} color ${color} con conductor ${conductor} (C.C. ${cc}) registrado exitosamente!`);
+        alert(`¡Motocarro ${placa} color ${color} con tarifa de $${tarifa.toLocaleString('es-CO')}/día y conductor ${conductor} registrado exitosamente!`);
         navigateTo('flota');
         populateDynamicSelects();
       });
