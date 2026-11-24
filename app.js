@@ -3024,43 +3024,125 @@
     });
 
     if (formMoto) {
-      formMoto.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const placa = (document.getElementById('placa')?.value || 'MCT-999').toUpperCase().trim();
+      let isSubmitting = false;
+
+      const handleMotoSubmit = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+
+        if (isSubmitting) return;
+
+        const placaInput = document.getElementById('placa');
+        const placa = (placaInput?.value || '').toUpperCase().trim();
+        if (!placa) {
+          alert('⚠️ Por favor ingresa la Placa del motocarro en la Sección 1 (por ejemplo: MCT-912).');
+          if (placaInput) {
+            placaInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            placaInput.focus();
+            placaInput.classList.add('border-red-500', 'ring-2', 'ring-red-500');
+            setTimeout(() => {
+              placaInput.classList.remove('border-red-500', 'ring-2', 'ring-red-500');
+            }, 4000);
+          }
+          return;
+        }
+
+        const isSinConductor = sinConductorToggle?.checked;
+        const nombreConductorVal = isSinConductor ? 'Sin conductor' : (nombreConductor?.value || '').trim();
+        if (!isSinConductor && !nombreConductorVal) {
+          alert('⚠️ Por favor ingresa el nombre del conductor o marca "Dejar sin conductor asignado".');
+          if (nombreConductor) {
+            nombreConductor.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            nombreConductor.focus();
+          }
+          return;
+        }
+
+        const tarifaInput = document.getElementById('tarifa-asignada');
+        const tarifa = Number(tarifaInput?.value || 50000);
+        if (isNaN(tarifa) || tarifa <= 0) {
+          alert('⚠️ Por favor ingresa un valor válido para la tarifa diaria (mayor a 0).');
+          if (tarifaInput) {
+            tarifaInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            tarifaInput.focus();
+          }
+          return;
+        }
+
+        const existingVeh = MotoData.findVehicle ? MotoData.findVehicle({ plate: placa }) : null;
+        if (existingVeh && existingVeh.status !== 'sold') {
+          alert(`⚠️ Ya existe un motocarro activo con la placa ${placa}. Si deseas editarlo, puedes ir a la vista Flota.`);
+          if (placaInput) {
+            placaInput.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            placaInput.focus();
+          }
+          return;
+        }
+
+        isSubmitting = true;
+        setTimeout(() => { isSubmitting = false; }, 1000);
+
         const colorRadio = document.querySelector('input[name="colorVehiculo"]:checked') || document.querySelector('input[name="color-motocarro"]:checked');
         const color = colorRadio ? colorRadio.value : 'Azul';
         const modelo = (document.getElementById('marca-modelo') || document.getElementById('modelo'))?.value || 'Bajaj RE 4S';
         const anio = document.getElementById('anio')?.value || '2026';
-        const conductor = sinConductorToggle?.checked ? 'Sin conductor' : (nombreConductor?.value.trim() || 'Sin conductor');
-        const cc = sinConductorToggle?.checked ? '-' : (cedula?.value.trim() || 'Sin registrar');
-        const tel = sinConductorToggle?.checked ? '-' : (telefono?.value.trim() || '-');
+        const cc = isSinConductor ? '-' : (cedula?.value.trim() || 'Sin registrar');
+        const tel = isSinConductor ? '-' : (telefono?.value.trim() || '-');
         const lic = document.getElementById('licencia')?.value || 'A2';
         const venceLic = document.getElementById('vence-licencia')?.value || '2028-04-15';
-        const tarifa = Number(document.getElementById('tarifa-asignada')?.value || 50000);
         const cuenta = document.getElementById('cuenta-recaudo')?.value || 'Caja Efectivo';
+        const kmVal = Number(document.getElementById('kilometraje')?.value || 100);
 
-        MotoData.addVehicle({
-          plate: placa,
-          color: color,
-          model: `${modelo} (${anio})`,
-          driver: conductor,
-          cedula: cc,
-          phone: tel,
-          license: lic,
-          venceLicencia: venceLic,
-          dailyRate: tarifa,
-          account: cuenta,
-          status: conductor === 'Sin conductor' ? 'idle' : 'route',
-          statusText: conductor === 'Sin conductor' ? 'Sin conductor' : 'En ruta',
-          soatExpiry: 'Vigente',
-          tecnoExpiry: 'Vigente',
-          km: 100
+        try {
+          MotoData.addVehicle({
+            plate: placa,
+            color: color,
+            model: `${modelo} (${anio})`,
+            driver: nombreConductorVal,
+            cedula: cc,
+            phone: tel,
+            license: lic,
+            venceLicencia: venceLic,
+            dailyRate: tarifa,
+            account: cuenta,
+            status: isSinConductor ? 'idle' : 'route',
+            statusText: isSinConductor ? 'Sin conductor' : 'En ruta',
+            soatExpiry: 'Vigente',
+            tecnoExpiry: 'Vigente',
+            km: kmVal
+          });
+
+          // In-page feedback banner si está disponible
+          const feedbackSuccess = document.getElementById('feedback-success');
+          const feedbackTitle = document.getElementById('feedback-title');
+          const feedbackDetail = document.getElementById('feedback-detail');
+          if (feedbackSuccess && feedbackTitle && feedbackDetail) {
+            feedbackTitle.textContent = `¡Motocarro ${placa} guardado con éxito!`;
+            feedbackDetail.textContent = `Asignado a ${nombreConductorVal} con tarifa de $${tarifa.toLocaleString('es-CO')}/día (${color}).`;
+            feedbackSuccess.classList.remove('hidden');
+          }
+
+          alert(`¡Motocarro ${placa} color ${color} con tarifa de $${tarifa.toLocaleString('es-CO')}/día y conductor ${nombreConductorVal} guardado exitosamente!`);
+          
+          navigateTo('flota');
+          if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
+          if (typeof renderFleetTable === 'function') renderFleetTable();
+        } catch (err) {
+          console.error('Error al guardar motocarro:', err);
+          alert('❌ Ocurrió un error al guardar el motocarro: ' + (err.message || err));
+        }
+      };
+
+      formMoto.addEventListener('submit', handleMotoSubmit);
+
+      const btnSave = document.getElementById('btn-save-motocarro');
+      if (btnSave) {
+        btnSave.addEventListener('click', (e) => {
+          handleMotoSubmit(e);
         });
-
-        alert(`¡Motocarro ${placa} color ${color} con tarifa de $${tarifa.toLocaleString('es-CO')}/día y conductor ${conductor} registrado exitosamente!`);
-        navigateTo('flota');
-        populateDynamicSelects();
-      });
+      }
     }
 
     // Formulario Configurar Tarifa (CON CÁLCULO PARA TURNO INTERCALADO 1 DÍA SÍ, 1 DÍA NO)
@@ -3097,13 +3179,43 @@
 
     const formTarifa = document.getElementById('tarifa-form') || document.getElementById('form-tarifa');
     if (formTarifa) {
-      formTarifa.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const nom = document.getElementById('nombre-tarifa')?.value || 'Tarifa Personalizada';
-        const val = Number(valorDiario?.value || 58000);
-        alert(`¡Tarifa "${nom}" ($${val.toLocaleString('es-CO')}/día en turno intercalado) guardada con éxito!`);
+      let isSubmittingTarifa = false;
+      const handleTarifaSubmit = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        if (isSubmittingTarifa) return;
+
+        const nom = document.getElementById('nombre-tarifa')?.value.trim() || 'Tarifa Personalizada';
+        const val = Number(valorDiario?.value || 0);
+        if (isNaN(val) || val <= 0) {
+          alert('⚠️ Por favor ingresa un valor diario válido mayor a 0 para la tarifa.');
+          valorDiario?.focus();
+          valorDiario?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
+        isSubmittingTarifa = true;
+        setTimeout(() => { isSubmittingTarifa = false; }, 1000);
+
+        // Actualizar tarifa asignada en los motocarros seleccionados
+        const checkedVehs = document.querySelectorAll('#tarifa-form-vehicles-grid input[type="checkbox"]:checked');
+        let updatedCount = 0;
+        checkedVehs.forEach(cb => {
+          const pl = cb.value;
+          if (pl && MotoData.updateVehicle) {
+            MotoData.updateVehicle(pl, { dailyRate: val });
+            updatedCount++;
+          }
+        });
+
+        alert(`¡Tarifa "${nom}" ($${val.toLocaleString('es-CO')}/día en esquema intercalado) guardada exitosamente!${updatedCount > 0 ? ` Se actualizó la tarifa de ${updatedCount} motocarro(s).` : ''}`);
         navigateTo('tarifas');
-      });
+      };
+
+      formTarifa.addEventListener('submit', handleTarifaSubmit);
+      document.getElementById('btn-save-tarifa')?.addEventListener('click', handleTarifaSubmit);
     }
 
     updateProjection();
@@ -3205,54 +3317,94 @@
 
     const formMantenimiento = document.getElementById('mant-form') || document.getElementById('form-mantenimiento');
     if (formMantenimiento) {
-      formMantenimiento.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const placa = document.getElementById('maint-motocarro')?.value || 'MCT-305';
+      let isSubmittingMant = false;
+      const handleMantSubmit = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        if (isSubmittingMant) return;
+
+        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
+        const activeVehicles = vehicles.filter(v => v.status !== 'sold');
+
+        if (activeVehicles.length === 0) {
+          alert('⚠️ Primero debes registrar al menos un motocarro en la flota para programar mantenimientos.');
+          navigateTo('form-motocarro');
+          return;
+        }
+
+        const placaSelect = document.getElementById('maint-motocarro');
+        let placa = (placaSelect?.value || '').trim().toUpperCase();
+        if (!placa && activeVehicles.length > 0) {
+          placa = activeVehicles[0].plate;
+          if (placaSelect) placaSelect.value = placa;
+        }
+
+        if (!placa) {
+          alert('⚠️ Por favor selecciona la placa del motocarro.');
+          placaSelect?.focus();
+          placaSelect?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
+        const fechaInput = mantFechaInput;
+        const fecha = (fechaInput?.value || '').trim() || new Date().toISOString().split('T')[0];
+        if (fechaInput && !fechaInput.value) fechaInput.value = fecha;
+
         const opt = mantServiceSelect?.options[mantServiceSelect.selectedIndex];
         const serviceName = opt?.dataset.name || opt?.text || 'Mantenimiento Preventivo';
         const tipo = (document.getElementById('mant-clasificacion') || document.getElementById('tipo-mantenimiento'))?.value || (opt?.dataset.class || 'Preventivo');
-        const costo = Number((document.getElementById('mano-obra') || document.getElementById('costo-estimado'))?.value || 65000);
+        const costoInput = (document.getElementById('mano-obra') || document.getElementById('costo-estimado'));
+        const costo = Number(costoInput?.value || 0);
         const descInput = document.getElementById('proximo-preventivo') || document.getElementById('descripcion-trabajo');
         const desc = descInput?.value.trim() || serviceName;
         const cuenta = document.getElementById('cuenta-pago')?.value || 'Caja Efectivo';
-        const fecha = mantFechaInput?.value || new Date().toISOString().split('T')[0];
         const nextDate = mantNextDateInput?.value || '';
         const km = Number(document.getElementById('mant-km')?.value || 0);
 
-        const vehicles = MotoData.getVehicles();
+        isSubmittingMant = true;
+        setTimeout(() => { isSubmittingMant = false; }, 1000);
+
         const v = vehicles.find(veh => veh.plate === placa) || {};
 
-        MotoData.addMaintenanceOrder({
-          plate: placa,
-          driver: v.driver || 'Conductor asignado',
-          type: tipo,
-          serviceName: serviceName,
-          desc: desc,
-          cost: costo,
-          date: fecha,
-          nextDate: nextDate,
-          km: km,
-          status: 'scheduled'
-        });
+        try {
+          MotoData.addMaintenanceOrder({
+            plate: placa,
+            driver: v.driver || 'Conductor asignado',
+            type: tipo,
+            serviceName: serviceName,
+            desc: desc,
+            cost: costo,
+            date: fecha,
+            nextDate: nextDate,
+            km: km,
+            status: 'scheduled'
+          });
 
-        MotoData.addTransaction({
-          type: 'expense',
-          account: cuenta,
-          plate: placa,
-          category: 'Mantenimiento',
-          concept: `${tipo}: ${serviceName} - ${placa}`,
-          amount: costo,
-          date: fecha
-        });
+          if (costo > 0) {
+            MotoData.addTransaction({
+              type: 'expense',
+              account: cuenta,
+              plate: placa,
+              category: 'Mantenimiento',
+              concept: `${tipo}: ${serviceName} - ${placa}`,
+              amount: costo,
+              date: fecha
+            });
+          }
 
-        const detail = document.getElementById('feedback-detail');
-        if (detail) {
-          detail.textContent = `Orden agendada para ${placa} (${serviceName}). Próximo cambio estimado: ${nextDate || 'programado'}. Costo: $ ${costo.toLocaleString('es-CO')}.`;
+          alert(`¡Orden de mantenimiento para ${placa} (${serviceName}) guardada exitosamente!`);
+          navigateTo('mantenimientos');
+          if (typeof renderMaintenanceTable === 'function') renderMaintenanceTable();
+        } catch (err) {
+          console.error('Error al guardar mantenimiento:', err);
+          alert('❌ Error al guardar orden de mantenimiento: ' + (err.message || err));
         }
-        const fb = document.getElementById('mant-feedback') || document.getElementById('maint-feedback');
-        if (fb) fb.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
+      };
+
+      formMantenimiento.addEventListener('submit', handleMantSubmit);
+      document.getElementById('btn-save-mant')?.addEventListener('click', handleMantSubmit);
     }
 
     // Formulario SOAT / Tecnomecánica
@@ -3266,49 +3418,105 @@
 
     const docForm = document.getElementById('doc-form');
     if (docForm) {
-      docForm.addEventListener('submit', (e) => {
-        e.preventDefault();
+      let isSubmittingDoc = false;
+      const handleDocSubmit = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        if (isSubmittingDoc) return;
+
+        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
+        const activeVehicles = vehicles.filter(v => v.status !== 'sold');
+
+        if (activeVehicles.length === 0) {
+          alert('⚠️ Primero debes registrar al menos un motocarro en la flota para asignarle documentos (SOAT / Tecnomecánica / Impuestos).');
+          navigateTo('form-motocarro');
+          return;
+        }
+
+        const placaSelect = document.getElementById('doc-motocarro');
+        let placa = (placaSelect?.value || '').trim().toUpperCase();
+        if (!placa && activeVehicles.length > 0) {
+          placa = activeVehicles[0].plate;
+          if (placaSelect) placaSelect.value = placa;
+        }
+
+        if (!placa) {
+          alert('⚠️ Por favor selecciona la placa del motocarro.');
+          placaSelect?.focus();
+          placaSelect?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
         const tipo = document.getElementById('doc-tipo')?.value || 'SOAT';
-        const placa = document.getElementById('doc-motocarro')?.value || 'MCT-109';
-        const vence = document.getElementById('doc-vencimiento')?.value || '2027-11-20';
-        const val = Number(document.getElementById('doc-valor')?.value || 615000);
+        const venceInput = document.getElementById('doc-vencimiento');
+        const vence = (venceInput?.value || '').trim();
+        if (!vence) {
+          alert('⚠️ Por favor ingresa la fecha de vencimiento del documento.');
+          venceInput?.focus();
+          venceInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
+        const val = Number(document.getElementById('doc-valor')?.value || 0);
         const cuenta = document.getElementById('doc-cuenta')?.value || 'Bancolombia Ahorros';
         const numero = document.getElementById('doc-numero')?.value.trim() || `POL-${Date.now().toString().slice(-6)}`;
         const entidad = document.getElementById('doc-entidad')?.value.trim() || 'Seguros Bolívar';
 
-        const vehicles = MotoData.getVehicles();
+        isSubmittingDoc = true;
+        setTimeout(() => { isSubmittingDoc = false; }, 1000);
+
         const v = vehicles.find(veh => veh.plate === placa) || {};
 
-        MotoData.addDocument({
-          plate: placa,
-          driver: v.driver || 'Conductor asignado',
-          cedula: v.cedula || '-',
-          type: tipo,
-          entity: entidad,
-          number: numero,
-          cost: val,
-          expiry: vence,
-          status: 'valid',
-          statusText: 'Vigente'
-        });
+        try {
+          MotoData.addDocument({
+            plate: placa,
+            driver: v.driver || 'Conductor asignado',
+            cedula: v.cedula || '-',
+            type: tipo,
+            entity: entidad,
+            number: numero,
+            cost: val,
+            expiry: vence,
+            status: 'valid',
+            statusText: 'Vigente'
+          });
 
-        MotoData.addTransaction({
-          type: 'expense',
-          account: cuenta,
-          plate: placa,
-          driver: v.driver || 'Conductor asignado',
-          category: 'SOAT / Tecnomecánica',
-          concept: `Renovación ${tipo} ${placa} (${numero})`,
-          amount: val,
-          date: new Date().toISOString().split('T')[0]
-        });
+          if (MotoData.quickUpdateDocumentByPlate) {
+            MotoData.quickUpdateDocumentByPlate(placa, {
+              type: tipo,
+              expiry: vence,
+              number: numero,
+              entity: entidad,
+              cost: val
+            });
+          }
 
-        const detail = document.getElementById('doc-feedback-detail');
-        if (detail) detail.textContent = `${tipo} de ${placa} (${v.driver || ''}) vigente hasta ${vence}.`;
-        const fb = document.getElementById('doc-feedback');
-        if (fb) fb.classList.remove('hidden');
-        window.scrollTo({ top: 0, behavior: 'smooth' });
-      });
+          if (val > 0) {
+            MotoData.addTransaction({
+              type: 'expense',
+              account: cuenta,
+              plate: placa,
+              driver: v.driver || 'Conductor asignado',
+              category: 'SOAT / Tecnomecánica',
+              concept: `Renovación ${tipo} ${placa} (${numero})`,
+              amount: val,
+              date: new Date().toISOString().split('T')[0]
+            });
+          }
+
+          alert(`¡Documento ${tipo} para el motocarro ${placa} guardado exitosamente con vencimiento ${vence}!`);
+          navigateTo('documentacion');
+          if (typeof renderDocumentsTable === 'function') renderDocumentsTable();
+        } catch (err) {
+          console.error('Error al guardar documento:', err);
+          alert('❌ Error al guardar el documento: ' + (err.message || err));
+        }
+      };
+
+      docForm.addEventListener('submit', handleDocSubmit);
+      document.getElementById('btn-save-doc')?.addEventListener('click', handleDocSubmit);
     }
 
     // Formulario Gasto o Movimiento
@@ -3322,34 +3530,87 @@
 
     const formMovimiento = document.getElementById('mov-form') || document.getElementById('form-movimiento');
     if (formMovimiento) {
-      formMovimiento.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const tipoRadio = document.querySelector('input[name="tipo-movimiento"]:checked');
-        const esIngreso = tipoRadio ? tipoRadio.value === 'ingreso' : false;
+      let isSubmittingMov = false;
+      const handleMovSubmit = (e) => {
+        if (e) {
+          e.preventDefault();
+          e.stopPropagation();
+        }
+        if (isSubmittingMov) return;
+
+        const tipoRadio = document.querySelector('input[name="movTipo"]:checked') || document.querySelector('input[name="tipo-movimiento"]:checked');
+        const tipoVal = tipoRadio ? tipoRadio.value.toLowerCase() : 'gasto';
+        const esIngreso = tipoVal.includes('ingreso');
+        const esTransferencia = tipoVal.includes('transferencia');
+
         const cuenta = document.getElementById('mov-cuenta')?.value || 'Caja Efectivo';
+        const cuentaDestino = document.getElementById('mov-cuenta-destino')?.value || 'Bancolombia Ahorros';
         const categoria = document.getElementById('mov-categoria')?.value || 'Operativo';
         const placa = document.getElementById('mov-motocarro')?.value || 'General flota';
-        const monto = Number(document.getElementById('mov-monto')?.value || 50000);
+        const montoInput = document.getElementById('mov-monto');
+        const monto = Number(montoInput?.value || 0);
+
+        if (isNaN(monto) || monto <= 0) {
+          alert('⚠️ Por favor ingresa un monto válido mayor a 0.');
+          montoInput?.focus();
+          montoInput?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          return;
+        }
+
         const concepto = (document.getElementById('mov-descripcion') || document.getElementById('mov-concepto'))?.value.trim() || 'Movimiento de caja';
         const fecha = document.getElementById('mov-fecha')?.value || new Date().toISOString().split('T')[0];
 
-        const vehicles = MotoData.getVehicles();
+        isSubmittingMov = true;
+        setTimeout(() => { isSubmittingMov = false; }, 1000);
+
+        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
         const v = vehicles.find(veh => veh.plate === placa) || {};
 
-        MotoData.addTransaction({
-          type: esIngreso ? 'income' : 'expense',
-          account: cuenta,
-          category: categoria,
-          plate: placa,
-          driver: v.driver || 'Conductor',
-          concept: concepto,
-          amount: monto,
-          date: fecha
-        });
+        try {
+          if (esTransferencia) {
+            MotoData.addTransaction({
+              type: 'expense',
+              account: cuenta,
+              category: 'Transferencia',
+              plate: placa,
+              concept: `Transferencia hacia ${cuentaDestino}: ${concepto}`,
+              amount: monto,
+              date: fecha
+            });
+            MotoData.addTransaction({
+              type: 'income',
+              account: cuentaDestino,
+              category: 'Transferencia',
+              plate: placa,
+              concept: `Transferencia recibida desde ${cuenta}: ${concepto}`,
+              amount: monto,
+              date: fecha
+            });
+            alert(`¡Transferencia de $${monto.toLocaleString('es-CO')} entre ${cuenta} y ${cuentaDestino} registrada con éxito!`);
+          } else {
+            MotoData.addTransaction({
+              type: esIngreso ? 'income' : 'expense',
+              account: cuenta,
+              category: categoria,
+              plate: placa,
+              driver: v.driver || 'Conductor',
+              concept: concepto,
+              amount: monto,
+              date: fecha
+            });
+            alert(`¡Movimiento de ${esIngreso ? 'ingreso' : 'egreso'} por $${monto.toLocaleString('es-CO')} en ${cuenta} registrado con éxito!`);
+          }
 
-        alert(`¡Movimiento de ${esIngreso ? 'ingreso' : 'egreso'} por $${monto.toLocaleString('es-CO')} registrado con éxito!`);
-        navigateTo('gastos');
-      });
+          navigateTo('gastos');
+          if (typeof renderFinanceContext === 'function') renderFinanceContext();
+        } catch (err) {
+          console.error('Error al registrar movimiento:', err);
+          alert('❌ Error al registrar el movimiento: ' + (err.message || err));
+        }
+      };
+
+      formMovimiento.addEventListener('submit', handleMovSubmit);
+      document.getElementById('btn-save-mov')?.addEventListener('click', handleMovSubmit);
     }
   }
 

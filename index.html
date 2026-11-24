@@ -1519,7 +1519,7 @@ Limpiar
 </div>
 <a class="font-label text-label-md underline whitespace-nowrap" href="#flota">Ver flota</a>
 </div>
-<form class="flex flex-col gap-gutter-lg" id="motocarro-form">
+<form class="flex flex-col gap-gutter-lg" id="motocarro-form" novalidate>
 <!-- Section 1: Datos del Motocarro -->
 <section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <div class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
@@ -1662,7 +1662,7 @@ Limpiar
 <a class="inline-flex items-center justify-center gap-gutter-sm px-gutter-md py-2.5 rounded bg-light-surface-container-lowest text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container-low transition-colors duration-state-change" data-component-id="button-secondary" data-component-type="button" data-component-variant="secondary" href="#flota">
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Cancelar</span>
 </a>
-<button class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
+<button id="btn-save-motocarro" class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">save</span>
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Guardar motocarro y conductor</span>
 </button>
@@ -1703,7 +1703,7 @@ Limpiar
 </div>
 <a class="font-label text-label-md underline whitespace-nowrap" href="#tarifas">Ver tarifas</a>
 </div>
-<form class="flex flex-col gap-gutter-lg" id="tarifa-form">
+<form class="flex flex-col gap-gutter-lg" id="tarifa-form" novalidate>
 <!-- Section 1: Condiciones de la Tarifa -->
 <section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <div class="flex items-center gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
@@ -1796,7 +1796,7 @@ Limpiar
 <a class="inline-flex items-center justify-center gap-gutter-sm px-gutter-md py-2.5 rounded bg-light-surface-container-lowest text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container-low transition-colors duration-state-change" data-component-id="button-secondary" data-component-type="button" data-component-variant="secondary" href="#tarifas">
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Cancelar</span>
 </a>
-<button class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
+<button id="btn-save-tarifa" class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">save</span>
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Guardar tarifa</span>
 </button>
@@ -1837,7 +1837,7 @@ Limpiar
 </div>
 <a class="font-label text-label-md underline whitespace-nowrap" href="#gastos">Ver libro</a>
 </div>
-<form class="flex flex-col gap-gutter-lg" id="mov-form">
+<form class="flex flex-col gap-gutter-lg" id="mov-form" novalidate>
 <!-- Section 1: Tipo de Movimiento -->
 <section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <div class="flex items-center gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
@@ -1940,7 +1940,7 @@ Limpiar
 <a class="inline-flex items-center justify-center gap-gutter-sm px-gutter-md py-2.5 rounded bg-light-surface-container-lowest text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container-low transition-colors duration-state-change" data-component-id="button-secondary" data-component-type="button" data-component-variant="secondary" href="#gastos">
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Cancelar</span>
 </a>
-<button class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
+<button id="btn-save-mov" class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">save</span>
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Registrar movimiento</span>
 </button>
@@ -1981,7 +1981,7 @@ Limpiar
 </div>
 <a class="font-label text-label-md underline whitespace-nowrap" href="#mantenimientos">Ver historial</a>
 </div>
-<form class="flex flex-col gap-gutter-lg" id="mant-form">
+<form class="flex flex-col gap-gutter-lg" id="mant-form" novalidate>
 <!-- Section 1: Vehículo y Tipo de Mantenimiento -->
 <section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <div class="flex items-center gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
@@ -2035,7 +2035,7 @@ Limpiar
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mant-fecha">Fecha de ejecución *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-fecha" name="fecha" required="" type="date" value=""/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-fecha" name="fecha" required="" type="date" value="2026-11-24"/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mant-km">Kilometraje al ingreso</label>
@@ -2141,7 +2141,7 @@ Limpiar
 <a class="inline-flex items-center justify-center gap-gutter-sm px-gutter-md py-2.5 rounded bg-light-surface-container-lowest text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container-low transition-colors duration-state-change" data-component-id="button-secondary" data-component-type="button" data-component-variant="secondary" href="#mantenimientos">
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Cancelar</span>
 </a>
-<button class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
+<button id="btn-save-mant" class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">save</span>
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Registrar mantenimiento</span>
 </button>
@@ -2182,7 +2182,7 @@ Limpiar
 </div>
 <a class="font-label text-label-md underline whitespace-nowrap" href="#documentacion">Ver documentación</a>
 </div>
-<form class="flex flex-col gap-gutter-lg" id="doc-form">
+<form class="flex flex-col gap-gutter-lg" id="doc-form" novalidate>
 <!-- Section 1: Documento y Motocarro -->
 <section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <div class="flex items-center gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
@@ -2286,7 +2286,7 @@ Limpiar
 <a class="inline-flex items-center justify-center gap-gutter-sm px-gutter-md py-2.5 rounded bg-light-surface-container-lowest text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container-low transition-colors duration-state-change" data-component-id="button-secondary" data-component-type="button" data-component-variant="secondary" href="#documentacion">
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Cancelar</span>
 </a>
-<button class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
+<button id="btn-save-doc" class="inline-flex items-center justify-center gap-gutter-sm px-gutter-lg py-2.5 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-light-primary focus-visible:ring-offset-2" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">save</span>
 <span class="font-label text-label-lg" data-design-text-token="label-lg">Guardar documento</span>
 </button>
@@ -2307,7 +2307,7 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="tx-form">
+<form class="flex flex-col gap-gutter-md" id="tx-form" novalidate>
 <div class="grid grid-cols-2 gap-gutter-sm">
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Tipo</span>
@@ -2366,7 +2366,7 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="assign-form">
+<form class="flex flex-col gap-gutter-md" id="assign-form" novalidate>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Placa del motocarro</span>
 <input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface uppercase" id="modal-plate" placeholder="Ej. MCT-804" type="text" value=""/>
@@ -2406,7 +2406,7 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="fin-form">
+<form class="flex flex-col gap-gutter-md" id="fin-form" novalidate>
 <div class="grid grid-cols-2 gap-gutter-sm">
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Tipo</span>
@@ -2469,7 +2469,7 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="maint-form">
+<form class="flex flex-col gap-gutter-md" id="maint-form" novalidate>
 <div class="grid grid-cols-2 gap-gutter-sm">
 <div class="p-2.5 bg-light-surface-container-low rounded border border-light-outline-variant flex flex-col gap-1.5">
 <div class="flex items-center justify-between">
@@ -2530,7 +2530,7 @@ Limpiar
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="doc-modal-form">
+<form class="flex flex-col gap-gutter-md" id="doc-modal-form" novalidate>
 <div class="grid grid-cols-2 gap-gutter-sm">
 <div class="p-2.5 bg-light-surface-container-low rounded border border-light-outline-variant flex flex-col gap-1.5">
 <div class="flex items-center justify-between">
@@ -2764,7 +2764,7 @@ Crear Cuenta y Acceder
         </p>
 </div>
 </div>
-<form class="flex flex-col gap-gutter-md" id="firebase-config-form">
+<form class="flex flex-col gap-gutter-md" id="firebase-config-form" novalidate>
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="fb-apiKey">API Key *</label>
 <input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md px-gutter-sm py-2 focus:border-light-primary" id="fb-apiKey" name="apiKey" placeholder="AIzaSy..." required="" type="text" value="AIzaSyD2JAuU8IlGMwWC-XniKF-7JKBY1Nm6NiY"/>
@@ -2827,7 +2827,7 @@ Crear Cuenta y Acceder
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="spare-part-form">
+<form class="flex flex-col gap-gutter-md" id="spare-part-form" novalidate>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="sp-name">Nombre del repuesto *</label>
@@ -2902,7 +2902,7 @@ Crear Cuenta y Acceder
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="new-maint-type-form">
+<form class="flex flex-col gap-gutter-md" id="new-maint-type-form" novalidate>
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="mt-name">Nombre del servicio *</label>
 <input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="mt-name" placeholder="Ej. Calibración de válvulas y bujía" required="" type="text"/>
@@ -2971,7 +2971,7 @@ Crear Cuenta y Acceder
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="buy-motocarro-form">
+<form class="flex flex-col gap-gutter-md" id="buy-motocarro-form" novalidate>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="buy-plate">Placa del vehículo *</label>
@@ -3056,7 +3056,7 @@ Crear Cuenta y Acceder
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="sell-motocarro-form">
+<form class="flex flex-col gap-gutter-md" id="sell-motocarro-form" novalidate>
 <!-- Auto-selector Conductor y Color para cargar placa a vender -->
 <div class="p-3 bg-light-surface-container-low rounded border border-light-outline-variant flex flex-col gap-2">
 <div class="flex items-center justify-between">
@@ -3135,7 +3135,7 @@ Crear Cuenta y Acceder
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="new-account-form">
+<form class="flex flex-col gap-gutter-md" id="new-account-form" novalidate>
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface font-semibold" for="acct-name">Nombre de la cuenta *</label>
 <input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="acct-name" placeholder="Ej. Daviplata Flota, Banco de Bogotá, Caja Menor Taller" required="" type="text"/>
@@ -3225,7 +3225,7 @@ Crear Cuenta y Acceder
 </a>
 </div>
 </div>
-<form class="flex flex-col gap-gutter-sm border-t border-light-outline-variant pt-gutter-sm" id="runt-update-form">
+<form class="flex flex-col gap-gutter-sm border-t border-light-outline-variant pt-gutter-sm" id="runt-update-form" novalidate>
 <div class="flex items-center gap-1.5 text-light-on-surface font-label text-label-sm font-bold">
 <span class="material-symbols-outlined text-[18px] text-success">update</span>
 <span>2. Registrar / Actualizar Fecha en MotoControl:</span>
@@ -3280,7 +3280,7 @@ Guardar y Actualizar Vigencia
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<form class="flex flex-col gap-gutter-md" id="email-alerts-form">
+<form class="flex flex-col gap-gutter-md" id="email-alerts-form" novalidate>
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface font-semibold flex items-center justify-between" for="alert-emails-input">
 <span>Correos Destinatarios de Alerta *</span>

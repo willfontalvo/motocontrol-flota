@@ -417,22 +417,25 @@ window.MotoData = {
 
   // 1. Alta o Modificación de Vehículo
   addVehicle(vehicle) {
+    const data = this.getCleanData();
     if (!vehicle.color) vehicle.color = 'Azul';
     if (!vehicle.cedula && vehicle.driver !== 'Sin conductor') vehicle.cedula = 'Sin registrar';
-    this.data.vehicles.unshift(vehicle);
+    data.vehicles.unshift(vehicle);
     this.persist();
   },
 
   updateVehicle(plate, updateObj) {
-    const idx = this.data.vehicles.findIndex(v => v.plate.toUpperCase() === plate.toUpperCase());
+    const data = this.getCleanData();
+    const idx = data.vehicles.findIndex(v => v.plate.toUpperCase() === plate.toUpperCase());
     if (idx !== -1) {
-      this.data.vehicles[idx] = { ...this.data.vehicles[idx], ...updateObj };
+      data.vehicles[idx] = { ...data.vehicles[idx], ...updateObj };
       this.persist();
     }
   },
 
   // 2. Compra de Nuevo Motocarro (Alta + Egreso Financiero)
   buyVehicle(buyData) {
+    const data = this.getCleanData();
     const newVehicle = {
       plate: buyData.plate.toUpperCase().trim(),
       color: buyData.color || 'Azul',
@@ -453,7 +456,7 @@ window.MotoData = {
       supplier: buyData.supplier || 'Concesionario'
     };
 
-    this.data.vehicles.unshift(newVehicle);
+    data.vehicles.unshift(newVehicle);
 
     // Registrar egreso contable de la compra
     if (buyData.price && Number(buyData.price) > 0) {
@@ -473,10 +476,11 @@ window.MotoData = {
 
   // 3. Venta de Motocarro (Baja de Flota + Ingreso Financiero)
   sellVehicle(saleData) {
+    const data = this.getCleanData();
     const plate = saleData.plate.toUpperCase().trim();
-    const idx = this.data.vehicles.findIndex(v => v.plate.toUpperCase() === plate);
+    const idx = data.vehicles.findIndex(v => v.plate.toUpperCase() === plate);
     if (idx !== -1) {
-      const v = this.data.vehicles[idx];
+      const v = data.vehicles[idx];
       v.status = 'sold';
       v.statusText = 'Vendido';
       v.salePrice = Number(saleData.price || 0);
@@ -628,10 +632,11 @@ window.MotoData = {
   },
 
   addTransaction(tx) {
+    const data = this.getCleanData();
     if (!tx.id) tx.id = 'tx-' + Date.now();
-    this.data.transactions.unshift(tx);
+    data.transactions.unshift(tx);
     
-    const acct = this.data.accounts.find(a => a.name.toLowerCase() === (tx.account || '').toLowerCase());
+    const acct = data.accounts.find(a => a.name.toLowerCase() === (tx.account || '').toLowerCase());
     if (acct) {
       if (tx.type === 'income') acct.balance += Number(tx.amount || 0);
       else if (tx.type === 'expense') acct.balance -= Number(tx.amount || 0);
@@ -640,39 +645,47 @@ window.MotoData = {
   },
 
   addMaintenanceOrder(order) {
+    const data = this.getCleanData();
     if (!order.id) order.id = 'm-' + Date.now();
-    this.data.maintenanceOrders.unshift(order);
+    data.maintenanceOrders.unshift(order);
     this.persist();
   },
 
   addDocument(doc) {
+    const data = this.getCleanData();
     if (!doc.id) doc.id = 'doc-' + Date.now();
-    this.data.documents.unshift(doc);
+    data.documents.unshift(doc);
     this.persist();
   },
 
   getVehicles() {
-    return (this.data && this.data.vehicles) ? this.data.vehicles : [];
+    const data = this.getCleanData();
+    return data.vehicles || [];
   },
 
   getTransactions() {
-    return (this.data && this.data.transactions) ? this.data.transactions : [];
+    const data = this.getCleanData();
+    return data.transactions || [];
   },
 
   getMaintenanceOrders() {
-    return (this.data && this.data.maintenanceOrders) ? this.data.maintenanceOrders : [];
+    const data = this.getCleanData();
+    return data.maintenanceOrders || [];
   },
 
   getDocuments() {
-    return (this.data && this.data.documents) ? this.data.documents : [];
+    const data = this.getCleanData();
+    return data.documents || [];
   },
 
   getSpareParts() {
-    return (this.data && this.data.spareParts) ? this.data.spareParts : [];
+    const data = this.getCleanData();
+    return data.spareParts || [];
   },
 
   getMaintenanceTypes() {
-    return (this.data && this.data.maintenanceTypes) ? this.data.maintenanceTypes : [];
+    const data = this.getCleanData();
+    return data.maintenanceTypes || [];
   },
 
   async clearAllData() {
