@@ -10,11 +10,7 @@ const DEFAULT_INITIAL_DATA = {
   transactions: [],
   maintenanceOrders: [],
   documents: [],
-  accounts: [
-    { id: 'acc-1', name: 'Caja Efectivo', type: 'Efectivo', balance: 0 },
-    { id: 'acc-2', name: 'Nequi Flota', type: 'Digital', balance: 0 },
-    { id: 'acc-3', name: 'Bancolombia Ahorros', type: 'Bancaria', balance: 0 }
-  ],
+  accounts: [],
   spareParts: [],
   maintenanceTypes: [
     {
@@ -97,9 +93,7 @@ window.MotoData = {
     if (!Array.isArray(this.data.transactions)) this.data.transactions = [];
     if (!Array.isArray(this.data.maintenanceOrders)) this.data.maintenanceOrders = [];
     if (!Array.isArray(this.data.documents)) this.data.documents = [];
-    if (!Array.isArray(this.data.accounts) || this.data.accounts.length === 0) {
-      this.data.accounts = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.accounts));
-    }
+    if (!Array.isArray(this.data.accounts)) this.data.accounts = [];
     if (!Array.isArray(this.data.spareParts)) this.data.spareParts = [];
     if (!Array.isArray(this.data.maintenanceTypes) || this.data.maintenanceTypes.length === 0) {
       this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
@@ -130,9 +124,23 @@ window.MotoData = {
           const hasDemoOrders = parsed.maintenanceOrders && parsed.maintenanceOrders.some(o => demoPlates.includes(o.plate));
           const hasDemoDocs = parsed.documents && parsed.documents.some(d => demoPlates.includes(d.plate));
           const hasDemoAccounts = parsed.accounts && parsed.accounts.some(a => [5120000, 2480000, 1150000].includes(a.balance));
+          // Detectar cuentas default antiguas (IDs acc-1, acc-2, acc-3) que ya no queremos
+          const hasOldDefaultAccounts = parsed.accounts && parsed.accounts.some(a =>
+            ['acc-1', 'acc-2', 'acc-3'].includes(a.id) &&
+            ['Caja Efectivo', 'Nequi Flota', 'Bancolombia Ahorros'].includes(a.name)
+          );
 
           if (hasDemoVehicles || hasDemoTx || hasDemoOrders || hasDemoDocs || hasDemoAccounts) {
             containsLegacyDemo = true;
+          }
+          // Si solo tiene las cuentas default antiguas pero datos reales de vehículos, no borrar todo —
+          // solo limpiar las cuentas default
+          if (!containsLegacyDemo && hasOldDefaultAccounts) {
+            parsed.accounts = parsed.accounts.filter(a =>
+              !(['acc-1', 'acc-2', 'acc-3'].includes(a.id) &&
+                ['Caja Efectivo', 'Nequi Flota', 'Bancolombia Ahorros'].includes(a.name))
+            );
+            localStorage.setItem('motocontrol_data', JSON.stringify(parsed));
           }
         } catch (e) {
           containsLegacyDemo = true;
@@ -151,9 +159,7 @@ window.MotoData = {
         if (!this.data.transactions) this.data.transactions = [];
         if (!this.data.maintenanceOrders) this.data.maintenanceOrders = [];
         if (!this.data.documents) this.data.documents = [];
-        if (!this.data.accounts || this.data.accounts.length === 0) {
-          this.data.accounts = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.accounts));
-        }
+        if (!this.data.accounts) this.data.accounts = [];
         if (!this.data.spareParts) this.data.spareParts = [];
         if (!this.data.maintenanceTypes || this.data.maintenanceTypes.length === 0) {
           this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
@@ -360,9 +366,11 @@ window.MotoData = {
     const dataToSave = this.getCleanData();
     this.saveToLocal();
     window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
-    if (this.isFirebaseActive && this.db) {
+    if (this.isFirebaseActive && this.db && dataToSave && typeof dataToSave === 'object') {
       try {
-        await this.db.collection('motocontrol_app').doc('fleet_data').set(dataToSave);
+        // Sanitizar: eliminar undefined antes de enviar a Firestore
+        const clean = JSON.parse(JSON.stringify(dataToSave));
+        await this.db.collection('motocontrol_app').doc('fleet_data').set(clean);
       } catch (e) {
         console.error('Error persisting to Firestore:', e);
       }
@@ -756,6 +764,24 @@ window.MotoData = {
       this.persist();
     }
     return { success: true, account: newAccount };
+  },
+
+  deleteAccount(accountName) {
+    const data = this.getCleanData();
+    const prevLen = data.accounts.length;
+    data.accounts = data.accounts.filter(a => a.name.toLowerCase() !== accountName.toLowerCase());
+    if (data.accounts.length === prevLen) return { success: false, message: 'Cuenta no encontrada.' };
+    this.persist();
+    return { success: true };
+  },
+
+  deleteVehicle(plate) {
+    const data = this.getCleanData();
+    const prevLen = data.vehicles.length;
+    data.vehicles = data.vehicles.filter(v => v.plate.toUpperCase() !== plate.toUpperCase());
+    if (data.vehicles.length === prevLen) return { success: false, message: 'Motocarro no encontrado.' };
+    this.persist();
+    return { success: true };
   }
 };
 

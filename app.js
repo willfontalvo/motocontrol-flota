@@ -100,28 +100,25 @@
   };
 
   // --- Capa de Datos Reactiva ---
-  const MotoData = window.FirebaseManager || {
-    data: {
-      vehicles: [],
-      transactions: [],
-      maintenanceOrders: [],
-      documents: [],
-      accounts: [],
-      spareParts: [],
-      maintenanceTypes: []
-    },
-    init() {},
-    getVehicles() { return this.data.vehicles || []; },
-    getTransactions() { return this.data.transactions || []; },
-    getDocuments() { return this.data.documents || []; },
-    getAccounts() { return this.data.accounts || []; },
-    getSpareParts() { return this.data.spareParts || []; },
-    getMaintenanceTypes() { return this.data.maintenanceTypes || []; },
-    getDrivers() { return []; },
-    getDriverDetails() { return null; },
-    getDriverVehicles() { return []; },
-    getColors() { return ['Azul', 'Salmón']; }
-  };
+  // IMPORTANTE: usar window.MotoData que es definido por firebase_manager.js
+  // No declarar una variable local para no sombear el objeto global
+  if (!window.MotoData) {
+    window.MotoData = {
+      data: { vehicles: [], transactions: [], maintenanceOrders: [], documents: [], accounts: [], spareParts: [], maintenanceTypes: [] },
+      init() {},
+      getVehicles() { return this.data.vehicles || []; },
+      getTransactions() { return this.data.transactions || []; },
+      getDocuments() { return this.data.documents || []; },
+      getAccounts() { return this.data.accounts || []; },
+      getSpareParts() { return this.data.spareParts || []; },
+      getMaintenanceTypes() { return this.data.maintenanceTypes || []; },
+      getDrivers() { return []; },
+      getDriverDetails() { return null; },
+      getDriverVehicles() { return []; },
+      getColors() { return ['Azul', 'Salmón']; }
+    };
+  }
+  const MotoData = window.MotoData;
 
   // --- Controlador Dinámico del Botón Superior ---
   function updateHeaderActionButton(viewId) {
@@ -755,13 +752,8 @@
 
     // Poblado de selects de cuentas bancarias
     let accounts = MotoData.getAccounts ? MotoData.getAccounts() : [];
-    if (!accounts || accounts.length === 0) {
-      accounts = [
-        { id: 'acc-1', name: 'Caja Efectivo', type: 'Efectivo', balance: 0 },
-        { id: 'acc-2', name: 'Nequi Flota', type: 'Digital', balance: 0 },
-        { id: 'acc-3', name: 'Bancolombia Ahorros', type: 'Bancaria', balance: 0 }
-      ];
-    }
+    // Si no hay cuentas, dejar el select vacío con mensaje
+    if (!accounts) accounts = [];
     const accountSelectIds = [
       'filter-account', 'dashboard-filter-account', 'mov-cuenta', 'mov-cuenta-destino',
       'cuenta-recaudo', 'cuenta-pago', 'doc-cuenta', 'sp-account', 'buy-account', 'sell-account'
@@ -1344,6 +1336,10 @@
                 <span class="material-symbols-outlined text-[16px]">edit</span>
                 <span>Editar</span>
               </button>
+              <button type="button" class="delete-vehicle-btn inline-flex items-center gap-1 px-2.5 py-1 rounded text-red-600 hover:bg-red-50 font-label text-label-sm font-semibold ml-1" data-plate="${v.plate}">
+                <span class="material-symbols-outlined text-[16px]">delete</span>
+                <span>Eliminar</span>
+              </button>
               ` : `
               <span class="text-xs text-light-outline font-body">Vendido a ${v.buyer || 'Particular'}</span>
               `}
@@ -1409,6 +1405,23 @@
       tableBody.querySelectorAll('.reassign-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           toggleAssignModal(true, btn.dataset.plate, btn.dataset.driver, btn.dataset.cedula);
+        });
+      });
+
+      // Listeners botones Eliminar motocarro
+      tableBody.querySelectorAll('.delete-vehicle-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const plate = btn.dataset.plate;
+          if (confirm(`¿Seguro que deseas eliminar el motocarro ${plate} de la flota? Esta acción no se puede deshacer.`)) {
+            const res = window.MotoData.deleteVehicle(plate);
+            if (res && res.success) {
+              renderFleetTable();
+              if (typeof renderDashboard === 'function') renderDashboard();
+              alert(`Motocarro ${plate} eliminado de la flota.`);
+            } else {
+              alert('No se pudo eliminar: ' + (res?.message || 'Error desconocido'));
+            }
+          }
         });
       });
     }
@@ -2889,8 +2902,30 @@
             <span class="font-body text-body-sm text-success tabular-nums font-medium">+$ ${inc.toLocaleString('es-CO')}</span>
             <span class="font-body text-body-sm text-light-error tabular-nums font-medium">-$ ${exp.toLocaleString('es-CO')}</span>
           </footer>
+          <div class="pt-2 flex justify-end">
+            <button type="button" class="btn-delete-account inline-flex items-center gap-1 px-3 py-1 rounded text-xs font-bold bg-red-50 text-red-600 border border-red-200 hover:bg-red-100 transition" data-account-name="${acc.name}">
+              <span class="material-symbols-outlined text-[15px]">delete</span> Eliminar cuenta
+            </button>
+          </div>
         `;
         grid.appendChild(card);
+      });
+
+      // Listeners de botones Eliminar cuenta
+      grid.querySelectorAll('.btn-delete-account').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const accName = btn.dataset.accountName;
+          if (confirm(`¿Seguro que deseas eliminar la cuenta "${accName}"? Esta acción no se puede deshacer.`)) {
+            const res = window.MotoData.deleteAccount(accName);
+            if (res && res.success) {
+              renderAccountsCards();
+              if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
+              alert(`Cuenta "${accName}" eliminada.`);
+            } else {
+              alert('No se pudo eliminar la cuenta: ' + (res?.message || 'Error desconocido'));
+            }
+          }
+        });
       });
     }
 
