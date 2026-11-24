@@ -427,7 +427,15 @@ window.MotoData = {
   addVehicle(vehicle) {
     const data = this.getCleanData();
     if (!vehicle.color) vehicle.color = 'Azul';
+    if (!vehicle.driver || vehicle.driver === 'Sin conductor') {
+      vehicle.driver = 'Sin conductor';
+      vehicle.status = 'idle';
+      vehicle.statusText = 'Sin conductor';
+    }
     if (!vehicle.cedula && vehicle.driver !== 'Sin conductor') vehicle.cedula = 'Sin registrar';
+    if (!vehicle.ownerName) vehicle.ownerName = vehicle.driver !== 'Sin conductor' ? vehicle.driver : 'Propietario Flota';
+    if (!vehicle.ownerCedula) vehicle.ownerCedula = vehicle.cedula && vehicle.cedula !== 'Sin registrar' ? vehicle.cedula : '';
+    if (!vehicle.chassis) vehicle.chassis = '-';
     data.vehicles.unshift(vehicle);
     this.persist();
   },
@@ -517,41 +525,64 @@ window.MotoData = {
   // 4. Ingreso de Repuestos a Stock
   addSparePart(partData) {
     if (!this.data.spareParts) this.data.spareParts = [];
-    const existing = this.data.spareParts.find(p => p.name.toLowerCase() === partData.name.toLowerCase() || (p.code && p.code.toLowerCase() === (partData.code || '').toLowerCase()));
+    const name = (partData.name || '').trim();
+    const code = (partData.code || '').trim();
+    const existing = this.data.spareParts.find(p => 
+      (name && p.name && p.name.toLowerCase() === name.toLowerCase()) || 
+      (code && p.code && p.code.toLowerCase() === code.toLowerCase())
+    );
     
-    const qty = Number(partData.qty || 1);
-    const unitPrice = Number(partData.unitPrice || 0);
+    const qty = Number(partData.qty !== undefined ? partData.qty : (partData.stock !== undefined ? partData.stock : 1));
+    const unitPrice = Number(partData.unitPrice !== undefined ? partData.unitPrice : (partData.price !== undefined ? partData.price : 0));
+    const minStock = Number(partData.minStock !== undefined ? partData.minStock : (partData.min !== undefined ? partData.min : 2));
     const totalCost = qty * unitPrice;
+    const isInitial = Boolean(partData.isInitial);
 
     if (existing) {
-      existing.stock += qty;
+      existing.stock = (existing.stock || 0) + qty;
       if (unitPrice > 0) existing.unitPrice = unitPrice;
       if (partData.supplier) existing.supplier = partData.supplier;
+      if (minStock > 0) existing.minStock = minStock;
     } else {
       this.data.spareParts.unshift({
-        code: partData.code || ('REP-' + String(this.data.spareParts.length + 1).padStart(3, '0')),
-        name: partData.name.trim(),
+        code: code || ('REP-' + String(this.data.spareParts.length + 1).padStart(3, '0')),
+        name: name,
         category: partData.category || 'Repuestos generales',
         stock: qty,
-        minStock: Number(partData.minStock || 2),
+        minStock: minStock,
         unitPrice: unitPrice,
-        supplier: partData.supplier || 'Proveedor local'
+        supplier: partData.supplier || (isInitial ? 'Inventario Inicial' : 'Proveedor local'),
+        isInitial: isInitial
       });
     }
 
-    // Registrar egreso contable de la compra de repuestos
-    if (totalCost > 0 && partData.account) {
+    // Registrar egreso contable solo si NO es inventario inicial y se especificó una cuenta
+    if (!isInitial && totalCost > 0 && partData.account && partData.account !== 'none' && partData.account !== '') {
       this.addTransaction({
         type: 'expense',
         account: partData.account,
         category: 'Repuestos',
-        concept: `Ingreso stock: ${qty} und. ${partData.name}`,
+        concept: `Compra stock: ${qty} und. ${name}`,
         amount: totalCost,
         date: new Date().toISOString().split('T')[0]
       });
     } else {
       this.persist();
     }
+    return { success: true };
+  },
+
+  deleteSparePart(codeOrName) {
+    const data = this.getCleanData();
+    const query = String(codeOrName || '').toLowerCase().trim();
+    const prevLen = data.spareParts.length;
+    data.spareParts = data.spareParts.filter(p => 
+      (p.code || '').toLowerCase() !== query && 
+      (p.name || '').toLowerCase() !== query
+    );
+    if (data.spareParts.length === prevLen) return { success: false, message: 'Repuesto no encontrado.' };
+    this.persist();
+    return { success: true };
   },
 
   // 5. Agregar y Administrar Tipos de Mantenimiento / Servicio

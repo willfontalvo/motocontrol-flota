@@ -1447,23 +1447,82 @@
     }
 
     // Modal de Asignación / Edición de Conductor
+    // Modal de Edición Completa de Motocarro, Conductor y Propietario
     const assignModal = document.getElementById('assign-modal');
     const plateInput = document.getElementById('modal-plate');
+    const plateBadge = document.getElementById('modal-plate-badge');
     const driverInput = document.getElementById('modal-driver');
     const cedulaInput = document.getElementById('modal-cedula');
+    const sinConductorCheckbox = document.getElementById('modal-sin-conductor');
+    const conductorBox = document.getElementById('modal-conductor-box');
 
-    function toggleAssignModal(show, plate = '', driver = '', cedula = '') {
+    function toggleAssignModal(show, plate = '') {
       if (!assignModal) return;
       if (show) {
-        if (plate && plateInput) plateInput.value = plate;
-        if (driverInput) driverInput.value = driver;
-        if (cedulaInput) cedulaInput.value = cedula;
+        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
+        const v = vehicles.find(veh => veh.plate.toUpperCase() === (plate || '').toUpperCase()) || {};
+
+        if (plateInput) plateInput.value = v.plate || plate || '';
+        if (plateBadge) plateBadge.textContent = v.plate || plate || 'MCT-000';
+
+        // Color
+        const isSalmon = (v.color || '').toLowerCase().includes('salm');
+        const colorAzulRadio = document.getElementById('modal-color-azul');
+        const colorSalmonRadio = document.getElementById('modal-color-salmon');
+        if (isSalmon && colorSalmonRadio) colorSalmonRadio.checked = true;
+        else if (colorAzulRadio) colorAzulRadio.checked = true;
+
+        // Modelo, chasis, km
+        const modelInp = document.getElementById('modal-model');
+        if (modelInp) modelInp.value = v.model || 'Bajaj RE 4S';
+        const chasisInp = document.getElementById('modal-chasis');
+        if (chasisInp) chasisInp.value = v.chassis && v.chassis !== '-' ? v.chassis : '';
+        const kmInp = document.getElementById('modal-km');
+        if (kmInp) kmInp.value = v.km || 0;
+
+        // Propietario
+        const ownerNameInp = document.getElementById('modal-owner-name');
+        if (ownerNameInp) ownerNameInp.value = v.ownerName || '';
+        const ownerCedulaInp = document.getElementById('modal-owner-cedula');
+        if (ownerCedulaInp) ownerCedulaInp.value = v.ownerCedula || '';
+
+        // Conductor
+        const isSinCond = !v.driver || v.driver === 'Sin conductor';
+        if (sinConductorCheckbox) sinConductorCheckbox.checked = isSinCond;
+        if (driverInput) driverInput.value = isSinCond ? '' : v.driver;
+        if (cedulaInput) cedulaInput.value = (v.cedula && v.cedula !== '-') ? v.cedula : '';
+        const phoneInp = document.getElementById('modal-phone');
+        if (phoneInp) phoneInp.value = (v.phone && v.phone !== '-') ? v.phone : '';
+        const venceLicInp = document.getElementById('modal-license-vence');
+        if (venceLicInp) venceLicInp.value = v.venceLicencia || '';
+
+        // Tarifa y estado
+        const dailyRateInp = document.getElementById('modal-daily-rate');
+        if (dailyRateInp) dailyRateInp.value = v.dailyRate || 50000;
+        const statusSel = document.getElementById('modal-status');
+        if (statusSel) statusSel.value = v.status || (isSinCond ? 'idle' : 'route');
+
+        if (conductorBox && sinConductorCheckbox) {
+          conductorBox.style.opacity = isSinCond ? '0.4' : '1';
+          conductorBox.style.pointerEvents = isSinCond ? 'none' : 'auto';
+        }
+
         assignModal.classList.remove('hidden');
         assignModal.classList.add('flex');
       } else {
         assignModal.classList.add('hidden');
         assignModal.classList.remove('flex');
       }
+    }
+
+    if (sinConductorCheckbox) {
+      sinConductorCheckbox.addEventListener('change', () => {
+        const checked = sinConductorCheckbox.checked;
+        if (conductorBox) {
+          conductorBox.style.opacity = checked ? '0.4' : '1';
+          conductorBox.style.pointerEvents = checked ? 'none' : 'auto';
+        }
+      });
     }
 
     if (driverInput) {
@@ -1486,18 +1545,52 @@
       assignForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const p = plateInput?.value.trim().toUpperCase() || '';
-        const d = driverInput?.value.trim() || 'Sin conductor';
-        const c = cedulaInput?.value.trim() || 'Sin registrar';
+        if (!p) {
+          alert('Placa no identificada.');
+          return;
+        }
 
-        MotoData.updateVehicle(p, {
-          driver: d,
-          cedula: c,
-          status: d === 'Sin conductor' ? 'idle' : 'route'
+        const isSalmon = document.getElementById('modal-color-salmon')?.checked;
+        const colorVal = isSalmon ? 'Salmón' : 'Azul';
+        const modelVal = document.getElementById('modal-model')?.value.trim() || 'Bajaj RE 4S';
+        const chasisVal = document.getElementById('modal-chasis')?.value.trim().toUpperCase() || '-';
+        const kmVal = Number(document.getElementById('modal-km')?.value || 0);
+
+        const ownerNameVal = document.getElementById('modal-owner-name')?.value.trim() || '';
+        const ownerCedulaVal = document.getElementById('modal-owner-cedula')?.value.trim() || '';
+
+        const isSinCond = sinConductorCheckbox ? sinConductorCheckbox.checked : false;
+        const dVal = (driverInput?.value || '').trim();
+        const driverFinal = isSinCond || !dVal ? 'Sin conductor' : dVal;
+        const cedulaFinal = isSinCond ? '-' : ((cedulaInput?.value || '').trim() || '-');
+        const phoneFinal = isSinCond ? '-' : ((document.getElementById('modal-phone')?.value || '').trim() || '-');
+        const venceLicFinal = isSinCond ? '' : (document.getElementById('modal-license-vence')?.value || 'Vigente');
+
+        const dailyRateVal = Number(document.getElementById('modal-daily-rate')?.value || 50000);
+        let statusVal = document.getElementById('modal-status')?.value || (driverFinal === 'Sin conductor' ? 'idle' : 'route');
+        if (driverFinal === 'Sin conductor' && statusVal === 'route') statusVal = 'idle';
+
+        window.MotoData.updateVehicle(p, {
+          color: colorVal,
+          model: modelVal,
+          chassis: chasisVal,
+          km: kmVal,
+          ownerName: ownerNameVal || (driverFinal !== 'Sin conductor' ? driverFinal : 'Propietario Flota'),
+          ownerCedula: ownerCedulaVal || (cedulaFinal !== '-' ? cedulaFinal : ''),
+          driver: driverFinal,
+          cedula: cedulaFinal,
+          phone: phoneFinal,
+          venceLicencia: venceLicFinal,
+          dailyRate: dailyRateVal,
+          status: statusVal,
+          statusText: statusVal === 'route' ? 'En ruta' : (statusVal === 'workshop' ? 'En taller' : 'Sin conductor')
         });
 
         toggleAssignModal(false);
         renderFleetTable();
-        alert(`Vehículo ${p} actualizado con conductor ${d} (C.C. ${c}).`);
+        if (typeof renderDashboard === 'function') renderDashboard();
+        if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
+        alert(`¡Motocarro ${p} actualizado correctamente con todos sus datos!`);
       });
     }
 
@@ -2010,7 +2103,7 @@
       const stockAllEl = document.getElementById('count-stock-all');
       const stockLowEl = document.getElementById('count-stock-low');
       if (stockAllEl) stockAllEl.textContent = parts.length;
-      if (stockLowEl) stockLowEl.textContent = parts.filter(p => p.stock <= p.min).length;
+      if (stockLowEl) stockLowEl.textContent = parts.filter(p => (p.stock || 0) <= (p.minStock || p.min || 2)).length;
 
       stockBody.innerHTML = '';
       if (parts.length === 0) {
@@ -2021,7 +2114,7 @@
                 <span class="material-symbols-outlined text-[44px] text-light-outline">inventory_2</span>
                 <p class="font-headline text-headline-sm text-light-on-surface">Inventario de repuestos vacío</p>
                 <p class="text-sm text-light-on-surface-variant max-w-sm">Ingresa aceites, bandas, filtros o repuestos para controlar las existencias de tu flota.</p>
-                <button type="button" class="inline-flex items-center gap-1.5 px-4 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs mt-2" onclick="document.getElementById('spare-part-modal')?.classList.remove('hidden'); document.getElementById('spare-part-modal')?.classList.add('flex');">
+                <button type="button" class="btn-open-spare-modal inline-flex items-center gap-1.5 px-4 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs mt-2">
                   <span class="material-symbols-outlined text-[18px]">add_box</span>
                   <span>Ingresar Primer Repuesto</span>
                 </button>
@@ -2029,26 +2122,52 @@
             </td>
           </tr>
         `;
+        stockBody.querySelectorAll('.btn-open-spare-modal').forEach(b => {
+          b.addEventListener('click', () => togglePartModal(true));
+        });
         return;
       }
       parts.forEach(p => {
-        const isLow = p.stock <= p.min;
+        const minQty = p.minStock !== undefined ? p.minStock : (p.min !== undefined ? p.min : 2);
+        const qty = p.stock !== undefined ? p.stock : (p.qty || 0);
+        const isLow = qty <= minQty;
+        const unitPrice = p.unitPrice !== undefined ? p.unitPrice : (p.price || 0);
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
         tr.innerHTML = `
-          <td class="px-gutter-md py-3"><span class="font-mono text-mono-md text-light-outline">${p.code}</span></td>
+          <td class="px-gutter-md py-3"><span class="font-mono text-mono-md text-light-outline">${p.code || '-'}</span></td>
           <td class="px-gutter-md py-3 font-body font-semibold text-light-on-surface">${p.name}</td>
-          <td class="px-gutter-md py-3"><span class="font-label text-label-sm px-2 py-0.5 rounded bg-light-surface-container">${p.category}</span></td>
-          <td class="px-gutter-md py-3 font-mono text-mono-md ${isLow ? 'text-light-error font-bold' : 'text-light-on-surface'} tabular-nums">${p.stock} und.</td>
-          <td class="px-gutter-md py-3 font-mono text-mono-md text-light-outline tabular-nums">${p.min} und.</td>
-          <td class="px-gutter-md py-3 font-mono text-mono-md text-light-on-surface tabular-nums">$ ${(p.price || 0).toLocaleString('es-CO')}</td>
-          <td class="px-gutter-md py-3">
+          <td class="px-gutter-md py-3"><span class="font-label text-label-sm px-2 py-0.5 rounded bg-light-surface-container">${p.category || 'General'}</span></td>
+          <td class="px-gutter-md py-3 font-mono text-mono-md ${isLow ? 'text-light-error font-bold' : 'text-light-on-surface'} tabular-nums">${qty} und.</td>
+          <td class="px-gutter-md py-3 font-mono text-mono-md text-light-outline tabular-nums">${minQty} und.</td>
+          <td class="px-gutter-md py-3 font-mono text-mono-md text-light-on-surface tabular-nums">$ ${unitPrice.toLocaleString('es-CO')}</td>
+          <td class="px-gutter-md py-3 whitespace-nowrap">
             <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${isLow ? 'bg-light-error-container text-light-on-error-container' : 'bg-success-container text-on-success-container'}">
               ${isLow ? 'Bajo stock' : 'Disponible'}
             </span>
+            <button type="button" class="btn-del-part text-red-500 hover:text-red-700 ml-2 inline-flex items-center p-1 rounded hover:bg-red-50 transition" data-code="${p.code}" data-name="${p.name}" title="Eliminar repuesto">
+              <span class="material-symbols-outlined text-[16px]">delete</span>
+            </button>
           </td>
         `;
         stockBody.appendChild(tr);
+      });
+
+      // Listeners de eliminar repuesto
+      stockBody.querySelectorAll('.btn-del-part').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const name = btn.dataset.name;
+          const code = btn.dataset.code;
+          if (confirm(`¿Seguro que deseas eliminar el repuesto "${name}" del inventario?`)) {
+            const res = window.MotoData.deleteSparePart(code || name);
+            if (res && res.success) {
+              renderStockTable();
+              alert(`Repuesto "${name}" eliminado del inventario.`);
+            } else {
+              alert('No se pudo eliminar el repuesto: ' + (res?.message || 'Error'));
+            }
+          }
+        });
       });
     }
 
@@ -2058,9 +2177,30 @@
       if (!partModal) return;
       partModal.classList.toggle('hidden', !show);
       partModal.classList.toggle('flex', show);
+      if (show) {
+        if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
+        updateSpAccountState();
+      }
     }
 
-    document.getElementById('open-part-modal-btn')?.addEventListener('click', () => togglePartModal(true));
+    function updateSpAccountState() {
+      const isCompra = document.getElementById('sp-tipo-compra')?.checked;
+      const accountBox = document.getElementById('sp-account-container');
+      const noticeBox = document.getElementById('sp-initial-notice');
+      if (accountBox) accountBox.classList.toggle('hidden', !isCompra);
+      if (noticeBox) noticeBox.classList.toggle('hidden', isCompra);
+    }
+
+    document.getElementById('sp-tipo-inicial')?.addEventListener('change', updateSpAccountState);
+    document.getElementById('sp-tipo-compra')?.addEventListener('change', updateSpAccountState);
+
+    // Conectar todos los botones que abren el modal de repuestos
+    document.querySelectorAll('#open-part-modal-btn, #add-part-btn, .btn-open-spare-modal').forEach(btn => {
+      btn.addEventListener('click', (e) => {
+        e.preventDefault();
+        togglePartModal(true);
+      });
+    });
     (document.getElementById('close-spare-part-modal-btn') || document.getElementById('close-part-modal-btn'))?.addEventListener('click', () => togglePartModal(false));
     (document.getElementById('cancel-spare-part-btn') || document.getElementById('cancel-part-btn'))?.addEventListener('click', () => togglePartModal(false));
 
@@ -2070,15 +2210,46 @@
         e.preventDefault();
         const code = (document.getElementById('sp-code') || document.getElementById('part-code'))?.value.trim() || `REP-${Date.now().toString().slice(-4)}`;
         const name = (document.getElementById('sp-name') || document.getElementById('part-name'))?.value.trim();
-        const category = (document.getElementById('sp-category') || document.getElementById('part-category'))?.value || 'Lubricantes';
-        const stock = Number((document.getElementById('sp-qty') || document.getElementById('part-stock'))?.value || 1);
-        const min = Number((document.getElementById('sp-min-stock') || document.getElementById('part-min'))?.value || 1);
-        const price = Number((document.getElementById('sp-price') || document.getElementById('part-price'))?.value || 0);
+        if (!name) {
+          alert('Por favor ingresa el nombre del repuesto.');
+          return;
+        }
 
-        MotoData.addSparePart({ code, name, category, stock, min, price });
+        const category = (document.getElementById('sp-category') || document.getElementById('part-category'))?.value || 'Lubricantes';
+        const supplier = document.getElementById('sp-supplier')?.value.trim() || '';
+        const qty = Number((document.getElementById('sp-qty') || document.getElementById('part-stock'))?.value || 1);
+        const minStock = Number((document.getElementById('sp-min-stock') || document.getElementById('part-min'))?.value || 1);
+        const unitPrice = Number((document.getElementById('sp-price') || document.getElementById('part-price'))?.value || 0);
+
+        const isCompra = document.getElementById('sp-tipo-compra')?.checked;
+        const account = isCompra ? (document.getElementById('sp-account')?.value || '') : '';
+
+        if (isCompra && !account) {
+          alert('Por favor selecciona la cuenta de la cual se descontará el dinero de la compra.');
+          return;
+        }
+
+        window.MotoData.addSparePart({
+          code,
+          name,
+          category,
+          supplier: supplier || (isCompra ? 'Proveedor' : 'Inventario Inicial'),
+          qty,
+          unitPrice,
+          minStock,
+          account,
+          isInitial: !isCompra
+        });
+
         togglePartModal(false);
+        partForm.reset();
+        document.getElementById('sp-tipo-inicial').checked = true;
+        updateSpAccountState();
         renderStockTable();
-        alert(`¡Repuesto "${name}" registrado en stock exitosamente!`);
+        alert(isCompra 
+          ? `¡Repuesto "${name}" registrado en stock y egreso de $${(qty * unitPrice).toLocaleString('es-CO')} descontado de "${account}"!`
+          : `¡Repuesto "${name}" agregado como Inventario Inicial (${qty} und.) sin descontar de ninguna cuenta!`
+        );
       });
     }
 
@@ -2526,14 +2697,16 @@
     const runtModal = document.getElementById('runt-assistant-modal');
     const runtSelectVehicle = document.getElementById('runt-select-vehicle');
     const runtPlateDisplay = document.getElementById('runt-plate-display');
-    const runtCedulaDisplay = document.getElementById('runt-cedula-display');
-    const runtCedulaNote = document.getElementById('runt-cedula-note');
+    const runtOwnerCedulaDisplay = document.getElementById('runt-display-owner-cedula');
+    const runtDriverCedulaDisplay = document.getElementById('runt-display-driver-cedula');
     const btnCopyPlate = document.getElementById('btn-copy-plate');
-    const btnCopyCedula = document.getElementById('btn-copy-cedula');
-    const runtDocTypeSelect = document.getElementById('runt-input-doc-type');
-    const runtExpiryInput = document.getElementById('runt-input-expiry');
-    const runtNumberInput = document.getElementById('runt-input-number');
-    const runtEntityInput = document.getElementById('runt-input-entity');
+    const btnCopyOwnerCedula = document.getElementById('btn-copy-owner-cedula');
+    const btnCopyDriverCedula = document.getElementById('btn-copy-driver-cedula');
+    const btnOpenR5 = document.getElementById('btn-open-r5');
+    const runtDocTypeSelect = document.getElementById('runt-doc-type') || document.getElementById('runt-input-doc-type');
+    const runtExpiryInput = document.getElementById('runt-expiry-date') || document.getElementById('runt-input-expiry');
+    const runtNumberInput = document.getElementById('runt-number') || document.getElementById('runt-input-number');
+    const runtEntityInput = document.getElementById('runt-entity') || document.getElementById('runt-input-entity');
     const runtUpdateForm = document.getElementById('runt-update-form');
 
     function openRuntModal(initialPlate = '', initialType = 'SOAT') {
@@ -2559,12 +2732,11 @@
         }
       }
       if (runtDocTypeSelect && initialType) {
-        // Seleccionar tipo coincidente
         const tLower = initialType.toLowerCase();
         if (tLower.includes('soat')) runtDocTypeSelect.value = 'SOAT';
         else if (tLower.includes('tecno')) runtDocTypeSelect.value = 'Tecnomecánica';
-        else if (tLower.includes('gobern')) runtDocTypeSelect.value = 'Impuesto Departamental (Gobernación)';
-        else if (tLower.includes('alcald') || tLower.includes('derech') || tLower.includes('rodamiento')) runtDocTypeSelect.value = 'Derechos de Tránsito (Alcaldía)';
+        else if (tLower.includes('gobern')) runtDocTypeSelect.value = 'Impuesto Departamental';
+        else if (tLower.includes('alcald') || tLower.includes('derech') || tLower.includes('rodamiento')) runtDocTypeSelect.value = 'Derechos de Tránsito';
         else runtDocTypeSelect.value = initialType;
       }
       updateRuntCard();
@@ -2583,17 +2755,14 @@
       const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
       const v = vehicles.find(veh => veh.plate === plate) || {};
 
-      if (runtPlateDisplay) {
-        runtPlateDisplay.textContent = plate || 'SIN PLACA';
+      const ownerCc = v.ownerCedula || '';
+      const driverCc = v.cedula && v.cedula !== '-' ? v.cedula : '';
+
+      if (runtOwnerCedulaDisplay) {
+        runtOwnerCedulaDisplay.value = ownerCc || (driverCc ? `${driverCc} (Conductor)` : 'Sin registrar');
       }
-      const cc = v.cedula && v.cedula !== '-' ? v.cedula : '';
-      if (runtCedulaDisplay) {
-        runtCedulaDisplay.textContent = cc || 'Sin cédula registrada';
-      }
-      if (runtCedulaNote) {
-        runtCedulaNote.textContent = cc
-          ? `Cédula de: ${v.driver || 'Propietario'}. Al abrir el RUNT, pulsa "Pegar" (Ctrl+V) en Placa y en Cédula.`
-          : '⚠️ En el RUNT debes ingresar la cédula del propietario registrado en la matrícula del motocarro.';
+      if (runtDriverCedulaDisplay) {
+        runtDriverCedulaDisplay.value = driverCc || 'Sin registrar';
       }
     }
 
@@ -2605,14 +2774,14 @@
     document.getElementById('close-runt-modal-btn')?.addEventListener('click', closeRuntModal);
     document.getElementById('cancel-runt-modal-btn')?.addEventListener('click', closeRuntModal);
 
-    // Botones de copiado al portapapeles
+    // Botón copiar placa
     if (btnCopyPlate) {
       btnCopyPlate.addEventListener('click', () => {
         const plate = runtSelectVehicle?.value || '';
         if (plate) {
           navigator.clipboard.writeText(plate).then(() => {
             const orig = btnCopyPlate.innerHTML;
-            btnCopyPlate.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span> ¡Copiado!';
+            btnCopyPlate.innerHTML = '<span class="material-symbols-outlined text-[15px]">check</span> ¡Placa Copiada!';
             setTimeout(() => { btnCopyPlate.innerHTML = orig; }, 1800);
           }).catch(() => {
             alert(`Placa: ${plate}`);
@@ -2621,25 +2790,64 @@
       });
     }
 
-    if (btnCopyCedula) {
-      btnCopyCedula.addEventListener('click', () => {
+    // Botón copiar cédula propietario
+    if (btnCopyOwnerCedula) {
+      btnCopyOwnerCedula.addEventListener('click', () => {
         const plate = runtSelectVehicle?.value || '';
-        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
-        const v = vehicles.find(veh => veh.plate === plate) || {};
-        const cc = v.cedula && v.cedula !== '-' ? v.cedula : '';
+        const v = (MotoData.getVehicles ? MotoData.getVehicles() : []).find(veh => veh.plate === plate) || {};
+        const cc = v.ownerCedula || (v.cedula && v.cedula !== '-' ? v.cedula : '');
         if (cc) {
           navigator.clipboard.writeText(cc).then(() => {
-            const orig = btnCopyCedula.innerHTML;
-            btnCopyCedula.innerHTML = '<span class="material-symbols-outlined text-[16px]">check</span> ¡Copiado!';
-            setTimeout(() => { btnCopyCedula.innerHTML = orig; }, 1800);
-          }).catch(() => {
-            alert(`Cédula: ${cc}`);
-          });
+            const orig = btnCopyOwnerCedula.innerHTML;
+            btnCopyOwnerCedula.innerHTML = '<span class="material-symbols-outlined text-[15px]">check</span>';
+            setTimeout(() => { btnCopyOwnerCedula.innerHTML = orig; }, 1800);
+          }).catch(() => { alert(`Cédula propietario: ${cc}`); });
         } else {
-          alert('Este motocarro no tiene cédula registrada. Regístrala en la ficha del motocarro para copiarla con 1 clic.');
+          alert('Este motocarro no tiene cédula de propietario registrada. Edita el motocarro en la vista Flota para agregarla.');
         }
       });
     }
+
+    // Botón copiar cédula conductor
+    if (btnCopyDriverCedula) {
+      btnCopyDriverCedula.addEventListener('click', () => {
+        const plate = runtSelectVehicle?.value || '';
+        const v = (MotoData.getVehicles ? MotoData.getVehicles() : []).find(veh => veh.plate === plate) || {};
+        const cc = v.cedula && v.cedula !== '-' ? v.cedula : '';
+        if (cc) {
+          navigator.clipboard.writeText(cc).then(() => {
+            const orig = btnCopyDriverCedula.innerHTML;
+            btnCopyDriverCedula.innerHTML = '<span class="material-symbols-outlined text-[15px]">check</span>';
+            setTimeout(() => { btnCopyDriverCedula.innerHTML = orig; }, 1800);
+          }).catch(() => { alert(`Cédula conductor: ${cc}`); });
+        } else {
+          alert('No hay cédula de conductor registrada.');
+        }
+      });
+    }
+
+    // Botón R5 (Consulta Rápida - Copia placa al portapapeles)
+    if (btnOpenR5) {
+      btnOpenR5.addEventListener('click', () => {
+        const plate = runtSelectVehicle?.value || '';
+        if (plate) {
+          navigator.clipboard.writeText(plate).catch(() => {});
+        }
+      });
+    }
+
+    // Atajos de fecha (+1 año, +6 meses)
+    document.querySelectorAll('.btn-quick-date').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const days = Number(btn.dataset.days || 365);
+        const d = new Date();
+        d.setDate(d.getDate() + days);
+        const yyyy = d.getFullYear();
+        const mm = String(d.getMonth() + 1).padStart(2, '0');
+        const dd = String(d.getDate()).padStart(2, '0');
+        if (runtExpiryInput) runtExpiryInput.value = `${yyyy}-${mm}-${dd}`;
+      });
+    });
 
     if (runtUpdateForm) {
       runtUpdateForm.addEventListener('submit', (e) => {
@@ -2652,13 +2860,13 @@
         const type = runtDocTypeSelect?.value || 'SOAT';
         const expiry = runtExpiryInput?.value;
         if (!expiry) {
-          alert('Por favor indica la nueva fecha de vencimiento que viste en la consulta de RUNT.');
+          alert('Por favor indica la nueva fecha de vencimiento obtenida en R5 o en el RUNT.');
           return;
         }
         const number = runtNumberInput?.value.trim() || '';
         const entity = runtEntityInput?.value.trim() || '';
 
-        MotoData.quickUpdateDocumentByPlate(plate, {
+        window.MotoData.quickUpdateDocumentByPlate(plate, {
           type: type,
           expiry: expiry,
           number: number,
@@ -3058,6 +3266,19 @@
       });
     });
 
+    // Conexión checkbox: El conductor es el mismo propietario
+    const mismoPropietarioToggle = document.getElementById('mismo-propietario-toggle');
+    if (mismoPropietarioToggle) {
+      mismoPropietarioToggle.addEventListener('change', () => {
+        if (mismoPropietarioToggle.checked) {
+          const propNombre = document.getElementById('propietario-nombre');
+          const propCedula = document.getElementById('propietario-cedula');
+          if (nombreConductor && propNombre && nombreConductor.value) propNombre.value = nombreConductor.value;
+          if (cedula && propCedula && cedula.value) propCedula.value = cedula.value;
+        }
+      });
+    }
+
     if (formMoto) {
       let isSubmitting = false;
 
@@ -3084,16 +3305,8 @@
           return;
         }
 
-        const isSinConductor = sinConductorToggle?.checked;
+        const isSinConductor = Boolean(sinConductorToggle?.checked) || !(nombreConductor?.value || '').trim();
         const nombreConductorVal = isSinConductor ? 'Sin conductor' : (nombreConductor?.value || '').trim();
-        if (!isSinConductor && !nombreConductorVal) {
-          alert('⚠️ Por favor ingresa el nombre del conductor o marca "Dejar sin conductor asignado".');
-          if (nombreConductor) {
-            nombreConductor.scrollIntoView({ behavior: 'smooth', block: 'center' });
-            nombreConductor.focus();
-          }
-          return;
-        }
 
         const tarifaInput = document.getElementById('tarifa-asignada');
         const tarifa = Number(tarifaInput?.value || 50000);
@@ -3121,25 +3334,32 @@
 
         const colorRadio = document.querySelector('input[name="colorVehiculo"]:checked') || document.querySelector('input[name="color-motocarro"]:checked');
         const color = colorRadio ? colorRadio.value : 'Azul';
-        const modelo = (document.getElementById('marca-modelo') || document.getElementById('modelo'))?.value || 'Bajaj RE 4S';
-        const anio = document.getElementById('anio')?.value || '2026';
-        const cc = isSinConductor ? '-' : (cedula?.value.trim() || 'Sin registrar');
+        const modelo = (document.getElementById('marca-modelo') || document.getElementById('modelo'))?.value.trim() || 'Bajaj RE 4S';
+        const anio = document.getElementById('anio')?.value || '2025';
+        const chasisVal = (document.getElementById('chasis')?.value || '').trim().toUpperCase() || '-';
+        const propNombreVal = (document.getElementById('propietario-nombre')?.value || '').trim();
+        const propCedulaVal = (document.getElementById('propietario-cedula')?.value || '').trim();
+
+        const cc = isSinConductor ? '-' : (cedula?.value.trim() || '-');
         const tel = isSinConductor ? '-' : (telefono?.value.trim() || '-');
         const lic = document.getElementById('licencia')?.value || 'A2';
-        const venceLic = document.getElementById('vence-licencia')?.value || '2028-04-15';
-        const cuenta = document.getElementById('cuenta-recaudo')?.value || 'Caja Efectivo';
-        const kmVal = Number(document.getElementById('kilometraje')?.value || 100);
+        const venceLic = document.getElementById('vence-licencia')?.value || '';
+        const cuenta = document.getElementById('cuenta-recaudo')?.value || '';
+        const kmVal = Number(document.getElementById('kilometraje')?.value || 0);
 
         try {
-          MotoData.addVehicle({
+          window.MotoData.addVehicle({
             plate: placa,
             color: color,
             model: `${modelo} (${anio})`,
+            chassis: chasisVal,
+            ownerName: propNombreVal || (nombreConductorVal !== 'Sin conductor' ? nombreConductorVal : 'Propietario Flota'),
+            ownerCedula: propCedulaVal || (cc !== '-' ? cc : ''),
             driver: nombreConductorVal,
             cedula: cc,
             phone: tel,
             license: lic,
-            venceLicencia: venceLic,
+            venceLicencia: venceLic || 'Vigente',
             dailyRate: tarifa,
             account: cuenta,
             status: isSinConductor ? 'idle' : 'route',

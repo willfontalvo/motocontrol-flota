@@ -1077,7 +1077,7 @@ Limpiar
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Inventario de repuestos en bodega</h2>
 <p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Existencias mínimas, costo unitario y reposición</p>
 </div>
-<button class="inline-flex items-center justify-center gap-gutter-xs px-gutter-md py-2 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change shadow-xs font-label text-label-md" data-component-id="button-secondary" data-component-type="button" data-component-variant="secondary" id="add-part-btn" type="button"><span class="material-symbols-outlined text-[18px]">add_box</span><span>Ingresar Repuesto a Stock</span></button>
+<button class="btn-open-spare-modal inline-flex items-center justify-center gap-gutter-xs px-gutter-md py-2 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change shadow-xs font-label text-label-md" data-component-id="button-secondary" data-component-type="button" data-component-variant="secondary" id="open-part-modal-btn" type="button"><span class="material-symbols-outlined text-[18px]">add_box</span><span>Ingresar Repuesto a Stock</span></button>
 </header>
 <div class="w-full overflow-x-auto border border-light-outline-variant rounded min-w-0">
 <div data-component-id="table-inventory" data-component-type="table" data-component-variant="standard">
@@ -1550,20 +1550,20 @@ Limpiar
 </div>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="marca-modelo">Marca y referencia *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="marca-modelo" name="marcaModelo" placeholder="Ej: Bajaj RE 4S / TVS King" required="" type="text" value="Bajaj RE 4S"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="marca-modelo">Marca y referencia</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="marca-modelo" name="marcaModelo" placeholder="Ej: Bajaj RE 4S / TVS King" type="text" value="Bajaj RE 4S"/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="anio">Modelo (Año) *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="anio" max="2027" min="2015" name="anio" required="" type="number" value="2025"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="anio">Modelo (Año)</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="anio" max="2027" min="2015" name="anio" type="number" value="2025"/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="kilometraje">Kilometraje actual (km) *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="kilometraje" min="0" name="kilometraje" required="" type="number" value="14200"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="kilometraje">Kilometraje actual (km)</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="kilometraje" min="0" name="kilometraje" placeholder="Ej. 14000 (Opcional)" type="number" value="0"/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="chasis">Número de chasis / VIN</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md uppercase px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="chasis" name="chasis" type="text" value="MD2A45CZ7RWB04819"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="chasis">Número de chasis / VIN (Opcional)</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md uppercase px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="chasis" name="chasis" placeholder="Ej: MD2A45CZ7RWB04819 (Opcional)" type="text" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="estado-vehiculo">Estado operativo</label>
@@ -1575,12 +1575,39 @@ Limpiar
 </div>
 </div>
 </section>
-<!-- Section 2: Conductor Asociado -->
+<!-- Section 2: Propietario del Motocarro (Para RUNT y SOAT) -->
+<section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md">
+<div class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
+<div class="flex items-center gap-gutter-sm">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">badge</span>
+<h2 class="font-headline text-headline-sm text-light-on-surface">2. Propietario del motocarro (Según RUNT / Matrícula)</h2>
+</div>
+<span class="text-xs text-light-outline font-body">Cédula requerida para consultar SOAT / Tecno</span>
+</div>
+<div class="p-2.5 rounded bg-light-surface-container-low border border-light-outline-variant flex items-center gap-2">
+<input class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" id="mismo-propietario-toggle" type="checkbox"/>
+<label class="text-xs font-label text-light-on-surface cursor-pointer" for="mismo-propietario-toggle">
+El conductor asignado es el mismo dueño / propietario del vehículo
+</label>
+</div>
+<div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-md">
+<div class="flex flex-col gap-gutter-xs">
+<label class="font-label text-label-md text-light-on-surface" for="propietario-nombre">Nombre del propietario</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="propietario-nombre" name="propietarioNombre" placeholder="Ej. Andrés Rojas (Dueño en tarjeta de propiedad)" type="text" value=""/>
+</div>
+<div class="flex flex-col gap-gutter-xs">
+<label class="font-label text-label-md text-light-on-surface" for="propietario-cedula">Cédula / NIT del propietario (Para RUNT) *</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="propietario-cedula" name="propietarioCedula" placeholder="Ej. 1.037.624.890 (La que figura en el RUNT)" type="text" value=""/>
+<span class="text-[11px] text-light-on-surface-variant font-body">💡 Esta cédula es la que se usará para consultar automáticamente en el RUNT (no la del conductor).</span>
+</div>
+</div>
+</section>
+<!-- Section 3: Conductor Asociado -->
 <section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <div class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
 <div class="flex items-center gap-gutter-sm">
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">person</span>
-<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">2. Conductor asociado</h2>
+<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">3. Conductor asignado (Opcional si aún no lo tienes)</h2>
 </div>
 <label class="inline-flex items-center gap-gutter-xs cursor-pointer">
 <input class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" id="sin-conductor-toggle" type="checkbox"/>
@@ -1590,10 +1617,10 @@ Limpiar
 <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-md" id="conductor-fields">
 <div class="flex flex-col gap-gutter-xs">
 <div class="flex items-center justify-between">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="nombre-conductor">Nombre completo *</label>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="nombre-conductor">Nombre completo del conductor</label>
 <span class="text-xs text-light-primary font-label font-medium">¿Mismo conductor para 2 motocarros? Escribe o elígelo</span>
 </div>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="nombre-conductor" list="existing-conductores-list" name="nombreConductor" placeholder="Elegir o escribir nombre y apellido" required="" type="text" value="Hernán Darío López"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="nombre-conductor" list="existing-conductores-list" name="nombreConductor" placeholder="Elegir o escribir nombre (Opcional)" type="text" value=""/>
 <datalist id="existing-conductores-list"></datalist>
 <p class="text-[11px] text-light-on-surface-variant font-body">Puedes asociar un conductor existente para trabajar en esquema intercalado (1 día sí y 1 día no).</p>
 <div class="hidden text-xs px-2.5 py-1.5 rounded bg-[#E0E7FF] text-[#3730A3] font-label font-medium items-center gap-1 border border-[#3730A3]/20" id="conductor-intercalado-badge">
@@ -1602,12 +1629,12 @@ Limpiar
 </div>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="cedula">Cédula de ciudadanía *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="cedula" name="cedula" required="" type="text" value="1.037.624.890"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="cedula">Cédula de ciudadanía del conductor</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="cedula" name="cedula" placeholder="Ej. 1.037.624.890 (Opcional)" type="text" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="telefono">Teléfono / WhatsApp *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="telefono" name="telefono" required="" type="tel" value="312 458 9034"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="telefono">Teléfono / WhatsApp</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="telefono" name="telefono" placeholder="Ej. 312 458 9034 (Opcional)" type="tel" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="licencia">Categoría y vencimiento de licencia</label>
@@ -1617,16 +1644,16 @@ Limpiar
 <option value="B1">B1</option>
 <option value="C1">C1</option>
 </select>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="vence-licencia" name="venceLicencia" type="date" value="2028-04-15"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="vence-licencia" name="venceLicencia" type="date" value=""/>
 </div>
 </div>
 </div>
 </section>
-<!-- Section 3: Tarifa y Cuenta de Recaudo -->
+<!-- Section 4: Tarifa y Cuenta de Recaudo -->
 <section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md" data-component-id="card-outlined" data-component-type="card" data-component-variant="outlined">
 <div class="flex items-center gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">payments</span>
-<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">3. Tarifa diaria y cuenta de ingreso</h2>
+<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">4. Tarifa diaria y cuenta de ingreso</h2>
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-md">
 <div class="flex flex-col gap-gutter-xs">
@@ -2357,41 +2384,119 @@ Limpiar
 </div>
 </div>
 <div aria-labelledby="assign-modal-title" aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="assign-modal" role="dialog">
-<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-md p-gutter-lg flex flex-col gap-gutter-md">
-<header class="flex items-center justify-between gap-gutter-sm">
-<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm" id="assign-modal-title">Asociar conductor y vehículo</h2>
+<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-xl p-gutter-lg flex flex-col gap-gutter-md max-h-[90vh] overflow-y-auto shadow-2xl">
+<header class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[24px] text-light-primary">edit_note</span>
+<div>
+<h2 class="font-headline text-headline-sm text-light-on-surface" id="assign-modal-title">Editar Información de Motocarro y Conductor</h2>
+<p class="font-body text-body-sm text-light-on-surface-variant">Actualiza chasis, cédulas, datos de propietario o conductor asignado</p>
+</div>
+</div>
 <button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low" id="close-assign-modal-btn" type="button">
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
 <form class="flex flex-col gap-gutter-md" id="assign-form" novalidate>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Placa del motocarro</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface uppercase" id="modal-plate" placeholder="Ej. MCT-804" type="text" value=""/>
+<!-- 1. Vehículo y Chasis -->
+<div class="p-3 bg-light-surface-container-low rounded border border-light-outline-variant flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label text-label-sm font-bold text-light-primary">1. Datos del Motocarro</span>
+<span class="px-2 py-0.5 rounded bg-light-surface border font-mono text-mono-md font-bold text-light-on-surface" id="modal-plate-badge">MCT-000</span>
+</div>
+<input type="hidden" id="modal-plate" value=""/>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface">Color del motocarro</label>
+<div class="grid grid-cols-2 gap-2">
+<label class="flex items-center gap-1.5 p-1.5 rounded border border-light-outline-variant bg-light-surface cursor-pointer text-xs font-semibold">
+<input type="radio" name="modalColor" id="modal-color-azul" value="Azul" class="text-[#0369A1] focus:ring-[#0369A1]"/>
+<span>🔵 Azul</span>
 </label>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Nombre completo del conductor</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" id="modal-driver" list="existing-conductores-list" placeholder="Ej. Julián Castro o Sin conductor" type="text"/>
-<span class="text-[11px] text-light-outline">Puedes asignar un conductor existente para turno intercalado (1 día sí y 1 día no).</span>
-</label>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface">Cédula de ciudadanía *</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface px-2.5 py-2 focus:border-light-primary" id="modal-cedula" placeholder="Ej. 1.037.624.890" type="text" value=""/>
-</label>
-
-<div class="grid grid-cols-2 gap-gutter-sm">
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Teléfono</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" placeholder="300 000 0000" type="tel"/>
-</label>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Tarifa diaria (COP)</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" step="1000" type="number" value="45000"/>
+<label class="flex items-center gap-1.5 p-1.5 rounded border border-light-outline-variant bg-light-surface cursor-pointer text-xs font-semibold">
+<input type="radio" name="modalColor" id="modal-color-salmon" value="Salmón" class="text-[#EA580C] focus:ring-[#EA580C]"/>
+<span>🟠 Salmón</span>
 </label>
 </div>
-<div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs">
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-model">Marca y modelo</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-body text-body-sm text-light-on-surface focus:border-light-primary" id="modal-model" placeholder="Ej. Bajaj RE 4S" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-chasis">Número de chasis / VIN</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-mono text-mono-sm uppercase text-light-on-surface focus:border-light-primary" id="modal-chasis" placeholder="Ej. MD2A45CZ7RWB04819" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-km">Kilometraje (km)</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-mono text-mono-sm text-light-on-surface focus:border-light-primary" id="modal-km" min="0" type="number"/>
+</div>
+</div>
+</div>
+
+<!-- 2. Propietario (RUNT) -->
+<div class="p-3 bg-light-surface-container-low rounded border border-light-outline-variant flex flex-col gap-2">
+<span class="font-label text-label-sm font-bold text-light-primary">2. Propietario (Según Matrícula / RUNT)</span>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-owner-name">Nombre del propietario</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-body text-body-sm text-light-on-surface focus:border-light-primary" id="modal-owner-name" placeholder="Ej. Andrés Rojas" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-owner-cedula">Cédula del propietario (Para RUNT) *</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-mono text-mono-sm font-bold text-light-on-surface focus:border-light-primary" id="modal-owner-cedula" placeholder="Ej. 1.037.624.890" type="text"/>
+</div>
+</div>
+</div>
+
+<!-- 3. Conductor Asignado -->
+<div class="p-3 bg-light-surface-container-low rounded border border-light-outline-variant flex flex-col gap-2">
+<div class="flex items-center justify-between">
+<span class="font-label text-label-sm font-bold text-light-primary">3. Conductor Asignado</span>
+<label class="flex items-center gap-1 cursor-pointer text-xs text-light-on-surface-variant">
+<input type="checkbox" id="modal-sin-conductor" class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary"/>
+<span>Sin conductor</span>
+</label>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2" id="modal-conductor-box">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-driver">Nombre del conductor</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-body text-body-sm text-light-on-surface focus:border-light-primary" id="modal-driver" list="existing-conductores-list" placeholder="Ej. Hernán López" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-cedula">Cédula del conductor</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-mono text-mono-sm text-light-on-surface focus:border-light-primary" id="modal-cedula" placeholder="Ej. 71.234.567" type="text"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-phone">Teléfono / WhatsApp</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-mono text-mono-sm text-light-on-surface focus:border-light-primary" id="modal-phone" placeholder="300 000 0000" type="tel"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-license-vence">Vencimiento Licencia</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-mono text-mono-sm text-light-on-surface focus:border-light-primary" id="modal-license-vence" type="date"/>
+</div>
+</div>
+</div>
+
+<!-- 4. Tarifa y Estado -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-daily-rate">Tarifa diaria ($ / día)</label>
+<input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-2 font-mono text-mono-md font-bold text-light-on-surface focus:border-light-primary" id="modal-daily-rate" min="0" step="1000" type="number" value="50000"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="modal-status">Estado operativo</label>
+<select class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-2 font-body text-body-sm text-light-on-surface focus:border-light-primary" id="modal-status">
+<option value="route">En ruta (Operando)</option>
+<option value="workshop">En taller (Mantenimiento)</option>
+<option value="idle">Sin conductor (Disponible)</option>
+</select>
+</div>
+</div>
+
+<div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs border-t border-light-outline-variant">
 <button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-assign-btn" type="button">Cancelar</button>
-<button class="px-gutter-md py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container" type="submit">Guardar asociación</button>
+<button class="px-gutter-md py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container shadow-xs" type="submit">Guardar Cambios</button>
 </div>
 </form>
 </div>
@@ -2826,6 +2931,26 @@ Crear Cuenta y Acceder
 </button>
 </header>
 <form class="flex flex-col gap-gutter-md" id="spare-part-form" novalidate>
+<!-- Selector Modo: Inventario Inicial vs Compra Nueva -->
+<div class="p-3 bg-light-surface-container-low rounded-md border border-light-outline-variant flex flex-col gap-2">
+<span class="font-label text-label-sm font-bold text-light-on-surface">Origen de los repuestos:</span>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+<label class="flex items-start gap-2 p-2.5 rounded border border-light-outline-variant bg-light-surface cursor-pointer has-[:checked]:border-light-primary has-[:checked]:bg-light-secondary-container/30 transition-colors">
+<input checked="" class="mt-0.5 text-light-primary focus:ring-light-primary" id="sp-tipo-inicial" name="spTipoRegistro" type="radio" value="inicial"/>
+<div class="flex flex-col">
+<span class="font-label text-label-sm font-bold text-light-on-surface">📦 Inventario Inicial / Bodega</span>
+<span class="text-[11px] text-light-on-surface-variant">Repuestos que ya tenías guardados. NO descuenta de cuentas ni genera egreso de dinero.</span>
+</div>
+</label>
+<label class="flex items-start gap-2 p-2.5 rounded border border-light-outline-variant bg-light-surface cursor-pointer has-[:checked]:border-light-primary has-[:checked]:bg-light-secondary-container/30 transition-colors">
+<input class="mt-0.5 text-light-primary focus:ring-light-primary" id="sp-tipo-compra" name="spTipoRegistro" type="radio" value="compra"/>
+<div class="flex flex-col">
+<span class="font-label text-label-sm font-bold text-light-on-surface">🛒 Compra Nueva de Repuestos</span>
+<span class="text-[11px] text-light-on-surface-variant">Registrar factura y descontar egreso de saldo de una cuenta bancaria o caja.</span>
+</div>
+</label>
+</div>
+</div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="sp-name">Nombre del repuesto *</label>
@@ -2851,32 +2976,33 @@ Crear Cuenta y Acceder
 </select>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface" for="sp-supplier">Proveedor</label>
-<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="sp-supplier" placeholder="Ej. MotoPartes del Valle" type="text"/>
+<label class="font-label text-label-md text-light-on-surface" for="sp-supplier">Proveedor / Origen</label>
+<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="sp-supplier" placeholder="Ej. Inventario propio / MotoPartes" type="text"/>
 </div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-gutter-sm">
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="sp-qty">Cantidad a ingresar *</label>
-<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="sp-qty" min="1" required="" type="number" value="5"/>
+<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="sp-qty" min="1" required="" type="number" value="1"/>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface" for="sp-price">Costo unitario (COP) *</label>
-<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="sp-price" min="0" required="" step="1000" type="number" value="45000"/>
+<label class="font-label text-label-md text-light-on-surface" for="sp-price">Costo unitario aprox. (COP)</label>
+<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="sp-price" min="0" step="1000" type="number" value="0"/>
 </div>
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="sp-min-stock">Stock mínimo alerta</label>
-<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="sp-min-stock" min="1" type="number" value="2"/>
+<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="sp-min-stock" min="1" type="number" value="1"/>
 </div>
 </div>
-<div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface" for="sp-account">Cuenta para descontar compra (Egreso)</label>
+<div class="hidden flex flex-col gap-1" id="sp-account-container">
+<label class="font-label text-label-md text-light-on-surface" for="sp-account">Cuenta para descontar compra (Egreso) *</label>
 <select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="sp-account">
-<option value="Bancolombia Ahorros">Bancolombia Ahorros</option>
-<option value="Nequi Flota">Nequi Flota</option>
-<option value="Caja Efectivo">Caja Efectivo</option>
-<option value="">No descontar (Ya pagado anteriormente)</option>
+<option value="">-- Seleccionar cuenta bancaria o caja --</option>
 </select>
+</div>
+<div class="p-2.5 rounded bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs flex items-center gap-2" id="sp-initial-notice">
+<span class="material-symbols-outlined text-[18px]">check_circle</span>
+<span><strong>Inventario Inicial activo:</strong> El repuesto se sumará a tus existencias físicas sin tocar el dinero de ninguna cuenta.</span>
 </div>
 <div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs border-t border-light-outline-variant">
 <button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-spare-part-btn" type="button">Cancelar</button>
@@ -3197,36 +3323,60 @@ Crear Cuenta y Acceder
 </span>
 <span class="text-xs text-light-outline font-body">Copia con un clic</span>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-gutter-sm">
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant" for="runt-select-vehicle">Motocarro:</label>
+<label class="font-label text-label-xs text-light-on-surface-variant font-semibold" for="runt-select-vehicle">Motocarro:</label>
 <select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-1.5 font-mono text-mono-md font-bold focus:border-light-primary" id="runt-select-vehicle">
 </select>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant">Cédula Conductor / Propietario:</label>
-<input class="rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-2.5 py-1.5 font-mono text-mono-md" id="runt-display-cedula" readonly="" type="text" value=""/>
+<label class="font-label text-label-xs text-light-on-surface-variant font-semibold">Cédula Propietario (RUNT):</label>
+<div class="flex items-center gap-1">
+<input class="w-full rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-2.5 py-1.5 font-mono text-mono-sm font-bold" id="runt-display-owner-cedula" readonly="" type="text" value=""/>
+<button class="p-1.5 rounded border border-light-outline-variant bg-light-surface hover:bg-light-primary hover:text-white transition-colors" id="btn-copy-owner-cedula" title="Copiar Cédula Propietario" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
 </div>
 </div>
-<div class="flex flex-wrap items-center gap-2 pt-1">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface-variant">Cédula Conductor:</label>
+<div class="flex items-center gap-1">
+<input class="w-full rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-2.5 py-1.5 font-mono text-mono-sm" id="runt-display-driver-cedula" readonly="" type="text" value=""/>
+<button class="p-1.5 rounded border border-light-outline-variant bg-light-surface hover:bg-light-primary hover:text-white transition-colors" id="btn-copy-driver-cedula" title="Copiar Cédula Conductor" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+</div>
+<!-- Enlaces directos de consulta -->
+<div class="flex flex-wrap items-center gap-2 pt-2 border-t border-light-outline-variant">
 <button class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-light-surface border border-light-outline-variant text-light-primary font-label text-label-sm hover:bg-light-primary hover:text-light-on-primary transition-colors shadow-xs" id="btn-copy-plate" type="button">
 <span class="material-symbols-outlined text-[15px]">content_copy</span>
 <span id="btn-copy-plate-text">Copiar Placa</span>
 </button>
-<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-light-surface border border-light-outline-variant text-light-primary font-label text-label-sm hover:bg-light-primary hover:text-light-on-primary transition-colors shadow-xs" id="btn-copy-cedula" type="button">
-<span class="material-symbols-outlined text-[15px]">badge</span>
-<span id="btn-copy-cedula-text">Copiar Cédula</span>
-</button>
-<a class="inline-flex items-center gap-1.5 px-4 py-1.5 rounded bg-light-primary text-light-on-primary font-label text-label-sm font-bold hover:bg-light-primary-container shadow-xs ml-auto transition-colors" href="https://www.runt.gov.co/consultaCiudadana/#/consultaVehiculo" rel="noopener noreferrer" target="_blank">
+<!-- Opción R5: Solo Placa y Sin Captcha -->
+<a class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-600 text-white font-label text-label-sm font-bold hover:bg-emerald-700 shadow-xs transition-colors" href="https://www.r5.com.co/soat" id="btn-open-r5" rel="noopener noreferrer" target="_blank" title="R5 te permite consultar el SOAT ingresando únicamente la placa, sin pedir cédula ni captcha.">
+<span class="material-symbols-outlined text-[16px]">bolt</span>
+<span>Consultar en R5 (Solo Placa · Sin Captcha)</span>
+</a>
+<!-- Opción Oficial RUNT -->
+<a class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-light-primary text-light-on-primary font-label text-label-sm font-semibold hover:bg-light-primary-container shadow-xs ml-auto transition-colors" href="https://www.runt.gov.co/consultaCiudadana/#/consultaVehiculo" id="btn-open-runt" rel="noopener noreferrer" target="_blank" title="Portal oficial RUNT (Requiere Cédula del Propietario y resolver captcha)">
 <span class="material-symbols-outlined text-[16px]">open_in_new</span>
-<span>Abrir Portal Oficial RUNT</span>
+<span>Portal RUNT Oficial</span>
 </a>
 </div>
 </div>
 <form class="flex flex-col gap-gutter-sm border-t border-light-outline-variant pt-gutter-sm" id="runt-update-form" novalidate>
+<div class="flex items-center justify-between">
 <div class="flex items-center gap-1.5 text-light-on-surface font-label text-label-sm font-bold">
 <span class="material-symbols-outlined text-[18px] text-success">update</span>
 <span>2. Registrar / Actualizar Fecha en MotoControl:</span>
+</div>
+<div class="flex items-center gap-1">
+<span class="text-[11px] text-light-on-surface-variant font-medium">Atajos:</span>
+<button class="btn-quick-date px-2 py-0.5 rounded border border-light-outline-variant bg-light-surface text-[11px] font-semibold hover:bg-light-secondary-container" data-days="365" type="button">+1 Año</button>
+<button class="btn-quick-date px-2 py-0.5 rounded border border-light-outline-variant bg-light-surface text-[11px] font-semibold hover:bg-light-secondary-container" data-days="180" type="button">+6 Meses</button>
+</div>
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
 <div class="flex flex-col gap-1">
