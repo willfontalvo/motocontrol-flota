@@ -704,16 +704,82 @@ window.MotoData = {
     return true;
   },
 
+  getTodayLocalISO() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  },
+
+  isTransferTx(tx) {
+    return Boolean(tx && (tx.type === 'transfer' || (tx.category || '').toLowerCase() === 'transferencia'));
+  },
+
   getSettings() {
     if (!this.data.settings) {
-      this.data.settings = {
-        alertEmails: '',
-        emailAlertsEnabled: true,
-        notifyDaysBefore: [30, 15, 5, 1],
-        notifyMaintDaysBefore: [5, 2]
+      this.data.settings = {};
+    }
+    if (!this.data.settings.workPlan) {
+      this.data.settings.workPlan = {
+        azulDays: 'even',
+        salmonDays: 'odd'
       };
     }
+    if (this.data.settings.taxDepartment === undefined) this.data.settings.taxDepartment = 'atlantico';
+    if (this.data.settings.transitPortalUrl === undefined) this.data.settings.transitPortalUrl = '';
+    if (this.data.settings.alertEmails === undefined) this.data.settings.alertEmails = '';
+    if (this.data.settings.emailAlertsEnabled === undefined) this.data.settings.emailAlertsEnabled = true;
+    if (!this.data.settings.notifyDaysBefore) this.data.settings.notifyDaysBefore = [30, 15, 5, 1];
+    if (!this.data.settings.notifyMaintDaysBefore) this.data.settings.notifyMaintDaysBefore = [5, 2];
     return this.data.settings;
+  },
+
+  getVehicleWorkStatus(v, dateStr) {
+    const targetDate = dateStr || this.getTodayLocalISO();
+    if (!v || v.status === 'sold') {
+      return { code: 'sold', label: 'Vendido', paidToday: 0, isWorkingDay: false, expectedRate: 0 };
+    }
+
+    const txs = this.data?.transactions || [];
+    const plateUpper = (v.plate || '').trim().toUpperCase();
+    const paidToday = txs
+      .filter(t =>
+        t.date === targetDate &&
+        t.type === 'income' &&
+        !this.isTransferTx(t) &&
+        t.category !== 'Apertura de cuenta' &&
+        t.category !== 'Venta de vehículo' &&
+        (t.plate || '').trim().toUpperCase() === plateUpper
+      )
+      .reduce((sum, t) => sum + Number(t.amount || 0), 0);
+
+    const expectedRate = Number(v.dailyRate || 45000);
+    if (paidToday > 0) {
+      return { code: 'paid', label: 'Pago', paidToday, isWorkingDay: true, expectedRate };
+    }
+    if (v.status === 'workshop') {
+      return { code: 'workshop', label: 'En taller', paidToday: 0, isWorkingDay: false, expectedRate };
+    }
+    if (v.status === 'resting') {
+      return { code: 'resting', label: 'Descansando', paidToday: 0, isWorkingDay: false, expectedRate };
+    }
+
+    const settings = this.getSettings();
+    const plan = settings.workPlan || { azulDays: 'even', salmonDays: 'odd' };
+    const dayNum = Number((targetDate.split('-')[2] || new Date().getDate()));
+    const parity = (dayNum % 2 === 0) ? 'even' : 'odd';
+    const isSalmon = (v.color || '').toLowerCase().includes('salm');
+    const rule = isSalmon ? (plan.salmonDays || 'odd') : (plan.azulDays || 'even');
+    const isWorkingDay = (rule === 'all' || rule === parity);
+
+    if (!isWorkingDay) {
+      return { code: 'resting', label: 'Descansando', paidToday: 0, isWorkingDay: false, expectedRate };
+    }
+    if (!v.driver || v.driver === 'Sin conductor' || v.status === 'idle') {
+      return { code: 'idle', label: 'Sin conductor', paidToday: 0, isWorkingDay: true, expectedRate };
+    }
+    return { code: 'pending', label: 'Pendiente', paidToday: 0, isWorkingDay: true, expectedRate };
   },
 
   saveSettings(newSettings) {
@@ -731,11 +797,44 @@ window.MotoData = {
     if (!skipBalanceUpdate) {
       const acct = data.accounts.find(a => a.name.toLowerCase() === (cleanTx.account || '').toLowerCase());
       if (acct) {
-        if (cleanTx.type === 'income') acct.balance += Number(cleanTx.amount || 0);
-        else if (cleanTx.type === 'expense') acct.balance -= Number(cleanTx.amount || 0);
+        if (cleanTx.type === 'income') acct.balance = Number(acct.balance || 0) + Number(cleanTx.amount || 0);
+        else if (cleanTx.type === 'expense') acct.balance = Number(acct.balance || 0) - Number(cleanTx.amount || 0);
       }
     }
     this.persist();
+  },
+
+  transferBetweenAccounts({ fromAccount, toAccount, amount, plate, concept, date }) {
+    const data = this.getCleanData();
+    const amt = Number(amount || 0);
+    if (!fromAccount || !toAccount || fromAccount === toAccount || amt <= 0) {
+      return { success: false, message: 'Datos de transferencia inválidos.' };
+    }
+    const fromAcc = data.accounts.find(a => a.name.toLowerCase() === fromAccount.toLowerCase());
+    const toAcc = data.accounts.find(a => a.name.toLowerCase() === toAccount.toLowerCase());
+    if (!fromAcc || !toAcc) {
+      return { success: false, message: 'No se encontró la cuenta origen o destino.' };
+    }
+
+    fromAcc.balance = Number(fromAcc.balance || 0) - amt;
+    toAcc.balance = Number(toAcc.balance || 0) + amt;
+
+    const record = {
+      id: 'tx-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      type: 'transfer',
+      category: 'Transferencia',
+      account: `${fromAcc.name} → ${toAcc.name}`,
+      fromAccount: fromAcc.name,
+      toAccount: toAcc.name,
+      plate: plate || 'Entre cuentas',
+      driver: '',
+      concept: concept || `Transferencia ${fromAcc.name} → ${toAcc.name}`,
+      amount: amt,
+      date: date || this.getTodayLocalISO()
+    };
+    data.transactions.unshift(record);
+    this.persist();
+    return { success: true, record };
   },
 
   deleteTransaction(id) {
@@ -743,12 +842,17 @@ window.MotoData = {
     const idx = data.transactions.findIndex(t => t.id === id);
     if (idx === -1) return { success: false, message: 'Movimiento no encontrado.' };
     const tx = data.transactions[idx];
-    // Revertir impacto en saldo si la cuenta aún existe y no fue apertura
-    if (tx.category !== 'Apertura de cuenta') {
+    const amt = Number(tx.amount || 0);
+    if (tx.type === 'transfer' && tx.fromAccount && tx.toAccount) {
+      const fromAcc = data.accounts.find(a => a.name.toLowerCase() === tx.fromAccount.toLowerCase());
+      const toAcc = data.accounts.find(a => a.name.toLowerCase() === tx.toAccount.toLowerCase());
+      if (fromAcc) fromAcc.balance = Number(fromAcc.balance || 0) + amt;
+      if (toAcc) toAcc.balance = Number(toAcc.balance || 0) - amt;
+    } else if (tx.category !== 'Apertura de cuenta') {
       const acct = data.accounts.find(a => a.name.toLowerCase() === (tx.account || '').toLowerCase());
       if (acct) {
-        if (tx.type === 'income') acct.balance -= Number(tx.amount || 0);
-        else if (tx.type === 'expense') acct.balance += Number(tx.amount || 0);
+        if (tx.type === 'income') acct.balance = Number(acct.balance || 0) - amt;
+        else if (tx.type === 'expense') acct.balance = Number(acct.balance || 0) + amt;
       }
     }
     data.transactions.splice(idx, 1);

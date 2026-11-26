@@ -140,6 +140,7 @@
       if (action === 'tarifa') {
         const quickTarifaModal = document.getElementById('fin-modal');
         if (quickTarifaModal) {
+          if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
           quickTarifaModal.classList.remove('hidden');
           quickTarifaModal.classList.add('flex');
         } else {
@@ -190,7 +191,7 @@
 
     // Re-render context
     if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
-    const todayStr = new Date().toISOString().split('T')[0];
+    const todayStr = (window.MotoData && window.MotoData.getTodayLocalISO) ? window.MotoData.getTodayLocalISO() : new Date().toISOString().split('T')[0];
     if (viewId === 'form-movimiento') {
       const mf = document.getElementById('mov-fecha');
       if (mf && !mf.value) mf.value = todayStr;
@@ -860,7 +861,6 @@
     const activeBadge = document.getElementById('dashboard-active-filter-badge');
     const activeBadgeText = document.getElementById('dashboard-active-filter-text');
     const activeBadgeStats = document.getElementById('dashboard-active-filter-stats');
-    const txTableBody = document.getElementById('dashboard-tx-table-body');
     const accountsContainer = document.getElementById('dashboard-accounts-container');
     const accountsCountEl = document.getElementById('dashboard-accounts-count');
     const maintTableBody = document.getElementById('dashboard-maint-table-body');
@@ -1197,7 +1197,9 @@
         if (!el) return;
         const totals = {};
         matchedTxs.forEach(t => {
-          if (t.type !== txType || !t.plate || t.plate === 'General' || t.plate === 'General flota') return;
+          const isTransf = MotoData.isTransferTx ? MotoData.isTransferTx(t) : (t.type === 'transfer' || t.category === 'Transferencia');
+          if (isTransf || t.category === 'Apertura de cuenta') return;
+          if (t.type !== txType || !t.plate || t.plate === 'General' || t.plate === 'General flota' || t.plate === 'Entre cuentas') return;
           totals[t.plate] = (totals[t.plate] || 0) + Number(t.amount || 0);
         });
         const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 6);
@@ -1250,10 +1252,13 @@
         if (dTo && t.date && t.date > dTo) okDate = false;
 
         if (okAcct && okDrv && okDate) {
-          matchCount++;
           matchedTxs.push(t);
-          if (t.type === 'income') incTotal += Number(t.amount || 0);
-          else if (t.type === 'expense') expTotal += Number(t.amount || 0);
+          const isTransf = MotoData.isTransferTx ? MotoData.isTransferTx(t) : (t.type === 'transfer' || t.category === 'Transferencia');
+          if (!isTransf) {
+            matchCount++;
+            if (t.type === 'income') incTotal += Number(t.amount || 0);
+            else if (t.type === 'expense') expTotal += Number(t.amount || 0);
+          }
         }
       });
 
@@ -1279,8 +1284,9 @@
       const fleetRateEl = document.getElementById('kpi-fleet-rate');
       const fleetSubEl = document.getElementById('kpi-fleet-sub');
 
-      const incCount = matchedTxs.filter(t => t.type === 'income').length;
-      const expCount = matchedTxs.filter(t => t.type === 'expense').length;
+      const operationalTxs = matchedTxs.filter(t => !(MotoData.isTransferTx ? MotoData.isTransferTx(t) : (t.type === 'transfer' || t.category === 'Transferencia')));
+      const incCount = operationalTxs.filter(t => t.type === 'income').length;
+      const expCount = operationalTxs.filter(t => t.type === 'expense').length;
       if (incEl) incEl.textContent = '$ ' + incTotal.toLocaleString('es-CO');
       if (incDeltaEl) incDeltaEl.textContent = `${incCount} reg.`;
       if (expEl) expEl.textContent = '$ ' + expTotal.toLocaleString('es-CO');
@@ -1288,9 +1294,20 @@
       if (balEl) balEl.textContent = '$ ' + netBalance.toLocaleString('es-CO');
       if (balStatusEl) balStatusEl.textContent = netBalance >= 0 ? 'Disponible' : 'Déficit';
 
+      let paidTodayCnt = 0;
+      let pendingTodayCnt = 0;
+      let restingTodayCnt = 0;
+      let workshopCnt = 0;
+      vehicles.forEach(v => {
+        const ws = MotoData.getVehicleWorkStatus ? MotoData.getVehicleWorkStatus(v) : { code: v.status === 'workshop' ? 'workshop' : 'pending' };
+        if (ws.code === 'paid') paidTodayCnt++;
+        else if (ws.code === 'pending') pendingTodayCnt++;
+        else if (ws.code === 'resting') restingTodayCnt++;
+        else if (ws.code === 'workshop') workshopCnt++;
+      });
+
       if (fleetCountEl) {
-        const inRoute = vehicles.filter(v => v.status === 'route').length;
-        fleetCountEl.textContent = `${inRoute} / ${vehicles.length}`;
+        fleetCountEl.textContent = `${paidTodayCnt + pendingTodayCnt} / ${vehicles.length}`;
       }
       if (fleetRateEl) {
         let avgRate = 0;
@@ -1302,8 +1319,14 @@
         fleetRateEl.textContent = `$ ${(avgRate / 1000).toFixed(0)}k/día`;
       }
       if (fleetSubEl) {
-        const inWorkshop = vehicles.filter(v => v.status === 'workshop').length;
-        fleetSubEl.textContent = inWorkshop > 0 ? `${inWorkshop} motocarro${inWorkshop === 1 ? '' : 's'} en taller correctivo` : (vehicles.length > 0 ? 'Toda la flota operativa' : 'Sin motocarros registrados');
+        if (vehicles.length === 0) {
+          fleetSubEl.textContent = 'Sin motocarros registrados';
+        } else {
+          const partsSub = [`${paidTodayCnt} pago${paidTodayCnt === 1 ? '' : 's'}`, `${pendingTodayCnt} pendiente${pendingTodayCnt === 1 ? '' : 's'}`];
+          if (restingTodayCnt > 0) partsSub.push(`${restingTodayCnt} descansando`);
+          if (workshopCnt > 0) partsSub.push(`${workshopCnt} en taller`);
+          fleetSubEl.textContent = partsSub.join(' · ');
+        }
       }
 
       if (hasSpecificFilter) {
@@ -1320,39 +1343,6 @@
         if (activeBadge) {
           activeBadge.classList.add('hidden');
           activeBadge.classList.remove('flex');
-        }
-      }
-
-      // Render Dashboard movements table
-      if (txTableBody) {
-        txTableBody.innerHTML = '';
-        const listToRender = hasSpecificFilter ? matchedTxs : txs.slice(0, 6);
-        if (listToRender.length === 0) {
-          txTableBody.innerHTML = '<tr><td colspan="6" class="px-3 py-6 text-center text-light-on-surface-variant font-body">No hay movimientos registrados para los filtros seleccionados.</td></tr>';
-        } else {
-          listToRender.forEach(t => {
-            const tr = document.createElement('tr');
-            tr.className = 'hover:bg-light-surface-container-low transition-colors';
-            const isInc = t.type === 'income';
-            const typeBadge = isInc
-              ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-success-container text-on-success-container text-[11px] font-semibold">Ingreso</span>'
-              : '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-light-error-container text-light-on-error-container text-[11px] font-semibold">Gasto</span>';
-
-            tr.innerHTML = `
-              <td class="px-3 py-2.5 font-mono text-light-outline whitespace-nowrap">${t.date || '-'}</td>
-              <td class="px-3 py-2.5">${typeBadge}</td>
-              <td class="px-3 py-2.5 font-body font-medium text-light-on-surface whitespace-nowrap">${t.concept || '-'}</td>
-              <td class="px-3 py-2.5">
-                <span class="font-mono font-bold text-light-primary">${t.plate || 'General'}</span>
-                <span class="font-body text-light-on-surface-variant text-[11px]">${t.driver ? ' · ' + t.driver : ''}</span>
-              </td>
-              <td class="px-3 py-2.5 font-body text-light-on-surface-variant whitespace-nowrap">${t.account || '-'}</td>
-              <td class="px-3 py-2.5 text-right font-mono font-bold tabular-nums whitespace-nowrap ${isInc ? 'text-success' : 'text-light-error'}">
-                ${isInc ? '+' : '-'} $ ${(t.amount || 0).toLocaleString('es-CO')}
-              </td>
-            `;
-            txTableBody.appendChild(tr);
-          });
         }
       }
 
@@ -1411,7 +1401,7 @@
         });
         const preset = btn.dataset.preset;
         const now = new Date();
-        const toIso = (d) => d.toISOString().split('T')[0];
+        const toIso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
         if (preset === 'all') {
           if (fromInput) fromInput.value = '';
           if (toInput) toInput.value = '';
@@ -1495,15 +1485,19 @@
         const vColor = v.color || 'Azul';
         const isSalmon = vColor.toLowerCase().includes('salm') || vColor.toLowerCase().includes('salmon');
         const isSold = v.status === 'sold';
+        const ws = (!isSold && MotoData.getVehicleWorkStatus)
+          ? MotoData.getVehicleWorkStatus(v)
+          : { code: isSold ? 'sold' : (v.status === 'workshop' ? 'workshop' : (v.status === 'resting' ? 'resting' : 'pending')) };
 
         let matchesFilter = false;
         if (currentFilter === 'all') matchesFilter = !isSold;
         else if (currentFilter === 'sold') matchesFilter = isSold;
         else if (currentFilter === 'Azul') matchesFilter = !isSalmon && !isSold;
         else if (currentFilter === 'Salmón') matchesFilter = isSalmon && !isSold;
-        else if (currentFilter === 'active' || currentFilter === 'route') matchesFilter = !isSold && v.status === 'route';
-        else if (currentFilter === 'unassigned') matchesFilter = !isSold && (!v.driver || v.driver === 'Sin conductor' || v.status === 'idle' || v.status === 'available');
-        else matchesFilter = !isSold && (v.status === currentFilter);
+        else if (currentFilter === 'active' || currentFilter === 'route') matchesFilter = !isSold && (ws.code === 'paid' || ws.code === 'pending');
+        else if (currentFilter === 'resting') matchesFilter = !isSold && ws.code === 'resting';
+        else if (currentFilter === 'unassigned') matchesFilter = !isSold && (ws.code === 'idle' || !v.driver || v.driver === 'Sin conductor');
+        else matchesFilter = !isSold && (v.status === currentFilter || ws.code === currentFilter);
 
         const cedulaStr = v.cedula || '';
         const searchStr = `${v.plate} ${vColor} ${v.model} ${v.driver} ${cedulaStr} ${v.phone}`.toLowerCase();
@@ -1513,17 +1507,24 @@
           visibleCount++;
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
-          tr.dataset.status = v.status;
+          tr.dataset.status = ws.code;
           tr.dataset.color = vColor;
           tr.dataset.search = searchStr;
 
-          const statusBadge = isSold
-            ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-light-surface-container-highest text-light-outline font-label text-label-sm font-semibold">🤝 Vendido</span>'
-            : v.status === 'route'
-            ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-success-container text-on-success-container font-label text-label-sm">En ruta</span>'
-            : v.status === 'workshop'
-            ? '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container font-label text-label-sm">En taller</span>'
-            : '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-light-surface-container-high text-light-on-surface-variant font-label text-label-sm">Sin conductor</span>';
+          let statusBadge = '';
+          if (isSold) {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-light-surface-container-highest text-light-outline font-label text-label-sm font-semibold">🤝 Vendido</span>';
+          } else if (ws.code === 'workshop') {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container font-label text-label-sm font-semibold">En taller</span>';
+          } else if (ws.code === 'resting') {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-light-surface-container-high text-light-on-surface-variant font-label text-label-sm font-semibold">Descansando</span>';
+          } else if (ws.code === 'idle') {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-light-surface-container-high text-light-on-surface-variant font-label text-label-sm">Sin conductor</span>';
+          } else if (ws.code === 'paid') {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-success-container text-on-success-container font-label text-label-sm font-semibold">En ruta · Pago</span>';
+          } else {
+            statusBadge = '<span class="inline-flex items-center px-2 py-0.5 rounded-full bg-warning-container text-on-warning-container font-label text-label-sm font-semibold">En ruta · Pendiente</span>';
+          }
 
           const colorBadge = isSalmon
             ? '<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-[#FFE5DB] text-[#7F4025] border border-[#9C573A]/30 font-label text-label-sm font-semibold">🟠 Salmón</span>'
@@ -1607,9 +1608,17 @@
 
       // Actualizar KPIs de la vista Flota
       const activeVehs = data.vehicles.filter(v => v.status !== 'sold');
-      const inRoute = activeVehs.filter(v => v.status === 'route').length;
-      const inWorkshop = activeVehs.filter(v => v.status === 'workshop').length;
-      const available = activeVehs.filter(v => v.status === 'available' || v.status === 'idle' || !v.driver || v.driver === 'Sin conductor').length;
+      let inRoute = 0;
+      let inWorkshop = 0;
+      let restingCnt = 0;
+      let available = 0;
+      activeVehs.forEach(v => {
+        const ws = MotoData.getVehicleWorkStatus ? MotoData.getVehicleWorkStatus(v) : { code: v.status === 'workshop' ? 'workshop' : 'pending' };
+        if (ws.code === 'paid' || ws.code === 'pending') inRoute++;
+        else if (ws.code === 'workshop') inWorkshop++;
+        else if (ws.code === 'resting') restingCnt++;
+        else available++;
+      });
       const driversAssigned = new Set(activeVehs.filter(v => v.driver && v.driver !== 'Sin conductor').map(v => v.driver)).size;
 
       const kpiTotalEl = document.getElementById('fleet-kpi-total');
@@ -1623,8 +1632,8 @@
       const kpiAlertsBadgeEl = document.getElementById('fleet-kpi-alerts-badge');
 
       if (kpiTotalEl) kpiTotalEl.textContent = activeVehs.length;
-      if (kpiInRouteEl) kpiInRouteEl.textContent = `${inRoute} en ruta`;
-      if (kpiSubEl) kpiSubEl.textContent = `${inWorkshop} en taller · ${available} disponible`;
+      if (kpiInRouteEl) kpiInRouteEl.textContent = `${inRoute} en ruta hoy`;
+      if (kpiSubEl) kpiSubEl.textContent = `${restingCnt} descansando · ${inWorkshop} en taller · ${available} sin conductor`;
       if (kpiDriversEl) kpiDriversEl.textContent = driversAssigned;
       if (kpiDriversBadgeEl) kpiDriversBadgeEl.textContent = `${driversAssigned} asignados`;
       if (kpiRateEl) {
@@ -1943,21 +1952,24 @@
 
       let matchCount = 0;
       data.transactions.forEach(t => {
-        const matchType = activeType === 'all' || t.type === activeType;
+        const isTransf = MotoData.isTransferTx ? MotoData.isTransferTx(t) : (t.type === 'transfer' || t.category === 'Transferencia');
+        const matchType = activeType === 'all' || (!isTransf && t.type === activeType);
         const matchAcct = acct === 'all' || (t.account || '').toLowerCase().includes(acct.toLowerCase());
 
         if (matchType && matchAcct) {
           matchCount++;
           const tr = document.createElement('tr');
           tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
-          const isInc = t.type === 'income';
+          const isInc = t.type === 'income' && !isTransf;
+          const amountClass = isTransf ? 'text-light-primary' : (isInc ? 'text-success' : 'text-light-error');
+          const prefix = isTransf ? '⇄ ' : (isInc ? '+ ' : '- ');
 
           tr.innerHTML = `
             <td class="px-gutter-md py-3.5"><span class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.concept}</span></td>
             <td class="px-gutter-md py-3.5"><span class="font-mono text-mono-md text-light-on-surface font-bold whitespace-nowrap">${t.plate || 'General'}</span></td>
             <td class="px-gutter-md py-3.5"><span class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.account}</span></td>
-            <td class="px-gutter-md py-3.5 text-right font-mono text-mono-md font-semibold ${isInc ? 'text-success' : 'text-light-error'} tabular-nums whitespace-nowrap">
-              ${isInc ? '+' : '-'} $ ${(t.amount || 0).toLocaleString('es-CO')}
+            <td class="px-gutter-md py-3.5 text-right font-mono text-mono-md font-semibold ${amountClass} tabular-nums whitespace-nowrap">
+              ${prefix}$ ${(t.amount || 0).toLocaleString('es-CO')}
             </td>
           `;
           txTableBody.appendChild(tr);
@@ -1979,12 +1991,53 @@
       }
     }
 
+    function syncWorkPlanUI() {
+      const settings = MotoData.getSettings ? MotoData.getSettings() : {};
+      const plan = settings.workPlan || { azulDays: 'even', salmonDays: 'odd' };
+      const todayBadge = document.getElementById('workplan-today-badge');
+      const azulSel = document.getElementById('workplan-azul-days');
+      const salmonSel = document.getElementById('workplan-salmon-days');
+      const now = new Date();
+      const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
+      const dayNum = now.getDate();
+      const parityLabel = dayNum % 2 === 0 ? 'Día PAR' : 'Día IMPAR';
+      if (todayBadge) todayBadge.textContent = `${dayNames[now.getDay()]} ${dayNum} · ${parityLabel}`;
+      if (azulSel) azulSel.value = plan.azulDays || 'even';
+      if (salmonSel) salmonSel.value = plan.salmonDays || 'odd';
+    }
+
+    document.getElementById('workplan-azul-days')?.addEventListener('change', (e) => {
+      const settings = MotoData.getSettings ? MotoData.getSettings() : {};
+      const plan = { ...(settings.workPlan || {}), azulDays: e.target.value };
+      MotoData.saveSettings({ workPlan: plan });
+      renderTariffVehiclesTable();
+      renderTarifasKPIs();
+    });
+    document.getElementById('workplan-salmon-days')?.addEventListener('change', (e) => {
+      const settings = MotoData.getSettings ? MotoData.getSettings() : {};
+      const plan = { ...(settings.workPlan || {}), salmonDays: e.target.value };
+      MotoData.saveSettings({ workPlan: plan });
+      renderTariffVehiclesTable();
+      renderTarifasKPIs();
+    });
+
     function renderTariffVehiclesTable() {
+      syncWorkPlanUI();
       if (!tariffVehiclesBody) return;
       const vehicles = MotoData.getVehicles ? MotoData.getVehicles().filter(v => v.status !== 'sold') : [];
       tariffVehiclesBody.innerHTML = '';
 
+      let paidCnt = 0;
+      let pendingCnt = 0;
+      let restingCnt = 0;
+
       if (vehicles.length === 0) {
+        const wpPaidEl = document.getElementById('wp-count-paid');
+        const wpPendEl = document.getElementById('wp-count-pending');
+        const wpRestEl = document.getElementById('wp-count-resting');
+        if (wpPaidEl) wpPaidEl.textContent = 'Pago: 0';
+        if (wpPendEl) wpPendEl.textContent = 'Pendiente: 0';
+        if (wpRestEl) wpRestEl.textContent = 'Descansando: 0';
         tariffVehiclesBody.innerHTML = `
           <tr>
             <td colspan="3" class="px-gutter-md py-8 text-center text-light-on-surface-variant font-body">
@@ -2000,23 +2053,61 @@
       }
 
       vehicles.forEach(v => {
+        const ws = MotoData.getVehicleWorkStatus ? MotoData.getVehicleWorkStatus(v) : { code: 'pending', label: 'Pendiente', paidToday: 0 };
+        if (ws.code === 'paid') paidCnt++;
+        else if (ws.code === 'pending') pendingCnt++;
+        else if (ws.code === 'resting') restingCnt++;
+
+        const isSalmon = (v.color || '').toLowerCase().includes('salm');
+        const colorDot = isSalmon ? '🟠' : '🔵';
+
+        let badgeHtml = '';
+        if (ws.code === 'paid') {
+          badgeHtml = `<div class="flex flex-col gap-0.5"><span class="inline-flex w-fit items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-success-container text-on-success-container">Pago</span><span class="font-mono text-[11px] text-success tabular-nums">$ ${ws.paidToday.toLocaleString('es-CO')}</span></div>`;
+        } else if (ws.code === 'pending') {
+          badgeHtml = `<div class="flex items-center gap-1.5 flex-wrap"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-warning-container text-on-warning-container">Pendiente</span><button type="button" class="quick-pay-btn px-2 py-0.5 rounded bg-light-primary text-light-on-primary text-[11px] font-label font-semibold hover:bg-light-primary-container transition-colors" data-plate="${v.plate}" data-rate="${v.dailyRate || 45000}">Cobrar</button></div>`;
+        } else if (ws.code === 'resting') {
+          badgeHtml = `<div class="flex items-center gap-1.5 flex-wrap"><span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-light-surface-container text-light-on-surface-variant">Descansando</span><button type="button" class="quick-pay-btn text-[11px] font-label text-light-primary hover:underline" data-plate="${v.plate}" data-rate="${v.dailyRate || 45000}">Registrar</button></div>`;
+        } else if (ws.code === 'workshop') {
+          badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-light-error-container text-light-on-error-container">En taller</span>`;
+        } else {
+          badgeHtml = `<span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-light-surface-container text-light-outline">Sin conductor</span>`;
+        }
+
         const tr = document.createElement('tr');
         tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
         tr.innerHTML = `
           <td class="px-gutter-md py-3">
-            <p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap font-bold">${v.plate}</p>
+            <p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap font-bold">${colorDot} ${v.plate}</p>
             <p class="font-body text-body-sm text-light-on-surface-variant whitespace-nowrap">${v.driver}</p>
           </td>
           <td class="px-gutter-md py-3 font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap">
             $ ${(v.dailyRate || 45000).toLocaleString('es-CO')}
           </td>
-          <td class="px-gutter-md py-3">
-            <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${v.status === 'route' ? 'bg-success-container text-on-success-container' : 'bg-light-surface-container text-light-on-surface-variant'}">
-              ${v.status === 'route' ? 'En ruta' : 'Pendiente'}
-            </span>
-          </td>
+          <td class="px-gutter-md py-3">${badgeHtml}</td>
         `;
         tariffVehiclesBody.appendChild(tr);
+      });
+
+      const wpPaidEl = document.getElementById('wp-count-paid');
+      const wpPendEl = document.getElementById('wp-count-pending');
+      const wpRestEl = document.getElementById('wp-count-resting');
+      if (wpPaidEl) wpPaidEl.textContent = `Pago: ${paidCnt}`;
+      if (wpPendEl) wpPendEl.textContent = `Pendiente: ${pendingCnt}`;
+      if (wpRestEl) wpRestEl.textContent = `Descansando: ${restingCnt}`;
+
+      tariffVehiclesBody.querySelectorAll('.quick-pay-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          toggleFinModal(true);
+          const typeSel = document.getElementById('fin-tx-type');
+          const plateSel = document.getElementById('fin-modal-plate');
+          const amtInp = document.getElementById('fin-amount');
+          const conceptInp = document.getElementById('fin-concept');
+          if (typeSel) typeSel.value = 'income';
+          if (plateSel) plateSel.value = btn.dataset.plate || '';
+          if (amtInp) amtInp.value = btn.dataset.rate || '45000';
+          if (conceptInp) conceptInp.value = 'Tarifa diaria';
+        });
       });
 
       // Update form-tarifa vehicle checklist
@@ -2113,12 +2204,13 @@
           category: txType === 'income' ? 'Tarifa diaria' : 'Operativo',
           concept: concept,
           amount: amount,
-          date: new Date().toISOString().split('T')[0]
+          date: MotoData.getTodayLocalISO ? MotoData.getTodayLocalISO() : new Date().toISOString().split('T')[0]
         });
 
         toggleFinModal(false);
         finForm.reset();
         renderTarifasMovements();
+        renderTariffVehiclesTable();
         renderTarifasKPIs();
         alert(`${txType === 'income' ? 'Recaudo' : 'Gasto'} de $ ${amount.toLocaleString('es-CO')} registrado en ${acct}.`);
       });
@@ -2135,6 +2227,8 @@
       let expenseCount = 0;
 
       txs.forEach(t => {
+        const isTransf = MotoData.isTransferTx ? MotoData.isTransferTx(t) : (t.type === 'transfer' || t.category === 'Transferencia');
+        if (isTransf) return;
         if (t.type === 'income') {
           income += Number(t.amount || 0);
           incomeCount++;
@@ -2144,6 +2238,13 @@
         }
       });
       const balance = income - expense;
+      let paidTodayCnt = 0;
+      let pendingTodayCnt = 0;
+      vehicles.forEach(v => {
+        const ws = MotoData.getVehicleWorkStatus ? MotoData.getVehicleWorkStatus(v) : { code: 'pending' };
+        if (ws.code === 'paid') paidTodayCnt++;
+        else if (ws.code === 'pending') pendingTodayCnt++;
+      });
 
       const baseRate = vehicles.length > 0 ? (vehicles[0].dailyRate || 45000) : 0;
       const baseRateEl = document.getElementById('kpi-tarifas-base-rate');
@@ -2156,7 +2257,7 @@
       const incomeSubEl = document.getElementById('kpi-tarifas-income-sub');
       if (incomeEl) incomeEl.textContent = `$ ${income.toLocaleString('es-CO')}`;
       if (incomeBadgeEl) incomeBadgeEl.textContent = `${incomeCount} recaudos`;
-      if (incomeSubEl) incomeSubEl.textContent = `${vehicles.filter(v => v.status === 'route').length} unidades liquidando`;
+      if (incomeSubEl) incomeSubEl.textContent = `${paidTodayCnt} pago${paidTodayCnt === 1 ? '' : 's'} hoy · ${pendingTodayCnt} pendiente${pendingTodayCnt === 1 ? '' : 's'}`;
 
       const expenseEl = document.getElementById('kpi-tarifas-expense');
       const expenseBadgeEl = document.getElementById('kpi-tarifas-expense-badge');
@@ -3126,6 +3227,23 @@
     const btnCopyOwnerCedula = document.getElementById('btn-copy-owner-cedula');
     const btnCopyDriverCedula = document.getElementById('btn-copy-driver-cedula');
     const btnOpenR5 = document.getElementById('btn-open-r5');
+    const taxDeptSelect = document.getElementById('tax-department-select');
+    const transitUrlInput = document.getElementById('transit-portal-url');
+    const btnOpenTaxPortal = document.getElementById('btn-open-tax-portal');
+    const btnOpenTransitPortal = document.getElementById('btn-open-transit-portal');
+    const btnOpenSimit = document.getElementById('btn-open-simit');
+    const TAX_PORTAL_URLS = {
+      atlantico: 'https://portalimpuestos.atlantico.gov.co/',
+      bolivar: 'https://impuestos.bolivar.gov.co/gobol_web/liquidaciones',
+      magdalena: 'https://impuestos.gobernaciondelmagdalena.gov.co/autoservicio-vehiculo',
+      cordoba: 'https://impuestos.cordoba.gov.co/RentasCord/vehiculos_consulta.jsp?Opcion=1',
+      sucre: 'https://www.sucre.gov.co/',
+      cesar: 'https://cesar.gov.co/',
+      antioquia: 'https://www.vehiculosantioquia.com.co/impuestosWeb/#/public',
+      valle: 'https://www.vehiculosvalle.com.co/',
+      cundinamarca: 'https://impuvehiculo.cundinamarca.gov.co/sivervcundinamarca/liquidacionweb/primeraa.php',
+      bogota: 'https://www.haciendabogota.gov.co/'
+    };
     const runtDocTypeSelect = document.getElementById('runt-doc-type') || document.getElementById('runt-input-doc-type');
     const runtExpiryInput = document.getElementById('runt-expiry-date') || document.getElementById('runt-input-expiry');
     const runtNumberInput = document.getElementById('runt-number') || document.getElementById('runt-input-number');
@@ -3134,6 +3252,13 @@
 
     function openRuntModal(initialPlate = '', initialType = 'SOAT') {
       if (!runtModal) return;
+      const settings = MotoData.getSettings ? MotoData.getSettings() : {};
+      if (taxDeptSelect && settings.taxDepartment) {
+        taxDeptSelect.value = settings.taxDepartment;
+      }
+      if (transitUrlInput && settings.transitPortalUrl !== undefined) {
+        transitUrlInput.value = settings.transitPortalUrl || '';
+      }
       const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
       if (runtSelectVehicle) {
         runtSelectVehicle.innerHTML = '';
@@ -3272,6 +3397,50 @@
       });
     }
 
+    // Portales de Impuestos Departamentales, Tránsito Municipal y SIMIT
+    if (taxDeptSelect) {
+      taxDeptSelect.addEventListener('change', () => {
+        if (MotoData.saveSettings) MotoData.saveSettings({ taxDepartment: taxDeptSelect.value });
+      });
+    }
+    if (transitUrlInput) {
+      transitUrlInput.addEventListener('change', () => {
+        if (MotoData.saveSettings) MotoData.saveSettings({ transitPortalUrl: transitUrlInput.value.trim() });
+      });
+    }
+    if (btnOpenTaxPortal) {
+      btnOpenTaxPortal.addEventListener('click', () => {
+        const dept = taxDeptSelect?.value || 'atlantico';
+        if (MotoData.saveSettings) MotoData.saveSettings({ taxDepartment: dept });
+        const plate = runtSelectVehicle?.value || '';
+        if (plate) navigator.clipboard.writeText(plate).catch(() => {});
+        const targetUrl = TAX_PORTAL_URLS[dept] || TAX_PORTAL_URLS.atlantico;
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      });
+    }
+    if (btnOpenSimit) {
+      btnOpenSimit.addEventListener('click', () => {
+        const plate = runtSelectVehicle?.value || '';
+        if (plate) navigator.clipboard.writeText(plate).catch(() => {});
+      });
+    }
+    if (btnOpenTransitPortal) {
+      btnOpenTransitPortal.addEventListener('click', () => {
+        let rawUrl = (transitUrlInput?.value || '').trim();
+        if (!rawUrl) {
+          alert('Pega primero el enlace de tu Secretaría de Tránsito o Alcaldía municipal (ej. https://...) y quedará guardado automáticamente.');
+          transitUrlInput?.focus();
+          return;
+        }
+        if (!/^https?:\/\//i.test(rawUrl)) rawUrl = 'https://' + rawUrl;
+        if (transitUrlInput) transitUrlInput.value = rawUrl;
+        if (MotoData.saveSettings) MotoData.saveSettings({ transitPortalUrl: rawUrl });
+        const plate = runtSelectVehicle?.value || '';
+        if (plate) navigator.clipboard.writeText(plate).catch(() => {});
+        window.open(rawUrl, '_blank', 'noopener,noreferrer');
+      });
+    }
+
     // Atajos de fecha (+1 año, +6 meses)
     document.querySelectorAll('.btn-quick-date').forEach(btn => {
       btn.addEventListener('click', () => {
@@ -3401,6 +3570,15 @@
     const countEl = document.getElementById('ledger-count');
     const ledgerBody = document.getElementById('ledger-body');
 
+    document.getElementById('btn-goto-transfer')?.addEventListener('click', () => {
+      navigateTo('form-movimiento');
+      const transfRadio = document.querySelector('input[name="movTipo"][value="Transferencia"]') || document.querySelector('input[name="tipo-movimiento"][value="Transferencia"]');
+      if (transfRadio) {
+        transfRadio.checked = true;
+        transfRadio.dispatchEvent(new Event('change', { bubbles: true }));
+      }
+    });
+
     function renderLedgerTable() {
       if (!ledgerBody) return;
       const txs = MotoData.getTransactions ? MotoData.getTransactions() : [];
@@ -3413,8 +3591,9 @@
       let visible = 0;
 
       txs.forEach(t => {
-        const rowAccount = (t.account || '').toLowerCase();
-        const rowCat = (t.category || (t.type === 'income' ? 'Ingreso' : 'Gasto')).toLowerCase();
+        const isTransf = MotoData.isTransferTx ? MotoData.isTransferTx(t) : (t.type === 'transfer' || t.category === 'Transferencia');
+        const rowAccount = (t.account || '').toLowerCase() + ' ' + (t.fromAccount || '').toLowerCase() + ' ' + (t.toAccount || '').toLowerCase();
+        const rowCat = (isTransf ? 'Transferencia' : (t.category || (t.type === 'income' ? 'Ingreso' : 'Gasto'))).toLowerCase();
         const rowDate = t.date || '';
 
         const okAccount = a === 'all' || rowAccount.includes(a);
@@ -3430,7 +3609,13 @@
           tr.dataset.account = t.account;
           tr.dataset.category = t.category;
           tr.dataset.date = t.date;
-          const isInc = t.type === 'income';
+          const isInc = t.type === 'income' && !isTransf;
+          const badgeClass = isTransf
+            ? 'bg-light-secondary-container text-light-on-secondary-container font-semibold'
+            : (isInc ? 'bg-success-container text-on-success-container' : 'bg-light-surface-container text-light-on-surface-variant');
+          const badgeText = isTransf ? '⇄ Transferencia' : (t.category || (isInc ? 'Ingreso' : 'Operativo'));
+          const amtColor = isTransf ? 'text-light-primary' : (isInc ? 'text-success' : 'text-light-error');
+          const amtPrefix = isTransf ? '⇄ ' : (isInc ? '+ ' : '- ');
 
           tr.innerHTML = `
             <td class="px-gutter-md py-3">
@@ -3440,7 +3625,7 @@
               <p class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.concept || '-'}</p>
             </td>
             <td class="px-gutter-md py-3">
-              <span class="font-label text-label-sm px-2 py-0.5 rounded ${isInc ? 'bg-success-container text-on-success-container' : 'bg-light-surface-container text-light-on-surface-variant'}">${t.category || (isInc ? 'Ingreso' : 'Operativo')}</span>
+              <span class="font-label text-label-sm px-2 py-0.5 rounded ${badgeClass}">${badgeText}</span>
             </td>
             <td class="px-gutter-md py-3">
               <p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap">${t.plate || 'General'}</p>
@@ -3450,8 +3635,8 @@
               <span class="font-body text-body-sm text-light-on-surface whitespace-nowrap">${t.account || '-'}</span>
             </td>
             <td class="px-gutter-md py-3 text-right">
-              <span class="font-mono text-mono-md font-semibold ${isInc ? 'text-success' : 'text-light-error'} tabular-nums whitespace-nowrap">
-                ${isInc ? '+' : '-'} $ ${(t.amount || 0).toLocaleString('es-CO')}
+              <span class="font-mono text-mono-md font-semibold ${amtColor} tabular-nums whitespace-nowrap">
+                ${amtPrefix}$ ${(t.amount || 0).toLocaleString('es-CO')}
               </span>
             </td>
             <td class="px-gutter-md py-3 text-right whitespace-nowrap">
@@ -4406,12 +4591,17 @@
     });
 
     const cuentaDestinoWrap = document.getElementById('cuenta-destino-wrap');
+    const movCategoriaWrap = document.getElementById('mov-categoria-wrap');
     function updateMovTipoUI() {
       const tipoRadio = document.querySelector('input[name="movTipo"]:checked') || document.querySelector('input[name="tipo-movimiento"]:checked');
       const isTransf = tipoRadio ? tipoRadio.value.toLowerCase().includes('transferencia') : false;
       if (cuentaDestinoWrap) {
         cuentaDestinoWrap.classList.toggle('hidden', !isTransf);
         cuentaDestinoWrap.classList.toggle('flex', isTransf);
+      }
+      if (movCategoriaWrap) {
+        movCategoriaWrap.classList.toggle('hidden', isTransf);
+        movCategoriaWrap.classList.toggle('flex', !isTransf);
       }
     }
     document.querySelectorAll('input[name="movTipo"], input[name="tipo-movimiento"]').forEach(r => {
@@ -4437,7 +4627,7 @@
         const cuenta = document.getElementById('mov-cuenta')?.value || '';
         const cuentaDestino = document.getElementById('mov-cuenta-destino')?.value || '';
         const categoria = document.getElementById('mov-categoria')?.value || 'Operativo';
-        const placa = document.getElementById('mov-motocarro')?.value || 'General flota';
+        const placa = document.getElementById('mov-motocarro')?.value || (esTransferencia ? 'Entre cuentas' : 'General flota');
         const montoInput = document.getElementById('mov-monto');
         const monto = Number(montoInput?.value || 0);
 
@@ -4456,8 +4646,8 @@
           return;
         }
 
-        const concepto = (document.getElementById('mov-descripcion') || document.getElementById('mov-concepto'))?.value.trim() || 'Movimiento de caja';
-        const fecha = document.getElementById('mov-fecha')?.value || new Date().toISOString().split('T')[0];
+        const concepto = (document.getElementById('mov-descripcion') || document.getElementById('mov-concepto'))?.value.trim() || (esTransferencia ? `Traspaso ${cuenta} → ${cuentaDestino}` : 'Movimiento de caja');
+        const fecha = document.getElementById('mov-fecha')?.value || (MotoData.getTodayLocalISO ? MotoData.getTodayLocalISO() : new Date().toISOString().split('T')[0]);
 
         isSubmittingMov = true;
         setTimeout(() => { isSubmittingMov = false; }, 1000);
@@ -4467,25 +4657,19 @@
 
         try {
           if (esTransferencia) {
-            MotoData.addTransaction({
-              type: 'expense',
-              account: cuenta,
-              category: 'Transferencia',
-              plate: placa,
-              concept: `Transferencia hacia ${cuentaDestino}: ${concepto}`,
+            const res = MotoData.transferBetweenAccounts({
+              fromAccount: cuenta,
+              toAccount: cuentaDestino,
               amount: monto,
+              plate: placa,
+              concept: concepto,
               date: fecha
             });
-            MotoData.addTransaction({
-              type: 'income',
-              account: cuentaDestino,
-              category: 'Transferencia',
-              plate: placa,
-              concept: `Transferencia recibida desde ${cuenta}: ${concepto}`,
-              amount: monto,
-              date: fecha
-            });
-            alert(`¡Transferencia de $${monto.toLocaleString('es-CO')} entre ${cuenta} y ${cuentaDestino} registrada con éxito!`);
+            if (!res || !res.success) {
+              alert('❌ ' + (res?.message || 'No se pudo completar la transferencia.'));
+              return;
+            }
+            alert(`¡Transferencia de $${monto.toLocaleString('es-CO')} de ${cuenta} hacia ${cuentaDestino} registrada sin afectar tus gastos ni ingresos!`);
           } else {
             MotoData.addTransaction({
               type: esIngreso ? 'income' : 'expense',

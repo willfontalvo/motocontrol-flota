@@ -394,9 +394,10 @@ Limpiar
 </article>
 </section>
 <!-- Income vs Expenses Chart & Money Accounts -->
-<section class="grid grid-cols-1 xl:grid-cols-12 gap-gutter-lg items-stretch">
+<!-- Main Chart & Money Accounts -->
+<section class="grid grid-cols-1 xl:grid-cols-12 gap-gutter-lg items-start">
 <!-- Interactive Income vs Expenses Chart (8 cols) -->
-<article class="xl:col-span-8 bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md">
+<article class="xl:col-span-8 bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md">
 <header class="flex flex-wrap items-center justify-between gap-gutter-sm">
 <div>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Ingresos vs. Gastos</h2>
@@ -414,38 +415,12 @@ Limpiar
 </div>
 </header>
 <!-- Bar Chart Container -->
-<div class="grid grid-cols-4 gap-gutter-md items-end pt-gutter-lg pb-gutter-xs border-b border-light-outline-variant min-h-[220px]" id="cashflow-chart">
+<div class="grid grid-cols-4 gap-gutter-md items-end pt-gutter-md pb-gutter-xs border-b border-light-outline-variant min-h-[195px]" id="cashflow-chart">
 <!-- Populated by JS -->
-</div>
-<!-- Recent Account Movements & Filtered Table -->
-<div class="flex flex-col gap-gutter-sm pt-gutter-xs">
-<div class="flex flex-wrap items-center justify-between gap-gutter-sm">
-<span class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="dashboard-movements-caption">Movimientos recientes según filtros seleccionados</span>
-<a class="font-label text-label-md text-light-primary hover:underline" href="#gastos">
-<span data-design-text-token="label-md">Ver todos en Gastos y Cuentas</span>
-</a>
-</div>
-<div class="w-full overflow-x-auto border border-light-outline-variant rounded">
-<table class="w-full text-left border-collapse text-xs">
-<thead>
-<tr class="bg-light-surface-container-low border-b border-light-outline-variant font-label text-light-on-surface-variant">
-<th class="px-3 py-2">Fecha</th>
-<th class="px-3 py-2">Tipo</th>
-<th class="px-3 py-2">Concepto</th>
-<th class="px-3 py-2">Unidad / Conductor</th>
-<th class="px-3 py-2">Cuenta</th>
-<th class="px-3 py-2 text-right">Monto</th>
-</tr>
-</thead>
-<tbody class="divide-y divide-light-outline-variant" id="dashboard-tx-table-body">
-<!-- Dynamic -->
-</tbody>
-</table>
-</div>
 </div>
 </article>
 <!-- Accounts Where Money Enters / Leaves (4 cols) -->
-<article class="xl:col-span-4 bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col justify-between gap-gutter-md">
+<article class="xl:col-span-4 bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-sm">
 <header class="flex items-center justify-between gap-gutter-sm">
 <div>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Cuentas de dinero</h2>
@@ -453,10 +428,10 @@ Limpiar
 </div>
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">account_balance</span>
 </header>
-<div class="flex flex-col gap-gutter-sm" id="dashboard-accounts-container">
+<div class="flex flex-col gap-2" id="dashboard-accounts-container">
 <!-- Populated dynamically by JS -->
 </div>
-<footer class="pt-gutter-sm border-t border-light-outline-variant flex items-center justify-between">
+<footer class="pt-gutter-xs border-t border-light-outline-variant flex items-center justify-between">
 <span class="font-body text-body-sm text-light-outline" data-design-text-token="body-sm" id="dashboard-accounts-count">0 cuentas activas</span>
 <a class="font-label text-label-md text-light-primary hover:underline" href="#gastos">
 <span data-design-text-token="label-md">Administrar cuentas</span>
@@ -657,6 +632,7 @@ Limpiar
 <div aria-label="Filtrar por estado" class="flex flex-wrap items-center gap-gutter-sm" role="tablist">
 <button aria-selected="true" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-secondary-container text-light-on-secondary-container transition-colors duration-state-change" data-status-filter="all" role="tab" type="button">Todos (<span id="count-todos">0</span>)</button>
 <button aria-selected="false" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors duration-state-change" data-status-filter="active" role="tab" type="button">En ruta</button>
+<button aria-selected="false" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors duration-state-change" data-status-filter="resting" role="tab" type="button">Descansando</button>
 <button aria-selected="false" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors duration-state-change" data-status-filter="workshop" role="tab" type="button">En taller</button>
 <button aria-selected="false" class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors duration-state-change" data-status-filter="unassigned" role="tab" type="button">Sin conductor</button>
 <button class="status-tab px-3 py-1.5 rounded font-label text-label-md bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors duration-state-change" data-status-filter="Azul" type="button">
@@ -770,6 +746,40 @@ Limpiar
 <!-- Accounts Where Money Enters or Leaves -->
 <section aria-label="Cuentas de ingreso y egreso" id="tarifas-accounts-cards-grid" class="grid grid-cols-1 md:grid-cols-3 gap-gutter-md items-stretch">
   <!-- Populated dynamically by JS -->
+</section>
+<!-- Plan de Trabajo del Día (Rotación Par / Impar Azul vs Salmón) -->
+<section aria-label="Plan de trabajo diario" class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-md flex flex-col lg:flex-row lg:items-center justify-between gap-gutter-md" id="tarifas-workplan-card">
+<div class="flex flex-col gap-1">
+<div class="flex flex-wrap items-center gap-2">
+<span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">calendar_today</span>
+<h2 class="font-headline text-headline-sm text-light-on-surface">Plan de trabajo y estado de tarifa</h2>
+<span class="px-2.5 py-0.5 rounded-full bg-light-secondary-container text-light-on-secondary-container font-label text-label-sm font-bold" id="workplan-today-badge">Hoy</span>
+</div>
+<p class="font-body text-body-sm text-light-on-surface-variant">Define qué días sale cada color; las unidades que descansan se marcan como <strong>Descansando</strong> y las activas cambian a <strong>Pago</strong> al registrar su tarifa.</p>
+</div>
+<div class="flex flex-wrap items-center gap-3">
+<label class="flex items-center gap-1.5 bg-light-surface-container-low px-2.5 py-1.5 rounded border border-light-outline-variant">
+<span class="font-label text-label-sm text-light-on-surface whitespace-nowrap">🔵 Azul:</span>
+<select class="bg-transparent font-label text-label-sm text-light-primary font-bold focus:outline-none cursor-pointer" id="workplan-azul-days">
+<option value="even">Días Pares</option>
+<option value="odd">Días Impares</option>
+<option value="all">Todos los días</option>
+</select>
+</label>
+<label class="flex items-center gap-1.5 bg-light-surface-container-low px-2.5 py-1.5 rounded border border-light-outline-variant">
+<span class="font-label text-label-sm text-light-on-surface whitespace-nowrap">🟠 Salmón:</span>
+<select class="bg-transparent font-label text-label-sm text-[#9C573A] font-bold focus:outline-none cursor-pointer" id="workplan-salmon-days">
+<option value="odd">Días Impares</option>
+<option value="even">Días Pares</option>
+<option value="all">Todos los días</option>
+</select>
+</label>
+<div class="flex flex-wrap items-center gap-1.5">
+<span class="px-2.5 py-1 rounded-full bg-success-container text-on-success-container font-label text-label-xs font-bold" id="wp-count-paid">Pago: 0</span>
+<span class="px-2.5 py-1 rounded-full bg-warning-container text-on-warning-container font-label text-label-xs font-bold" id="wp-count-pending">Pendiente: 0</span>
+<span class="px-2.5 py-1 rounded-full bg-light-surface-container text-light-on-surface-variant font-label text-label-xs font-semibold" id="wp-count-resting">Descansando: 0</span>
+</div>
+</div>
 </section>
 <!-- Tariff Rules & Financial Movements Grid -->
 <section class="grid grid-cols-1 xl:grid-cols-12 gap-gutter-lg items-stretch">
@@ -1266,6 +1276,10 @@ Limpiar
 <p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Saldo disponible, ingresos y salidas por cuenta</p>
 </div>
 <div class="flex flex-wrap items-center gap-2">
+<button class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-light-secondary-container text-light-on-secondary-container font-label text-label-md hover:bg-light-surface-variant transition-colors" id="btn-goto-transfer" type="button">
+<span class="material-symbols-outlined text-[18px]">swap_horiz</span>
+<span>Transferir entre cuentas</span>
+</button>
 <a class="inline-flex items-center gap-1.5 px-3.5 py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container shadow-xs transition-colors" href="#form-movimiento">
 <span class="material-symbols-outlined text-[18px]">add_circle</span>
 <span>Nuevo Movimiento de Caja</span>
@@ -1292,6 +1306,7 @@ Limpiar
 <option value="Repuestos">Repuestos</option>
 <option value="SOAT / Tecnomecánica">SOAT / Tecno</option>
 <option value="Tarifa">Ingresos (Tarifas)</option>
+<option value="Transferencia">Transferencias entre cuentas</option>
 <option value="Combustible">Combustible</option>
 <option value="Administrativo">Administrativo</option>
 </select>
@@ -1764,11 +1779,12 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </select>
 </div>
 <div class="hidden flex-col gap-gutter-xs" id="cuenta-destino-wrap">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mov-cuenta-destino">Cuenta destino *</label>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mov-cuenta-destino">Cuenta destino (Transferencia interna) *</label>
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-cuenta-destino">
 </select>
+<span class="font-body text-body-xs text-light-primary">Mueve dinero entre tus propias cuentas sin sumar como gasto ni ingreso.</span>
 </div>
-<div class="flex flex-col gap-gutter-xs">
+<div class="flex flex-col gap-gutter-xs" id="mov-categoria-wrap">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mov-categoria">Categoría *</label>
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-categoria">
 <option selected="" value="Combustible">Combustible / Tanqueo</option>
@@ -2294,6 +2310,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <label class="font-label text-label-xs text-light-on-surface" for="modal-status">Estado operativo</label>
 <select class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-2 font-body text-body-sm text-light-on-surface focus:border-light-primary" id="modal-status">
 <option value="route">En ruta (Operando)</option>
+<option value="resting">Descansando (Hoy no sale)</option>
 <option value="workshop">En taller (Mantenimiento)</option>
 <option value="idle">Sin conductor (Disponible)</option>
 </select>
@@ -3084,20 +3101,57 @@ Crear Cuenta y Acceder
 </div>
 </div>
 
-<!-- Fila 3: Barra de botones simétricos en 1 sola línea -->
+<!-- Fila 3: Barra de botones simétricos en 1 sola línea (R5 / RUNT / Copiar) -->
 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-light-outline-variant">
 <button class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-light-surface border border-light-outline-variant text-light-primary font-label text-label-md hover:bg-light-secondary-container/40 transition-colors" id="btn-copy-plate" type="button">
 <span class="material-symbols-outlined text-[16px]">content_copy</span>
 <span id="btn-copy-plate-text">Copiar Placa</span>
 </button>
-<a class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-success text-on-success font-label text-label-md hover:bg-success/90 transition-colors" href="https://www.r5.com.co/soat" id="btn-open-r5" rel="noopener noreferrer" target="_blank" title="Abrir R5 (copia la placa automáticamente)">
+<a class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-success text-on-success font-label text-label-md hover:bg-success/90 transition-colors" href="https://www.grupor5.com/" id="btn-open-r5" rel="noopener noreferrer" target="_blank" title="Abrir página principal de R5 (inicia sesión para ver SOAT y Tecnomecánica; copia la placa automáticamente)">
 <span class="material-symbols-outlined text-[16px]">bolt</span>
-<span>Abrir R5 (SOAT)</span>
+<span>Abrir R5 Principal</span>
 </a>
 <a class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container transition-colors" href="https://www.runt.gov.co/consultaCiudadana/#/consultaVehiculo" id="btn-open-runt" rel="noopener noreferrer" target="_blank" title="Abrir Portal Oficial RUNT (copia cédula del propietario)">
 <span class="material-symbols-outlined text-[16px]">open_in_new</span>
-<span>Abrir RUNT Oficial</span>
+<span>Abrir RUNT (Historial)</span>
 </a>
+</div>
+
+<!-- Fila 4: Portales Oficiales de Impuestos Departamentales, Tránsito y SIMIT -->
+<div class="pt-2 border-t border-light-outline-variant flex flex-col gap-2">
+<div class="flex items-center justify-between gap-2">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Impuestos departamentales, Tránsito y Multas:</span>
+<span class="font-body text-body-xs text-light-outline">Portales externos (no RUNT)</span>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+<select class="sm:col-span-5 h-9 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 font-body text-body-sm focus:border-light-primary focus:ring-light-primary" id="tax-department-select">
+<option value="atlantico">Gobernación del Atlántico</option>
+<option value="bolivar">Gobernación de Bolívar</option>
+<option value="magdalena">Gobernación del Magdalena</option>
+<option value="cordoba">Gobernación de Córdoba</option>
+<option value="sucre">Gobernación de Sucre</option>
+<option value="cesar">Gobernación del Cesar</option>
+<option value="antioquia">Gobernación de Antioquia</option>
+<option value="valle">Gobernación del Valle</option>
+<option value="cundinamarca">Gobernación Cundinamarca</option>
+<option value="bogota">Hacienda Bogotá D.C.</option>
+</select>
+<button class="sm:col-span-4 h-9 inline-flex items-center justify-center gap-1 px-2.5 rounded border border-light-primary bg-light-surface text-light-primary font-label text-label-sm font-semibold hover:bg-light-primary hover:text-light-on-primary transition-colors" id="btn-open-tax-portal" type="button">
+<span class="material-symbols-outlined text-[15px]">account_balance</span>
+<span>Abrir Impuestos</span>
+</button>
+<a class="sm:col-span-3 h-9 inline-flex items-center justify-center gap-1 px-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-label text-label-sm font-semibold hover:bg-light-surface-container transition-colors" href="https://www.fcm.org.co/simit/#/home-public" id="btn-open-simit" rel="noopener noreferrer" target="_blank" title="Consultar multas y comparendos en SIMIT">
+<span class="material-symbols-outlined text-[15px]">gavel</span>
+<span>SIMIT Multas</span>
+</a>
+</div>
+<div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
+<input class="sm:col-span-9 h-9 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 font-body text-body-sm focus:border-light-primary focus:ring-light-primary" id="transit-portal-url" placeholder="Link de Tránsito / Alcaldía municipal (Ej. https://transitodelsur.gov.co)" type="url"/>
+<button class="sm:col-span-3 h-9 inline-flex items-center justify-center gap-1 px-2.5 rounded border border-light-outline-variant bg-light-surface text-light-primary font-label text-label-sm font-semibold hover:bg-light-secondary-container/40 transition-colors" id="btn-open-transit-portal" type="button">
+<span class="material-symbols-outlined text-[15px]">directions_car</span>
+<span>Tránsito</span>
+</button>
+</div>
 </div>
 </section>
 
