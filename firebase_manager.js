@@ -1407,29 +1407,42 @@ window.AuthManager = {
     operator: { label: 'Operador (Solo Ingreso)', perms: ['view', 'create'] }
   },
 
-  generateSalt() {
-    const arr = new Uint8Array(12);
+  _randomChars(len, alphabet = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789') {
+    const arr = new Uint8Array(len);
     if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
       crypto.getRandomValues(arr);
     } else {
       for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
     }
-    return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+    return Array.from(arr, b => alphabet[b % alphabet.length]).join('');
+  },
+
+  generateSalt() {
+    return this._randomChars(24, '0123456789abcdef');
+  },
+
+  generateRecoveryCode() {
+    return `MC-${this._randomChars(4)}-${this._randomChars(4)}-${this._randomChars(4)}`;
   },
 
   hashPassword(plain, salt) {
     return mcSha256Hex(`${salt}:motocontrol:${plain}`);
   },
 
-  verifyPassword(plain, storedHash, salt) {
-    if (!plain || !storedHash || !salt) return false;
-    const candidate = this.hashPassword(plain, salt);
-    if (candidate.length !== storedHash.length) return false;
+  _constantTimeEqual(a, b) {
+    const s1 = String(a || '');
+    const s2 = String(b || '');
+    if (!s1 || s1.length !== s2.length) return false;
     let diff = 0;
-    for (let i = 0; i < candidate.length; i++) {
-      diff |= candidate.charCodeAt(i) ^ storedHash.charCodeAt(i);
+    for (let i = 0; i < s1.length; i++) {
+      diff |= s1.charCodeAt(i) ^ s2.charCodeAt(i);
     }
     return diff === 0;
+  },
+
+  verifyPassword(plain, storedHash, salt) {
+    if (!plain || !storedHash || !salt) return false;
+    return this._constantTimeEqual(this.hashPassword(plain, salt), storedHash);
   },
 
   normalizeRoleKey(roleInput) {
@@ -1665,12 +1678,8 @@ window.AuthManager = {
   },
 
   async login(identifier, password, remember = true) {
-    const lock = this._getLockState();
-    const now = Date.now();
-    if (lock.lockedUntil && now < lock.lockedUntil) {
-      const secs = Math.ceil((lock.lockedUntil - now) / 1000);
-      return { success: false, message: `Demasiados intentos fallidos. Espera ${secs}s antes de intentar de nuevo.` };
-    }
+    const blockedMsg = this._getLockBlockedMessage();
+    if (blockedMsg) return { success: false, message: blockedMsg };
 
     if (window.MotoData && window.MotoData.db) {
       await this.syncSecurityWithCloud();
@@ -1686,13 +1695,11 @@ window.AuthManager = {
     const user = users.find(u => (u.email || '').toLowerCase() === id || (u.username || '').toLowerCase() === id);
 
     if (!user || !this.verifyPassword(pass, user.passwordHash, user.salt)) {
-      const attempts = (lock.attempts || 0) + 1;
-      const lockedUntil = attempts >= 5 ? (now + 30000) : 0;
-      this._setLockState({ attempts: lockedUntil ? 0 : attempts, lockedUntil });
-      if (lockedUntil) {
+      const fail = this._recordFailedAttempt();
+      if (fail.lockedUntil) {
         return { success: false, message: 'Cuenta temporalmente bloqueada 30 segundos por seguridad (5 intentos fallidos).' };
       }
-      return { success: false, message: `Correo/usuario o contraseña incorrectos (${attempts}/5).` };
+      return { success: false, message: `Correo/usuario o contraseña incorrectos (${fail.attempts}/5).` };
     }
 
     if (user.active === false) {
@@ -1708,7 +1715,7 @@ window.AuthManager = {
     return { success: true, user: safeUser };
   },
 
-  async registerInitialOwner({ name, email, password, projectVerify }) {
+  async registerInitialOwner({ name, email, password, recoveryKey, projectVerify }) {
     if (window.MotoData && window.MotoData.db) {
       await this.syncSecurityWithCloud();
     }
@@ -1719,6 +1726,7 @@ window.AuthManager = {
     const cleanName = (name || '').trim();
     const cleanEmail = (email || '').trim().toLowerCase();
     const cleanPass = (password || '').trim();
+    const cleanRecKey = (recoveryKey || '').trim();
     if (!cleanName || !cleanEmail || !cleanPass) {
       return { success: false, message: 'Completa nombre completo, correo electrónico y contraseña.' };
     }
@@ -1727,6 +1735,9 @@ window.AuthManager = {
     }
     if (cleanPass.length < 6) {
       return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
+    }
+    if (cleanRecKey && cleanRecKey.length < 4) {
+      return { success: false, message: 'Si ingresas llave de recuperación personal, debe tener mínimo 4 caracteres.' };
     }
     if (this.cloudHasExistingData) {
       const expectedPid = (() => {
@@ -1738,6 +1749,7 @@ window.AuthManager = {
     }
 
     const salt = this.generateSalt();
+    const recSalt = cleanRecKey ? this.generateSalt() : '';
     const ownerUser = {
       id: 'usr-' + Date.now(),
       name: cleanName,
@@ -1747,6 +1759,7 @@ window.AuthManager = {
       role: this.ROLE_DEFS.owner.label,
       salt: salt,
       passwordHash: this.hashPassword(cleanPass, salt),
+      ...(cleanRecKey ? { recoverySalt: recSalt, recoveryHash: this.hashPassword(cleanRecKey, recSalt), recoveryUpdatedAt: new Date().toISOString() } : {}),
       active: true,
       createdAt: new Date().toISOString()
     };
@@ -1880,6 +1893,152 @@ window.AuthManager = {
       window.MotoData.logAudit('Edición', 'Seguridad', `Cambió su contraseña (${cur.name})`);
     }
     return { success: true };
+  },
+
+  _getLockBlockedMessage() {
+    const lock = this._getLockState();
+    const now = Date.now();
+    if (lock.lockedUntil && now < lock.lockedUntil) {
+      const secs = Math.ceil((lock.lockedUntil - now) / 1000);
+      return `Demasiados intentos fallidos. Espera ${secs}s antes de intentar de nuevo.`;
+    }
+    return '';
+  },
+
+  _recordFailedAttempt() {
+    const lock = this._getLockState();
+    const attempts = (lock.attempts || 0) + 1;
+    const lockedUntil = attempts >= 5 ? (Date.now() + 30000) : 0;
+    this._setLockState({ attempts: lockedUntil ? 0 : attempts, lockedUntil });
+    return { attempts, lockedUntil };
+  },
+
+  hasPersonalRecoveryKey(identifier) {
+    const users = this.getUsers();
+    let target = null;
+    if (identifier) {
+      const id = String(identifier).trim().toLowerCase();
+      target = users.find(u => (u.email || '').toLowerCase() === id || (u.username || '').toLowerCase() === id);
+    } else {
+      const cur = this.getCurrentUser();
+      if (!cur) return false;
+      target = users.find(u => u.id === cur.id || (u.email || '').toLowerCase() === (cur.email || '').toLowerCase());
+    }
+    return Boolean(target && target.recoveryHash && target.recoverySalt);
+  },
+
+  async setPersonalRecoveryKey(currentPassword, recoveryPhrase) {
+    const cur = this.getCurrentUser();
+    if (!cur) return { success: false, message: 'Sesión no iniciada.' };
+    const phrase = String(recoveryPhrase || '').trim();
+    if (phrase.length < 4) {
+      return { success: false, message: 'La llave de recuperación debe tener mínimo 4 caracteres.' };
+    }
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === cur.id || u.email === cur.email);
+    if (idx === -1) return { success: false, message: 'Usuario no encontrado.' };
+    if (!this.verifyPassword(String(currentPassword || '').trim(), users[idx].passwordHash, users[idx].salt)) {
+      return { success: false, message: 'La contraseña actual ingresada es incorrecta.' };
+    }
+    const recSalt = this.generateSalt();
+    users[idx].recoverySalt = recSalt;
+    users[idx].recoveryHash = this.hashPassword(phrase, recSalt);
+    users[idx].recoveryUpdatedAt = new Date().toISOString();
+    this._saveUsersLocal(users);
+    await this._pushUsersToCloud(users);
+    if (window.MotoData && window.MotoData.logAudit) {
+      window.MotoData.logAudit('Edición', 'Seguridad', `Configuró llave de recuperación personal (${cur.name})`);
+    }
+    return { success: true };
+  },
+
+  async recoverPassword({ identifier, recoveryKey, newPassword }) {
+    const blockedMsg = this._getLockBlockedMessage();
+    if (blockedMsg) return { success: false, message: blockedMsg };
+
+    const id = String(identifier || '').trim().toLowerCase();
+    const key = String(recoveryKey || '').trim();
+    const np = String(newPassword || '').trim();
+    if (!id || !key) {
+      return { success: false, message: 'Ingresa tu correo/usuario y la llave de recuperación.' };
+    }
+    if (np.length < 6) {
+      return { success: false, message: 'La nueva contraseña debe tener mínimo 6 caracteres.' };
+    }
+
+    if (window.MotoData && window.MotoData.db) {
+      await this.syncSecurityWithCloud();
+    }
+    const users = this.getUsers();
+    if (users.length === 0) {
+      return { success: false, message: 'No hay cuentas registradas aún. Configura el Administrador Principal primero.' };
+    }
+
+    const idx = users.findIndex(u => (u.email || '').toLowerCase() === id || (u.username || '').toLowerCase() === id);
+    if (idx === -1) {
+      const fail = this._recordFailedAttempt();
+      if (fail.lockedUntil) {
+        return { success: false, message: 'Bloqueado 30 segundos por seguridad (5 intentos fallidos).' };
+      }
+      return { success: false, message: `Correo/usuario o llave de recuperación incorrectos (${fail.attempts}/5).` };
+    }
+
+    const targetUser = users[idx];
+    if (targetUser.active === false) {
+      return { success: false, message: 'Esta cuenta está desactivada. Contacta al Administrador Principal.' };
+    }
+
+    let verified = false;
+    let method = '';
+    if (targetUser.recoveryHash && targetUser.recoverySalt && this.verifyPassword(key, targetUser.recoveryHash, targetUser.recoverySalt)) {
+      verified = true;
+      method = 'personal_key';
+    } else if (targetUser.roleKey === 'owner' && window.MotoData && window.MotoData.db) {
+      try {
+        const overrideRef = window.MotoData.db.collection('motocontrol_app').doc('recovery_override');
+        const snap = await overrideRef.get();
+        if (snap.exists) {
+          const overrideData = snap.data() || {};
+          const expectedCode = String(overrideData.code || '').trim();
+          if (expectedCode.length >= 4 && this._constantTimeEqual(key, expectedCode)) {
+            verified = true;
+            method = 'firebase_override';
+            await overrideRef.delete().catch(() => {});
+          }
+        }
+      } catch (e) {
+        console.warn('Error consultando recovery_override:', e);
+      }
+    }
+
+    if (!verified) {
+      const fail = this._recordFailedAttempt();
+      if (fail.lockedUntil) {
+        return { success: false, message: 'Bloqueado 30 segundos por seguridad (5 intentos fallidos).' };
+      }
+      if (targetUser.roleKey !== 'owner' && !(targetUser.recoveryHash && targetUser.recoverySalt)) {
+        return {
+          success: false,
+          message: `Esta cuenta no tiene llave de recuperación personal. Solicita al Administrador Principal restablecerla en Seguridad → Usuarios y Roles (${fail.attempts}/5).`
+        };
+      }
+      if (targetUser.roleKey === 'owner' && !(targetUser.recoveryHash && targetUser.recoverySalt)) {
+        return {
+          success: false,
+          message: `Código incorrecto o no se encontró el documento recovery_override.code en Firebase Console (${fail.attempts}/5).`
+        };
+      }
+      return { success: false, message: `Llave de recuperación incorrecta (${fail.attempts}/5).` };
+    }
+
+    this._setLockState({ attempts: 0, lockedUntil: 0 });
+    const salt = this.generateSalt();
+    users[idx].salt = salt;
+    users[idx].passwordHash = this.hashPassword(np, salt);
+    users[idx].passwordRecoveredAt = new Date().toISOString();
+    this._saveUsersLocal(users);
+    await this._pushUsersToCloud(users);
+    return { success: true, method, email: users[idx].email, name: users[idx].name };
   },
 
   logout() {

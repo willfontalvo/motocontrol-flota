@@ -2570,11 +2570,12 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </button>
 </div>
 </label>
-<div class="flex items-center justify-between text-xs">
+<div class="flex flex-wrap items-center justify-between gap-2 text-xs">
 <label class="flex items-center gap-1.5 cursor-pointer text-light-on-surface-variant">
 <input checked="" class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" id="login-remember" type="checkbox"/>
 <span>Mantener sesión iniciada en este equipo</span>
 </label>
+<button class="font-label text-light-primary hover:underline font-semibold" id="btn-forgot-password" type="button">¿Olvidaste tu contraseña?</button>
 </div>
 <button class="w-full py-2.5 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container transition-colors shadow-sm mt-1" id="btn-login-submit" type="submit">
 Ingresar al Sistema
@@ -2601,12 +2602,68 @@ El registro público está desactivado. Solo usuarios autorizados por el Adminis
 <span class="font-label text-label-sm text-light-on-surface font-semibold">Contraseña segura (mín. 6 caracteres) *</span>
 <input class="w-full px-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="reg-password" placeholder="Mínimo 6 caracteres" required="" type="password"/>
 </label>
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Frase o llave de recuperación (opcional, mín. 4)</span>
+<input class="w-full px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-sm focus:border-light-primary" id="reg-recovery-key" placeholder="Para recuperar tu clave si algún día la olvidas" type="password"/>
+</label>
 <label class="hidden flex-col gap-1" id="reg-project-verify-wrap">
 <span class="font-label text-label-sm text-light-error font-semibold">Código de proyecto Firebase (para proteger datos existentes) *</span>
 <input class="w-full px-3 py-2 rounded border border-light-error/50 bg-light-surface text-light-on-surface font-mono text-mono-sm" id="reg-project-verify" placeholder="Ingresa el Project ID de tu Firebase" type="text"/>
 </label>
 <button class="w-full py-2.5 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container transition-colors shadow-sm mt-1" type="submit">
 Registrar Administrador Principal y Bloquear Acceso
+</button>
+</form>
+
+<!-- Formulario Recuperar Contraseña -->
+<form autocomplete="off" class="hidden flex-col gap-gutter-sm" id="forgot-form">
+<div class="p-2.5 rounded bg-light-secondary-container/40 border border-light-primary/30 text-xs font-body text-light-on-surface">
+<strong>Recuperación segura de acceso:</strong> Ingresa tu correo/usuario, tu llave de recuperación personal (o código temporal de Firebase Console si eres el Administrador Principal) y define una nueva contraseña.
+</div>
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Correo electrónico o Usuario *</span>
+<div class="relative">
+<span class="material-symbols-outlined text-[18px] text-light-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2">mail</span>
+<input autocomplete="username" class="w-full pl-9 pr-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="forgot-email" placeholder="tu-correo@ejemplo.com" required="" type="text"/>
+</div>
+</label>
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Llave de recuperación / Código temporal *</span>
+<div class="relative">
+<span class="material-symbols-outlined text-[18px] text-light-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2">vpn_key</span>
+<input class="w-full pl-9 pr-10 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-sm focus:border-light-primary focus:ring-light-primary" id="forgot-recovery-key" placeholder="Tu llave personal o código de emergencia" required="" type="password"/>
+<button aria-label="Mostrar u ocultar llave de recuperación" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-light-on-surface-variant hover:text-light-on-surface p-1" id="toggle-forgot-rec-key" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
+</div>
+</label>
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Nueva contraseña (mín. 6) *</span>
+<div class="relative">
+<input class="w-full pl-3 pr-9 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-sm focus:border-light-primary focus:ring-light-primary" id="forgot-new-password" placeholder="Mín. 6 caracteres" required="" type="password"/>
+<button aria-label="Mostrar u ocultar nueva contraseña" class="absolute right-2 top-1/2 -translate-y-1/2 text-light-on-surface-variant hover:text-light-on-surface p-1" id="toggle-forgot-new-pass" type="button">
+<span class="material-symbols-outlined text-[17px]">visibility</span>
+</button>
+</div>
+</label>
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Confirmar contraseña *</span>
+<input class="w-full px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-sm focus:border-light-primary focus:ring-light-primary" id="forgot-confirm-password" placeholder="Repite la clave" required="" type="password"/>
+</label>
+</div>
+<button class="w-full py-2.5 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container transition-colors shadow-sm mt-1" id="btn-forgot-submit" type="submit">
+Restablecer Contraseña
+</button>
+<details class="rounded border border-light-outline-variant bg-light-surface-container-low p-2.5 text-[11px] font-body text-light-on-surface-variant">
+<summary class="cursor-pointer font-label font-semibold text-light-on-surface select-none">¿No configuraste tu llave de recuperación personal?</summary>
+<ul class="list-disc pl-4 mt-1.5 space-y-1">
+<li><strong>Co-Administradores y Operadores:</strong> solicita al <strong>Administrador Principal</strong> asignar una nueva clave desde <em>Seguridad → Usuarios y Roles → Clave</em>.</li>
+<li><strong>Administrador Principal:</strong> entra a <strong>Firebase Console → Firestore (<code>motocontrol_app</code>)</strong>, crea el documento <code>recovery_override</code> con el campo <code>code</code> (mín. 4 caracteres, temporal) e ingrésalo arriba; se eliminará automáticamente tras usarse.</li>
+</ul>
+</details>
+<button class="w-full py-2 rounded border border-light-outline-variant text-light-on-surface font-label text-label-sm font-semibold hover:bg-light-surface-container-low transition-colors" id="btn-back-to-login" type="button">
+Volver al Inicio de Sesión
 </button>
 </form>
 
@@ -2722,6 +2779,40 @@ Registrar Administrador Principal y Bloquear Acceso
 </div>
 <button class="h-9 px-4 rounded bg-light-primary text-light-on-primary font-label text-label-sm font-bold hover:bg-light-primary-container" type="submit">Actualizar Contraseña</button>
 </form>
+
+<!-- Configurar o Rotar Llave de Recuperación Personal -->
+<div class="p-gutter-md bg-light-surface-container-low rounded-md border border-light-outline-variant flex flex-col gap-3">
+<div class="flex flex-wrap items-center justify-between gap-2">
+<div>
+<h3 class="font-label text-label-md font-bold text-light-on-surface flex items-center gap-1.5">
+<span class="material-symbols-outlined text-[18px] text-light-primary">vpn_key</span>
+<span>Llave de Recuperación Personal (¿Olvidaste tu contraseña?)</span>
+</h3>
+<p class="font-body text-xs text-light-on-surface-variant">Se guarda únicamente cifrada (SHA-256 + salt). Guárdala en un lugar seguro para restablecer tu clave si la olvidas.</p>
+</div>
+<span class="inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-label font-semibold bg-warning-container text-on-warning-container" id="sec-recovery-status-badge">Pendiente de configurar</span>
+</div>
+<form class="grid grid-cols-1 sm:grid-cols-12 gap-2.5 items-end" id="sec-recovery-phrase-form">
+<div class="sm:col-span-4 flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="sec-rec-curr-pass">Contraseña actual *</label>
+<input class="h-9 rounded border border-light-outline-variant bg-light-surface px-2.5 font-mono text-mono-sm" id="sec-rec-curr-pass" required="" type="password"/>
+</div>
+<div class="sm:col-span-5 flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="sec-rec-phrase">Nueva frase o código de recuperación (mín. 4) *</label>
+<div class="flex items-center gap-1.5">
+<input class="h-9 w-full rounded border border-light-outline-variant bg-light-surface px-2.5 font-mono text-mono-sm" id="sec-rec-phrase" placeholder="Ej. MC-XXXX o frase secreta" required="" type="text"/>
+<button class="h-9 px-2.5 rounded border border-light-outline-variant bg-light-surface text-light-primary font-label text-xs font-semibold hover:bg-light-secondary-container/40 whitespace-nowrap" id="btn-gen-rec-phrase" title="Generar código seguro aleatorio" type="button">Generar</button>
+<button class="h-9 px-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface-variant hover:text-light-on-surface" id="btn-copy-rec-phrase" title="Copiar llave antes de guardar" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
+</button>
+</div>
+</div>
+<div class="sm:col-span-3">
+<button class="h-9 w-full px-3 rounded bg-light-primary text-light-on-primary font-label text-label-sm font-bold hover:bg-light-primary-container whitespace-nowrap" id="btn-save-rec-phrase" type="submit">Guardar Llave</button>
+</div>
+</form>
+</div>
+
 <div class="p-gutter-md rounded-md border border-light-outline-variant bg-light-surface flex flex-col gap-1.5 text-xs font-body text-light-on-surface-variant">
 <p class="font-label text-label-sm text-light-on-surface font-bold">Protecciones activas en esta versión:</p>
 <ul class="list-disc pl-5 space-y-1">

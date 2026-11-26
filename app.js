@@ -490,6 +490,7 @@
     const tabRegister = document.getElementById('tab-auth-register');
     const loginForm = document.getElementById('login-form');
     const registerForm = document.getElementById('register-form');
+    const forgotForm = document.getElementById('forgot-form');
     const feedback = document.getElementById('auth-feedback');
 
     function showFeedback(msg, isError = true) {
@@ -505,10 +506,13 @@
       if (feedback) feedback.classList.add('hidden');
     }
 
-    function setAuthMode(mode) {
-      clearFeedback();
+    function setAuthMode(mode, preserveFeedback = false) {
+      if (!preserveFeedback) clearFeedback();
       const canSetup = window.AuthManager && window.AuthManager.needsInitialSetup();
-      const effectiveMode = (mode === 'register' && canSetup) ? 'register' : 'login';
+      const effectiveMode = (mode === 'register' && canSetup)
+        ? 'register'
+        : (mode === 'forgot' && !canSetup ? 'forgot' : 'login');
+
       if (effectiveMode === 'login') {
         tabLogin?.classList.add('bg-light-surface-container-lowest', 'text-light-on-surface', 'font-bold', 'shadow-xs');
         tabLogin?.classList.remove('text-light-on-surface-variant', 'font-medium');
@@ -518,7 +522,9 @@
         loginForm?.classList.add('flex');
         registerForm?.classList.add('hidden');
         registerForm?.classList.remove('flex');
-      } else {
+        forgotForm?.classList.add('hidden');
+        forgotForm?.classList.remove('flex');
+      } else if (effectiveMode === 'register') {
         tabRegister?.classList.add('bg-light-surface-container-lowest', 'text-light-on-surface', 'font-bold', 'shadow-xs');
         tabRegister?.classList.remove('text-light-on-surface-variant', 'font-medium');
         tabLogin?.classList.remove('bg-light-surface-container-lowest', 'text-light-on-surface', 'font-bold', 'shadow-xs');
@@ -527,19 +533,76 @@
         registerForm?.classList.add('flex');
         loginForm?.classList.add('hidden');
         loginForm?.classList.remove('flex');
+        forgotForm?.classList.add('hidden');
+        forgotForm?.classList.remove('flex');
+      } else {
+        forgotForm?.classList.remove('hidden');
+        forgotForm?.classList.add('flex');
+        loginForm?.classList.add('hidden');
+        loginForm?.classList.remove('flex');
+        registerForm?.classList.add('hidden');
+        registerForm?.classList.remove('flex');
+        const loginIdVal = document.getElementById('login-identifier')?.value.trim();
+        const forgotEmailInp = document.getElementById('forgot-email');
+        if (forgotEmailInp && loginIdVal && !forgotEmailInp.value) {
+          forgotEmailInp.value = loginIdVal;
+        }
       }
     }
 
     if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode('login'));
     if (tabRegister) tabRegister.addEventListener('click', () => setAuthMode('register'));
+    document.getElementById('btn-forgot-password')?.addEventListener('click', () => setAuthMode('forgot'));
+    document.getElementById('btn-back-to-login')?.addEventListener('click', () => setAuthMode('login'));
 
-    const togglePassBtn = document.getElementById('toggle-login-pass');
-    const loginPassInp = document.getElementById('login-password');
-    if (togglePassBtn && loginPassInp) {
-      togglePassBtn.addEventListener('click', () => {
-        const isPass = loginPassInp.type === 'password';
-        loginPassInp.type = isPass ? 'text' : 'password';
-        togglePassBtn.innerHTML = `<span class="material-symbols-outlined text-[18px]">${isPass ? 'visibility_off' : 'visibility'}</span>`;
+    function bindPasswordToggle(btnId, inputId, iconSize = 18) {
+      const btn = document.getElementById(btnId);
+      const inp = document.getElementById(inputId);
+      if (!btn || !inp) return;
+      btn.addEventListener('click', () => {
+        const isPass = inp.type === 'password';
+        inp.type = isPass ? 'text' : 'password';
+        btn.innerHTML = `<span class="material-symbols-outlined text-[${iconSize}px]">${isPass ? 'visibility_off' : 'visibility'}</span>`;
+      });
+    }
+    bindPasswordToggle('toggle-login-pass', 'login-password', 18);
+    bindPasswordToggle('toggle-forgot-rec-key', 'forgot-recovery-key', 18);
+    bindPasswordToggle('toggle-forgot-new-pass', 'forgot-new-password', 17);
+
+    if (forgotForm) {
+      forgotForm.addEventListener('submit', async (e) => {
+        e.preventDefault();
+        if (!window.AuthManager) return;
+        const email = document.getElementById('forgot-email')?.value.trim();
+        const recoveryKey = document.getElementById('forgot-recovery-key')?.value.trim();
+        const newPassword = document.getElementById('forgot-new-password')?.value.trim();
+        const confirmPassword = document.getElementById('forgot-confirm-password')?.value.trim();
+        if (newPassword !== confirmPassword) {
+          showFeedback('Las nuevas contraseñas no coinciden.', true);
+          return;
+        }
+        const btn = document.getElementById('btn-forgot-submit');
+        if (btn) {
+          btn.disabled = true;
+          btn.textContent = 'Verificando...';
+        }
+        try {
+          const res = await window.AuthManager.recoverPassword({ identifier: email, recoveryKey, newPassword });
+          if (res.success) {
+            forgotForm.reset();
+            const loginIdInp = document.getElementById('login-identifier');
+            if (loginIdInp && res.email) loginIdInp.value = res.email;
+            setAuthMode('login', true);
+            showFeedback('✅ Contraseña restablecida correctamente. Ya puedes iniciar sesión con tu nueva clave.', false);
+          } else {
+            showFeedback(res.message, true);
+          }
+        } finally {
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Restablecer Contraseña';
+          }
+        }
       });
     }
 
@@ -581,8 +644,8 @@
         projWrap.classList.toggle('hidden', !needVerify);
         projWrap.classList.toggle('flex', needVerify);
       }
-      if (!canSetup) {
-        setAuthMode('login');
+      if (!canSetup && (!forgotForm || forgotForm.classList.contains('hidden'))) {
+        setAuthMode('login', !feedback?.classList.contains('hidden'));
       }
     }
 
@@ -596,6 +659,8 @@
           authModal.classList.add('flex');
         }
       } else {
+        forgotForm?.classList.add('hidden');
+        forgotForm?.classList.remove('flex');
         if (appShell) appShell.classList.remove('hidden');
         if (authModal) {
           authModal.classList.add('hidden');
@@ -646,10 +711,11 @@
         const name = document.getElementById('reg-name')?.value.trim();
         const email = document.getElementById('reg-identifier')?.value.trim();
         const pass = document.getElementById('reg-password')?.value.trim();
+        const recoveryKey = document.getElementById('reg-recovery-key')?.value.trim() || '';
         const projectVerify = document.getElementById('reg-project-verify')?.value.trim() || '';
         if (!window.AuthManager) return;
 
-        const res = await window.AuthManager.registerInitialOwner({ name, email, password: pass, projectVerify });
+        const res = await window.AuthManager.registerInitialOwner({ name, email, password: pass, recoveryKey, projectVerify });
         if (res.success) {
           clearFeedback();
           registerForm.reset();
@@ -670,6 +736,8 @@
         const lp = document.getElementById('login-password');
         if (li) li.value = '';
         if (lp) lp.value = '';
+        forgotForm?.reset();
+        setAuthMode('login');
         clearFeedback();
         if (secModal) {
           secModal.classList.add('hidden');
@@ -689,6 +757,16 @@
     const secPanelUsers = document.getElementById('sec-panel-users');
     const secPanelAudit = document.getElementById('sec-panel-audit');
     const secPanelAccount = document.getElementById('sec-panel-account');
+
+    function updateRecoveryStatusUI() {
+      const badge = document.getElementById('sec-recovery-status-badge');
+      if (!badge || !window.AuthManager) return;
+      const configured = window.AuthManager.hasPersonalRecoveryKey();
+      badge.textContent = configured ? '✅ Llave personal configurada' : 'Pendiente de configurar';
+      badge.className = configured
+        ? 'inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-label font-semibold bg-success-container text-on-success-container'
+        : 'inline-flex px-2.5 py-0.5 rounded-full text-[11px] font-label font-semibold bg-warning-container text-on-warning-container';
+    }
 
     function switchSecTab(tab) {
       const canUsers = window.AuthManager?.can('manage_users');
@@ -719,6 +797,7 @@
       });
       if (target === 'users') renderUsersTable();
       if (target === 'audit') renderAuditTable();
+      if (target === 'account') updateRecoveryStatusUI();
     }
 
     function renderUsersTable() {
@@ -903,6 +982,47 @@
       if (res.success) {
         e.target.reset();
         alert('✅ Tu contraseña se actualizó de forma segura.');
+      } else {
+        alert('⚠️ ' + res.message);
+      }
+    });
+
+    document.getElementById('btn-gen-rec-phrase')?.addEventListener('click', () => {
+      if (!window.AuthManager) return;
+      const inp = document.getElementById('sec-rec-phrase');
+      if (!inp) return;
+      inp.value = window.AuthManager.generateRecoveryCode();
+      inp.focus();
+      inp.select();
+    });
+
+    document.getElementById('btn-copy-rec-phrase')?.addEventListener('click', async () => {
+      const inp = document.getElementById('sec-rec-phrase');
+      const val = inp ? inp.value.trim() : '';
+      if (!val) {
+        alert('Primero escribe o genera una llave de recuperación.');
+        return;
+      }
+      try {
+        await navigator.clipboard.writeText(val);
+        alert('📋 Llave copiada al portapapeles. Guárdala en un lugar seguro y luego pulsa "Guardar Llave".');
+      } catch (e) {
+        inp.select();
+        document.execCommand('copy');
+        alert('📋 Llave copiada. Luego pulsa "Guardar Llave" para activarla.');
+      }
+    });
+
+    document.getElementById('sec-recovery-phrase-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!window.AuthManager) return;
+      const curr = document.getElementById('sec-rec-curr-pass')?.value.trim();
+      const phrase = document.getElementById('sec-rec-phrase')?.value.trim();
+      const res = await window.AuthManager.setPersonalRecoveryKey(curr, phrase);
+      if (res.success) {
+        e.target.reset();
+        updateRecoveryStatusUI();
+        alert('✅ Llave de recuperación personal guardada (cifrada SHA-256). Recuerda conservar una copia segura.');
       } else {
         alert('⚠️ ' + res.message);
       }
