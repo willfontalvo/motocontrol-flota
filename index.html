@@ -774,6 +774,15 @@ Limpiar
 <option value="all">Todos los días</option>
 </select>
 </label>
+<label class="flex items-center gap-1.5 bg-light-surface-container-low px-2.5 py-1.5 rounded border border-light-primary/40" title="Escoge manualmente qué color trabaja el día 31 de cada mes">
+<span class="font-label text-label-sm text-light-on-surface whitespace-nowrap">📅 Día 31:</span>
+<select class="bg-transparent font-label text-label-sm text-light-primary font-bold focus:outline-none cursor-pointer" id="workplan-day31-color">
+<option value="salmon">🟠 Salmón</option>
+<option value="azul">🔵 Azul</option>
+<option value="all">🔵🟠 Ambos</option>
+<option value="none">Ninguno</option>
+</select>
+</label>
 <div class="flex flex-wrap items-center gap-1.5">
 <span class="px-2.5 py-1 rounded-full bg-success-container text-on-success-container font-label text-label-xs font-bold" id="wp-count-paid">Pago: 0</span>
 <span class="px-2.5 py-1 rounded-full bg-warning-container text-on-warning-container font-label text-label-xs font-bold" id="wp-count-pending">Pendiente: 0</span>
@@ -1217,10 +1226,6 @@ Limpiar
 <p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="doc-count-label">0 registros documentales</p>
 </div>
 <div class="flex flex-wrap items-center gap-2">
-<button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface hover:bg-light-surface-container font-label text-label-md transition-colors" id="btn-open-runt-assistant" type="button">
-<span class="material-symbols-outlined text-[18px] text-light-primary">policy</span>
-<span>Consulta Manual RUNT / R5</span>
-</button>
 <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface hover:bg-light-surface-container font-label text-label-md transition-colors" id="btn-open-email-alerts-modal" type="button">
 <span class="material-symbols-outlined text-[18px] text-light-primary">notifications_active</span>
 <span>Configurar Alertas por Correo</span>
@@ -1457,14 +1462,14 @@ Limpiar
 </div>
 </div>
 </section>
-<!-- Section 2: Propietario del Motocarro (Para RUNT y SOAT) -->
+<!-- Section 2: Propietario del Motocarro -->
 <section class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md p-gutter-lg flex flex-col gap-gutter-md">
 <div class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
 <div class="flex items-center gap-gutter-sm">
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">badge</span>
-<h2 class="font-headline text-headline-sm text-light-on-surface">2. Propietario del motocarro (Según RUNT / Matrícula)</h2>
+<h2 class="font-headline text-headline-sm text-light-on-surface">2. Propietario del motocarro (Tarjeta de propiedad)</h2>
 </div>
-<span class="text-xs text-light-outline font-body">Cédula requerida para consultar SOAT / Tecno</span>
+<span class="text-xs text-light-outline font-body">Datos del titular del vehículo</span>
 </div>
 <div class="p-2.5 rounded bg-light-surface-container-low border border-light-outline-variant flex items-center gap-2">
 <input class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" id="mismo-propietario-toggle" type="checkbox"/>
@@ -1478,9 +1483,9 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="propietario-nombre" name="propietarioNombre" placeholder="Ej. Andrés Rojas (Dueño en tarjeta de propiedad)" type="text" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" for="propietario-cedula">Cédula / NIT del propietario (Para RUNT) *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="propietario-cedula" name="propietarioCedula" placeholder="Ej. 1.037.624.890 (La que figura en el RUNT)" type="text" value=""/>
-<span class="text-[11px] text-light-on-surface-variant font-body">💡 Esta cédula es la que se usará para consultar automáticamente en el RUNT (no la del conductor).</span>
+<label class="font-label text-label-md text-light-on-surface" for="propietario-cedula">Cédula / NIT del propietario *</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="propietario-cedula" name="propietarioCedula" placeholder="Ej. 1.037.624.890 (Titular en matrícula)" type="text" value=""/>
+<span class="text-[11px] text-light-on-surface-variant font-body">Cédula del titular registrado en la tarjeta de propiedad del vehículo.</span>
 </div>
 </div>
 </section>
@@ -2256,16 +2261,16 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 </div>
 
-<!-- 2. Propietario (RUNT) -->
+<!-- 2. Propietario -->
 <div class="p-3 bg-light-surface-container-low rounded border border-light-outline-variant flex flex-col gap-2">
-<span class="font-label text-label-sm font-bold text-light-primary">2. Propietario (Según Matrícula / RUNT)</span>
+<span class="font-label text-label-sm font-bold text-light-primary">2. Propietario (Tarjeta de propiedad)</span>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-xs text-light-on-surface" for="modal-owner-name">Nombre del propietario</label>
 <input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-body text-body-sm text-light-on-surface focus:border-light-primary" id="modal-owner-name" placeholder="Ej. Andrés Rojas" type="text"/>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface" for="modal-owner-cedula">Cédula del propietario (Para RUNT) *</label>
+<label class="font-label text-label-xs text-light-on-surface" for="modal-owner-cedula">Cédula del propietario *</label>
 <input class="rounded border border-light-outline-variant bg-light-surface px-2.5 py-1.5 font-mono text-mono-sm font-bold text-light-on-surface focus:border-light-primary" id="modal-owner-cedula" placeholder="Ej. 1.037.624.890" type="text"/>
 </div>
 </div>
@@ -3041,166 +3046,6 @@ Crear Cuenta y Acceder
 <div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs border-t border-light-outline-variant">
 <button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-account-modal-btn" type="button">Cancelar</button>
 <button class="px-gutter-md py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container shadow-sm" type="submit">Crear Cuenta</button>
-</div>
-</form>
-</div>
-</div>
-
-<!-- MODAL: Consulta Manual de Documentos (RUNT / R5) -->
-<div aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="runt-assistant-modal" role="dialog">
-<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-xl p-gutter-lg flex flex-col gap-gutter-md max-h-[90vh] overflow-y-auto shadow-2xl">
-<header class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
-<div class="flex items-center gap-2.5">
-<span class="material-symbols-outlined text-[24px] text-light-primary">policy</span>
-<div>
-<h2 class="font-headline text-headline-sm text-light-on-surface">Consulta Manual de Documentos (RUNT / R5)</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant">Copia placa y cédula para consultar en R5 o RUNT y guarda aquí la nueva fecha</p>
-</div>
-</div>
-<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low shrink-0" id="close-runt-modal-btn" type="button">
-<span class="material-symbols-outlined text-[20px]">close</span>
-</button>
-</header>
-
-<!-- Bloque 1: Datos del Motocarro -->
-<section class="bg-light-surface-container-low p-gutter-md rounded-md border border-light-outline-variant flex flex-col gap-3">
-<div class="flex items-center justify-between gap-2">
-<span class="font-label text-label-md text-light-primary flex items-center gap-1.5">
-<span class="material-symbols-outlined text-[16px]">pin</span>
-<span>1. Datos del motocarro para consulta manual</span>
-</span>
-<span class="font-body text-body-sm text-light-outline">1 clic para copiar</span>
-</div>
-
-<!-- Fila 1: Selección completa del Motocarro -->
-<div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface-variant" for="runt-select-vehicle">Motocarro seleccionado</label>
-<select class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md font-semibold focus:border-light-primary focus:ring-light-primary" id="runt-select-vehicle">
-</select>
-</div>
-
-<!-- Fila 2: Cédula Propietario y Cédula Conductor alineadas -->
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-<div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface-variant" for="runt-display-owner-cedula">Cédula del Propietario (RUNT)</label>
-<div class="flex items-center gap-1.5">
-<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-3 font-mono text-mono-md font-semibold focus:outline-none" id="runt-display-owner-cedula" readonly="" type="text" value=""/>
-<button class="h-10 w-10 shrink-0 inline-flex items-center justify-center rounded border border-light-outline-variant bg-light-surface text-light-primary hover:bg-light-primary hover:text-light-on-primary transition-colors" id="btn-copy-owner-cedula" title="Copiar cédula del propietario" type="button">
-<span class="material-symbols-outlined text-[18px]">content_copy</span>
-</button>
-</div>
-</div>
-<div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface-variant" for="runt-display-driver-cedula">Cédula del Conductor</label>
-<div class="flex items-center gap-1.5">
-<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-3 font-mono text-mono-md focus:outline-none" id="runt-display-driver-cedula" readonly="" type="text" value=""/>
-<button class="h-10 w-10 shrink-0 inline-flex items-center justify-center rounded border border-light-outline-variant bg-light-surface text-light-primary hover:bg-light-primary hover:text-light-on-primary transition-colors" id="btn-copy-driver-cedula" title="Copiar cédula del conductor" type="button">
-<span class="material-symbols-outlined text-[18px]">content_copy</span>
-</button>
-</div>
-</div>
-</div>
-
-<!-- Fila 3: Barra de botones simétricos en 1 sola línea (R5 / RUNT / Copiar) -->
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-light-outline-variant">
-<button class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-light-surface border border-light-outline-variant text-light-primary font-label text-label-md hover:bg-light-secondary-container/40 transition-colors" id="btn-copy-plate" type="button">
-<span class="material-symbols-outlined text-[16px]">content_copy</span>
-<span id="btn-copy-plate-text">Copiar Placa</span>
-</button>
-<a class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-success text-on-success font-label text-label-md hover:bg-success/90 transition-colors" href="https://www.grupor5.com/" id="btn-open-r5" rel="noopener noreferrer" target="_blank" title="Abrir página principal de R5 (inicia sesión para ver SOAT y Tecnomecánica; copia la placa automáticamente)">
-<span class="material-symbols-outlined text-[16px]">bolt</span>
-<span>Abrir R5 Principal</span>
-</a>
-<a class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container transition-colors" href="https://www.runt.gov.co/consultaCiudadana/#/consultaVehiculo" id="btn-open-runt" rel="noopener noreferrer" target="_blank" title="Abrir Portal Oficial RUNT (copia cédula del propietario)">
-<span class="material-symbols-outlined text-[16px]">open_in_new</span>
-<span>Abrir RUNT (Historial)</span>
-</a>
-</div>
-
-<!-- Fila 4: Portales Oficiales de Impuestos Departamentales, Tránsito y SIMIT -->
-<div class="pt-2 border-t border-light-outline-variant flex flex-col gap-2">
-<div class="flex items-center justify-between gap-2">
-<span class="font-label text-label-sm text-light-on-surface font-semibold">Impuestos departamentales, Tránsito y Multas:</span>
-<span class="font-body text-body-xs text-light-outline">Portales externos (no RUNT)</span>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
-<select class="sm:col-span-5 h-9 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 font-body text-body-sm focus:border-light-primary focus:ring-light-primary" id="tax-department-select">
-<option value="atlantico">Gobernación del Atlántico</option>
-<option value="bolivar">Gobernación de Bolívar</option>
-<option value="magdalena">Gobernación del Magdalena</option>
-<option value="cordoba">Gobernación de Córdoba</option>
-<option value="sucre">Gobernación de Sucre</option>
-<option value="cesar">Gobernación del Cesar</option>
-<option value="antioquia">Gobernación de Antioquia</option>
-<option value="valle">Gobernación del Valle</option>
-<option value="cundinamarca">Gobernación Cundinamarca</option>
-<option value="bogota">Hacienda Bogotá D.C.</option>
-</select>
-<button class="sm:col-span-4 h-9 inline-flex items-center justify-center gap-1 px-2.5 rounded border border-light-primary bg-light-surface text-light-primary font-label text-label-sm font-semibold hover:bg-light-primary hover:text-light-on-primary transition-colors" id="btn-open-tax-portal" type="button">
-<span class="material-symbols-outlined text-[15px]">account_balance</span>
-<span>Abrir Impuestos</span>
-</button>
-<a class="sm:col-span-3 h-9 inline-flex items-center justify-center gap-1 px-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-label text-label-sm font-semibold hover:bg-light-surface-container transition-colors" href="https://www.fcm.org.co/simit/#/home-public" id="btn-open-simit" rel="noopener noreferrer" target="_blank" title="Consultar multas y comparendos en SIMIT">
-<span class="material-symbols-outlined text-[15px]">gavel</span>
-<span>SIMIT Multas</span>
-</a>
-</div>
-<div class="grid grid-cols-1 sm:grid-cols-12 gap-2 items-center">
-<input class="sm:col-span-9 h-9 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 font-body text-body-sm focus:border-light-primary focus:ring-light-primary" id="transit-portal-url" placeholder="Link de Tránsito / Alcaldía municipal (Ej. https://transitodelsur.gov.co)" type="url"/>
-<button class="sm:col-span-3 h-9 inline-flex items-center justify-center gap-1 px-2.5 rounded border border-light-outline-variant bg-light-surface text-light-primary font-label text-label-sm font-semibold hover:bg-light-secondary-container/40 transition-colors" id="btn-open-transit-portal" type="button">
-<span class="material-symbols-outlined text-[15px]">directions_car</span>
-<span>Tránsito</span>
-</button>
-</div>
-</div>
-</section>
-
-<!-- Bloque 2: Formulario de Actualización Manual -->
-<form class="flex flex-col gap-3 pt-1" id="runt-update-form" novalidate>
-<div class="flex flex-wrap items-center justify-between gap-2 border-b border-light-outline-variant pb-2">
-<div class="flex items-center gap-1.5 text-light-on-surface font-label text-label-md">
-<span class="material-symbols-outlined text-[18px] text-success">update</span>
-<span>2. Registrar nueva vigencia en MotoControl</span>
-</div>
-<div class="flex items-center gap-1.5">
-<span class="font-body text-body-sm text-light-on-surface-variant">Atajos:</span>
-<button class="btn-quick-date px-2.5 py-1 rounded border border-light-outline-variant bg-light-surface font-label text-label-sm text-light-on-surface hover:bg-light-secondary-container/50 transition-colors" data-days="365" type="button">+1 Año</button>
-<button class="btn-quick-date px-2.5 py-1 rounded border border-light-outline-variant bg-light-surface font-label text-label-sm text-light-on-surface hover:bg-light-secondary-container/50 transition-colors" data-days="180" type="button">+6 Meses</button>
-</div>
-</div>
-
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-<div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface-variant" for="runt-doc-type">Tipo de documento *</label>
-<select class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="runt-doc-type" required="">
-<option selected="" value="SOAT">SOAT (Seguro Obligatorio)</option>
-<option value="Tecnomecánica">Revisión Técnico-Mecánica (CDA)</option>
-<option value="Impuesto Departamental">Impuesto Vehicular (Gobernación)</option>
-<option value="Derechos de Tránsito">Derechos de Tránsito / Rodamiento (Alcaldía)</option>
-</select>
-</div>
-<div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface-variant" for="runt-expiry-date">Nueva fecha de vencimiento *</label>
-<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="runt-expiry-date" required="" type="date"/>
-</div>
-</div>
-
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
-<div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface-variant" for="runt-entity">Aseguradora / CDA / Entidad</label>
-<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="runt-entity" placeholder="Ej. SURA, Seguros del Estado, CDA..." type="text"/>
-</div>
-<div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface-variant" for="runt-number">Número de póliza / certificado</label>
-<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md uppercase focus:border-light-primary focus:ring-light-primary" id="runt-number" placeholder="Ej. POL-2026-8812" type="text"/>
-</div>
-</div>
-
-<div class="flex items-center justify-end gap-2 pt-3 border-t border-light-outline-variant">
-<button class="h-10 px-4 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low transition-colors" id="cancel-runt-modal-btn" type="button">Cerrar</button>
-<button class="h-10 px-5 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container shadow-xs transition-colors" type="submit">
-Guardar y Actualizar Vigencia
-</button>
 </div>
 </form>
 </div>

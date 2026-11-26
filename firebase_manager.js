@@ -723,11 +723,13 @@ window.MotoData = {
     if (!this.data.settings.workPlan) {
       this.data.settings.workPlan = {
         azulDays: 'even',
-        salmonDays: 'odd'
+        salmonDays: 'odd',
+        day31Color: 'salmon'
       };
     }
-    if (this.data.settings.taxDepartment === undefined) this.data.settings.taxDepartment = 'atlantico';
-    if (this.data.settings.transitPortalUrl === undefined) this.data.settings.transitPortalUrl = '';
+    if (!this.data.settings.workPlan.day31Color) {
+      this.data.settings.workPlan.day31Color = 'salmon';
+    }
     if (this.data.settings.alertEmails === undefined) this.data.settings.alertEmails = '';
     if (this.data.settings.emailAlertsEnabled === undefined) this.data.settings.emailAlertsEnabled = true;
     if (!this.data.settings.notifyDaysBefore) this.data.settings.notifyDaysBefore = [30, 15, 5, 1];
@@ -766,12 +768,21 @@ window.MotoData = {
     }
 
     const settings = this.getSettings();
-    const plan = settings.workPlan || { azulDays: 'even', salmonDays: 'odd' };
+    const plan = settings.workPlan || { azulDays: 'even', salmonDays: 'odd', day31Color: 'salmon' };
     const dayNum = Number((targetDate.split('-')[2] || new Date().getDate()));
-    const parity = (dayNum % 2 === 0) ? 'even' : 'odd';
     const isSalmon = (v.color || '').toLowerCase().includes('salm');
-    const rule = isSalmon ? (plan.salmonDays || 'odd') : (plan.azulDays || 'even');
-    const isWorkingDay = (rule === 'all' || rule === parity);
+    let isWorkingDay = true;
+    if (dayNum === 31) {
+      const d31 = plan.day31Color || 'salmon';
+      if (d31 === 'all') isWorkingDay = true;
+      else if (d31 === 'none') isWorkingDay = false;
+      else if (d31 === 'azul') isWorkingDay = !isSalmon;
+      else isWorkingDay = isSalmon;
+    } else {
+      const parity = (dayNum % 2 === 0) ? 'even' : 'odd';
+      const rule = isSalmon ? (plan.salmonDays || 'odd') : (plan.azulDays || 'even');
+      isWorkingDay = (rule === 'all' || rule === parity);
+    }
 
     if (!isWorkingDay) {
       return { code: 'resting', label: 'Descansando', paidToday: 0, isWorkingDay: false, expectedRate };

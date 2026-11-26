@@ -1778,8 +1778,9 @@
       });
     }
 
-    (document.getElementById('open-assign-secondary-btn') || document.getElementById('btn-goto-add-motocarro') || document.getElementById('open-assign-modal-btn'))?.addEventListener('click', () => navigateTo('form-motocarro'));
-    document.getElementById('open-assign-secondary-btn')?.addEventListener('click', () => toggleAssignModal(true));
+    ['btn-goto-add-motocarro', 'open-assign-secondary-btn', 'open-assign-modal-btn'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click', () => navigateTo('form-motocarro'));
+    });
     document.getElementById('close-assign-modal-btn')?.addEventListener('click', () => toggleAssignModal(false));
     document.getElementById('cancel-assign-btn')?.addEventListener('click', () => toggleAssignModal(false));
 
@@ -1826,7 +1827,7 @@
           venceLicencia: venceLicFinal,
           dailyRate: dailyRateVal,
           status: statusVal,
-          statusText: statusVal === 'route' ? 'En ruta' : (statusVal === 'workshop' ? 'En taller' : 'Sin conductor')
+          statusText: statusVal === 'route' ? 'En ruta' : (statusVal === 'workshop' ? 'En taller' : (statusVal === 'resting' ? 'Descansando' : 'Sin conductor'))
         });
 
         toggleAssignModal(false);
@@ -1847,7 +1848,9 @@
 
     document.getElementById('btn-open-buy-modal')?.addEventListener('click', () => toggleBuyModal(true));
     document.getElementById('close-buy-modal-btn')?.addEventListener('click', () => toggleBuyModal(false));
-    (document.getElementById('cancel-buy-modal-btn') || document.getElementById('cancel-buy-btn'))?.addEventListener('click', () => toggleBuyModal(false));
+    ['cancel-buy-modal-btn', 'cancel-buy-btn'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click', () => toggleBuyModal(false));
+    });
 
     const buyForm = document.getElementById('buy-motocarro-form');
     if (buyForm) {
@@ -1891,7 +1894,9 @@
 
     document.getElementById('btn-open-sell-modal')?.addEventListener('click', () => toggleSellModal(true));
     document.getElementById('close-sell-modal-btn')?.addEventListener('click', () => toggleSellModal(false));
-    (document.getElementById('cancel-sell-modal-btn') || document.getElementById('cancel-sell-btn'))?.addEventListener('click', () => toggleSellModal(false));
+    ['cancel-sell-modal-btn', 'cancel-sell-btn'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click', () => toggleSellModal(false));
+    });
 
     setupVehicleAutoFiller({
       driverSelectId: 'sell-filter-driver',
@@ -1993,17 +1998,23 @@
 
     function syncWorkPlanUI() {
       const settings = MotoData.getSettings ? MotoData.getSettings() : {};
-      const plan = settings.workPlan || { azulDays: 'even', salmonDays: 'odd' };
+      const plan = settings.workPlan || { azulDays: 'even', salmonDays: 'odd', day31Color: 'salmon' };
       const todayBadge = document.getElementById('workplan-today-badge');
       const azulSel = document.getElementById('workplan-azul-days');
       const salmonSel = document.getElementById('workplan-salmon-days');
+      const day31Sel = document.getElementById('workplan-day31-color');
       const now = new Date();
       const dayNames = ['Domingo', 'Lunes', 'Martes', 'Miércoles', 'Jueves', 'Viernes', 'Sábado'];
       const dayNum = now.getDate();
-      const parityLabel = dayNum % 2 === 0 ? 'Día PAR' : 'Día IMPAR';
+      let parityLabel = dayNum % 2 === 0 ? 'Día PAR' : 'Día IMPAR';
+      if (dayNum === 31) {
+        const d31Map = { salmon: 'Día 31 (🟠 Salmón)', azul: 'Día 31 (🔵 Azul)', all: 'Día 31 (Ambos)', none: 'Día 31 (Descanso)' };
+        parityLabel = d31Map[plan.day31Color || 'salmon'] || 'Día 31 (Especial)';
+      }
       if (todayBadge) todayBadge.textContent = `${dayNames[now.getDay()]} ${dayNum} · ${parityLabel}`;
       if (azulSel) azulSel.value = plan.azulDays || 'even';
       if (salmonSel) salmonSel.value = plan.salmonDays || 'odd';
+      if (day31Sel) day31Sel.value = plan.day31Color || 'salmon';
     }
 
     document.getElementById('workplan-azul-days')?.addEventListener('change', (e) => {
@@ -2016,6 +2027,13 @@
     document.getElementById('workplan-salmon-days')?.addEventListener('change', (e) => {
       const settings = MotoData.getSettings ? MotoData.getSettings() : {};
       const plan = { ...(settings.workPlan || {}), salmonDays: e.target.value };
+      MotoData.saveSettings({ workPlan: plan });
+      renderTariffVehiclesTable();
+      renderTarifasKPIs();
+    });
+    document.getElementById('workplan-day31-color')?.addEventListener('change', (e) => {
+      const settings = MotoData.getSettings ? MotoData.getSettings() : {};
+      const plan = { ...(settings.workPlan || {}), day31Color: e.target.value };
       MotoData.saveSettings({ workPlan: plan });
       renderTariffVehiclesTable();
       renderTarifasKPIs();
@@ -2681,8 +2699,12 @@
         togglePartModal(true);
       });
     });
-    (document.getElementById('close-spare-part-modal-btn') || document.getElementById('close-part-modal-btn'))?.addEventListener('click', () => togglePartModal(false));
-    (document.getElementById('cancel-spare-part-btn') || document.getElementById('cancel-part-btn'))?.addEventListener('click', () => togglePartModal(false));
+    ['close-spare-part-modal-btn', 'close-part-modal-btn'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click', () => togglePartModal(false));
+    });
+    ['cancel-spare-part-btn', 'cancel-part-btn'].forEach(id => {
+      document.getElementById(id)?.addEventListener('click', () => togglePartModal(false));
+    });
 
     const partForm = document.getElementById('spare-part-form');
     if (partForm) {
@@ -3050,10 +3072,6 @@
             <td class="px-gutter-md py-3">${badgeHtml}</td>
             <td class="px-gutter-md py-3 text-right">
               <div class="inline-flex items-center gap-2 justify-end">
-                <button class="runt-doc-row-btn inline-flex items-center gap-1 px-2.5 py-1 rounded border border-light-outline-variant hover:bg-light-secondary-container/30 text-light-primary font-label text-label-sm font-semibold transition-colors" data-plate="${doc.plate}" data-doc="${doc.type}" type="button" title="Consulta Manual RUNT / R5">
-                  <span class="material-symbols-outlined text-[15px]">manage_search</span>
-                  <span>RUNT</span>
-                </button>
                 <button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="${doc.type}" data-plate="${doc.plate}" type="button">${docState === 'expired' ? 'Renovar' : 'Actualizar'}</button>
                 <button class="delete-doc-btn inline-flex items-center p-1 rounded text-red-500 hover:text-red-700 hover:bg-red-50 transition" data-id="${doc.id}" data-doc="${doc.type}" data-plate="${doc.plate}" type="button" title="Eliminar documento">
                   <span class="material-symbols-outlined text-[16px]">delete</span>
@@ -3089,10 +3107,6 @@
 
       tableBody.querySelectorAll('.renew-doc-btn').forEach(btn => {
         btn.addEventListener('click', () => toggleDocModal(true, btn.dataset.plate, btn.dataset.doc));
-      });
-
-      tableBody.querySelectorAll('.runt-doc-row-btn').forEach(btn => {
-        btn.addEventListener('click', () => openRuntModal(btn.dataset.plate, btn.dataset.doc));
       });
 
       tableBody.querySelectorAll('.delete-doc-btn').forEach(btn => {
@@ -3212,277 +3226,6 @@
         toggleDocModal(false);
         renderDocsTable();
         alert(`Renovación de ${type} para ${plate} guardada con éxito.`);
-      });
-    }
-
-    // =========================================================================
-    // MODAL ASISTENTE RUNT (OPCIÓN A: 1-CLIC PLACA + CÉDULA + ENLACE OFICIAL)
-    // =========================================================================
-    const runtModal = document.getElementById('runt-assistant-modal');
-    const runtSelectVehicle = document.getElementById('runt-select-vehicle');
-    const runtPlateDisplay = document.getElementById('runt-plate-display');
-    const runtOwnerCedulaDisplay = document.getElementById('runt-display-owner-cedula');
-    const runtDriverCedulaDisplay = document.getElementById('runt-display-driver-cedula');
-    const btnCopyPlate = document.getElementById('btn-copy-plate');
-    const btnCopyOwnerCedula = document.getElementById('btn-copy-owner-cedula');
-    const btnCopyDriverCedula = document.getElementById('btn-copy-driver-cedula');
-    const btnOpenR5 = document.getElementById('btn-open-r5');
-    const taxDeptSelect = document.getElementById('tax-department-select');
-    const transitUrlInput = document.getElementById('transit-portal-url');
-    const btnOpenTaxPortal = document.getElementById('btn-open-tax-portal');
-    const btnOpenTransitPortal = document.getElementById('btn-open-transit-portal');
-    const btnOpenSimit = document.getElementById('btn-open-simit');
-    const TAX_PORTAL_URLS = {
-      atlantico: 'https://portalimpuestos.atlantico.gov.co/',
-      bolivar: 'https://impuestos.bolivar.gov.co/gobol_web/liquidaciones',
-      magdalena: 'https://impuestos.gobernaciondelmagdalena.gov.co/autoservicio-vehiculo',
-      cordoba: 'https://impuestos.cordoba.gov.co/RentasCord/vehiculos_consulta.jsp?Opcion=1',
-      sucre: 'https://www.sucre.gov.co/',
-      cesar: 'https://cesar.gov.co/',
-      antioquia: 'https://www.vehiculosantioquia.com.co/impuestosWeb/#/public',
-      valle: 'https://www.vehiculosvalle.com.co/',
-      cundinamarca: 'https://impuvehiculo.cundinamarca.gov.co/sivervcundinamarca/liquidacionweb/primeraa.php',
-      bogota: 'https://www.haciendabogota.gov.co/'
-    };
-    const runtDocTypeSelect = document.getElementById('runt-doc-type') || document.getElementById('runt-input-doc-type');
-    const runtExpiryInput = document.getElementById('runt-expiry-date') || document.getElementById('runt-input-expiry');
-    const runtNumberInput = document.getElementById('runt-number') || document.getElementById('runt-input-number');
-    const runtEntityInput = document.getElementById('runt-entity') || document.getElementById('runt-input-entity');
-    const runtUpdateForm = document.getElementById('runt-update-form');
-
-    function openRuntModal(initialPlate = '', initialType = 'SOAT') {
-      if (!runtModal) return;
-      const settings = MotoData.getSettings ? MotoData.getSettings() : {};
-      if (taxDeptSelect && settings.taxDepartment) {
-        taxDeptSelect.value = settings.taxDepartment;
-      }
-      if (transitUrlInput && settings.transitPortalUrl !== undefined) {
-        transitUrlInput.value = settings.transitPortalUrl || '';
-      }
-      const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
-      if (runtSelectVehicle) {
-        runtSelectVehicle.innerHTML = '';
-        if (vehicles.length === 0) {
-          const opt = document.createElement('option');
-          opt.value = '';
-          opt.textContent = 'Sin motocarros registrados';
-          runtSelectVehicle.appendChild(opt);
-        } else {
-          vehicles.forEach(v => {
-            const opt = document.createElement('option');
-            opt.value = v.plate;
-            opt.textContent = `${v.plate} - ${v.driver || 'Sin conductor'} (${v.color || 'Azul'})`;
-            runtSelectVehicle.appendChild(opt);
-          });
-          if (initialPlate) {
-            runtSelectVehicle.value = initialPlate;
-          }
-        }
-      }
-      if (runtDocTypeSelect && initialType) {
-        const tLower = initialType.toLowerCase();
-        if (tLower.includes('soat')) runtDocTypeSelect.value = 'SOAT';
-        else if (tLower.includes('tecno')) runtDocTypeSelect.value = 'Tecnomecánica';
-        else if (tLower.includes('gobern')) runtDocTypeSelect.value = 'Impuesto Departamental';
-        else if (tLower.includes('alcald') || tLower.includes('derech') || tLower.includes('rodamiento')) runtDocTypeSelect.value = 'Derechos de Tránsito';
-        else runtDocTypeSelect.value = initialType;
-      }
-      updateRuntCard();
-      runtModal.classList.remove('hidden');
-      runtModal.classList.add('flex');
-    }
-
-    function closeRuntModal() {
-      if (!runtModal) return;
-      runtModal.classList.add('hidden');
-      runtModal.classList.remove('flex');
-    }
-
-    function updateRuntCard() {
-      const plate = runtSelectVehicle ? runtSelectVehicle.value : '';
-      const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
-      const v = vehicles.find(veh => veh.plate === plate) || {};
-
-      const ownerCc = v.ownerCedula || '';
-      const driverCc = v.cedula && v.cedula !== '-' ? v.cedula : '';
-
-      if (runtOwnerCedulaDisplay) {
-        runtOwnerCedulaDisplay.value = ownerCc || (driverCc ? `${driverCc} (Conductor)` : 'Sin registrar');
-      }
-      if (runtDriverCedulaDisplay) {
-        runtDriverCedulaDisplay.value = driverCc || 'Sin registrar';
-      }
-    }
-
-    if (runtSelectVehicle) {
-      runtSelectVehicle.addEventListener('change', updateRuntCard);
-    }
-
-    document.getElementById('btn-open-runt-assistant')?.addEventListener('click', () => openRuntModal());
-    document.getElementById('close-runt-modal-btn')?.addEventListener('click', closeRuntModal);
-    document.getElementById('cancel-runt-modal-btn')?.addEventListener('click', closeRuntModal);
-
-    // Botón copiar placa
-    if (btnCopyPlate) {
-      btnCopyPlate.addEventListener('click', () => {
-        const plate = runtSelectVehicle?.value || '';
-        if (plate) {
-          navigator.clipboard.writeText(plate).then(() => {
-            const orig = btnCopyPlate.innerHTML;
-            btnCopyPlate.innerHTML = '<span class="material-symbols-outlined text-[15px]">check</span> ¡Placa Copiada!';
-            setTimeout(() => { btnCopyPlate.innerHTML = orig; }, 1800);
-          }).catch(() => {
-            alert(`Placa: ${plate}`);
-          });
-        }
-      });
-    }
-
-    // Botón copiar cédula propietario
-    if (btnCopyOwnerCedula) {
-      btnCopyOwnerCedula.addEventListener('click', () => {
-        const plate = runtSelectVehicle?.value || '';
-        const v = (MotoData.getVehicles ? MotoData.getVehicles() : []).find(veh => veh.plate === plate) || {};
-        const cc = v.ownerCedula || (v.cedula && v.cedula !== '-' ? v.cedula : '');
-        if (cc) {
-          navigator.clipboard.writeText(cc).then(() => {
-            const orig = btnCopyOwnerCedula.innerHTML;
-            btnCopyOwnerCedula.innerHTML = '<span class="material-symbols-outlined text-[15px]">check</span>';
-            setTimeout(() => { btnCopyOwnerCedula.innerHTML = orig; }, 1800);
-          }).catch(() => { alert(`Cédula propietario: ${cc}`); });
-        } else {
-          alert('Este motocarro no tiene cédula de propietario registrada. Edita el motocarro en la vista Flota para agregarla.');
-        }
-      });
-    }
-
-    // Botón copiar cédula conductor
-    if (btnCopyDriverCedula) {
-      btnCopyDriverCedula.addEventListener('click', () => {
-        const plate = runtSelectVehicle?.value || '';
-        const v = (MotoData.getVehicles ? MotoData.getVehicles() : []).find(veh => veh.plate === plate) || {};
-        const cc = v.cedula && v.cedula !== '-' ? v.cedula : '';
-        if (cc) {
-          navigator.clipboard.writeText(cc).then(() => {
-            const orig = btnCopyDriverCedula.innerHTML;
-            btnCopyDriverCedula.innerHTML = '<span class="material-symbols-outlined text-[15px]">check</span>';
-            setTimeout(() => { btnCopyDriverCedula.innerHTML = orig; }, 1800);
-          }).catch(() => { alert(`Cédula conductor: ${cc}`); });
-        } else {
-          alert('No hay cédula de conductor registrada.');
-        }
-      });
-    }
-
-    // Botón R5 (Consulta Rápida - Copia placa al portapapeles)
-    if (btnOpenR5) {
-      btnOpenR5.addEventListener('click', () => {
-        const plate = runtSelectVehicle?.value || '';
-        if (plate) {
-          navigator.clipboard.writeText(plate).catch(() => {});
-        }
-      });
-    }
-
-    // Botón RUNT Oficial (Copia cédula del propietario o conductor automáticamente)
-    const btnOpenRunt = document.getElementById('btn-open-runt');
-    if (btnOpenRunt) {
-      btnOpenRunt.addEventListener('click', () => {
-        const plate = runtSelectVehicle?.value || '';
-        const v = (MotoData.getVehicles ? MotoData.getVehicles() : []).find(veh => veh.plate === plate) || {};
-        const cc = v.ownerCedula || (v.cedula && v.cedula !== '-' ? v.cedula : '');
-        if (cc) {
-          navigator.clipboard.writeText(cc).catch(() => {});
-        }
-      });
-    }
-
-    // Portales de Impuestos Departamentales, Tránsito Municipal y SIMIT
-    if (taxDeptSelect) {
-      taxDeptSelect.addEventListener('change', () => {
-        if (MotoData.saveSettings) MotoData.saveSettings({ taxDepartment: taxDeptSelect.value });
-      });
-    }
-    if (transitUrlInput) {
-      transitUrlInput.addEventListener('change', () => {
-        if (MotoData.saveSettings) MotoData.saveSettings({ transitPortalUrl: transitUrlInput.value.trim() });
-      });
-    }
-    if (btnOpenTaxPortal) {
-      btnOpenTaxPortal.addEventListener('click', () => {
-        const dept = taxDeptSelect?.value || 'atlantico';
-        if (MotoData.saveSettings) MotoData.saveSettings({ taxDepartment: dept });
-        const plate = runtSelectVehicle?.value || '';
-        if (plate) navigator.clipboard.writeText(plate).catch(() => {});
-        const targetUrl = TAX_PORTAL_URLS[dept] || TAX_PORTAL_URLS.atlantico;
-        window.open(targetUrl, '_blank', 'noopener,noreferrer');
-      });
-    }
-    if (btnOpenSimit) {
-      btnOpenSimit.addEventListener('click', () => {
-        const plate = runtSelectVehicle?.value || '';
-        if (plate) navigator.clipboard.writeText(plate).catch(() => {});
-      });
-    }
-    if (btnOpenTransitPortal) {
-      btnOpenTransitPortal.addEventListener('click', () => {
-        let rawUrl = (transitUrlInput?.value || '').trim();
-        if (!rawUrl) {
-          alert('Pega primero el enlace de tu Secretaría de Tránsito o Alcaldía municipal (ej. https://...) y quedará guardado automáticamente.');
-          transitUrlInput?.focus();
-          return;
-        }
-        if (!/^https?:\/\//i.test(rawUrl)) rawUrl = 'https://' + rawUrl;
-        if (transitUrlInput) transitUrlInput.value = rawUrl;
-        if (MotoData.saveSettings) MotoData.saveSettings({ transitPortalUrl: rawUrl });
-        const plate = runtSelectVehicle?.value || '';
-        if (plate) navigator.clipboard.writeText(plate).catch(() => {});
-        window.open(rawUrl, '_blank', 'noopener,noreferrer');
-      });
-    }
-
-    // Atajos de fecha (+1 año, +6 meses)
-    document.querySelectorAll('.btn-quick-date').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const days = Number(btn.dataset.days || 365);
-        const d = new Date();
-        d.setDate(d.getDate() + days);
-        const yyyy = d.getFullYear();
-        const mm = String(d.getMonth() + 1).padStart(2, '0');
-        const dd = String(d.getDate()).padStart(2, '0');
-        if (runtExpiryInput) runtExpiryInput.value = `${yyyy}-${mm}-${dd}`;
-      });
-    });
-
-    if (runtUpdateForm) {
-      runtUpdateForm.addEventListener('submit', (e) => {
-        e.preventDefault();
-        const plate = runtSelectVehicle?.value;
-        if (!plate) {
-          alert('Por favor selecciona un motocarro.');
-          return;
-        }
-        const type = runtDocTypeSelect?.value || 'SOAT';
-        const expiry = runtExpiryInput?.value;
-        if (!expiry) {
-          alert('Por favor indica la nueva fecha de vencimiento obtenida en R5 o en el RUNT.');
-          return;
-        }
-        const number = runtNumberInput?.value.trim() || '';
-        const entity = runtEntityInput?.value.trim() || '';
-
-        window.MotoData.quickUpdateDocumentByPlate(plate, {
-          type: type,
-          expiry: expiry,
-          number: number,
-          entity: entity,
-          status: 'valid',
-          statusText: 'Vigente'
-        });
-
-        closeRuntModal();
-        renderDocsTable();
-        alert(`✅ ¡Vigencia de ${type} para ${plate} actualizada exitosamente hasta el ${expiry}!`);
       });
     }
 
