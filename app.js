@@ -189,9 +189,25 @@
     window.scrollTo({ top: 0, behavior: 'smooth' });
 
     // Re-render context
+    if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
+    const todayStr = new Date().toISOString().split('T')[0];
+    if (viewId === 'form-movimiento') {
+      const mf = document.getElementById('mov-fecha');
+      if (mf && !mf.value) mf.value = todayStr;
+    } else if (viewId === 'form-tarifa') {
+      const vf = document.getElementById('vigencia-desde');
+      if (vf && !vf.value) vf.value = todayStr;
+    } else if (viewId === 'form-mantenimiento') {
+      const mtf = document.getElementById('mant-fecha');
+      if (mtf && !mtf.value) mtf.value = todayStr;
+    } else if (viewId === 'form-soat') {
+      const df = document.getElementById('doc-expedicion');
+      if (df && !df.value) df.value = todayStr;
+    }
+
     if (viewId === 'dashboard') {
       window.dispatchEvent(new CustomEvent('motocontrol-render-dashboard'));
-    } else if (viewId === 'flota') {
+    } else {
       window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
     }
   }
@@ -738,7 +754,7 @@
       sel.value = cur;
     });
 
-    document.querySelectorAll('.driver-name-select').forEach(sel => {
+    document.querySelectorAll('.driver-name-select, #tarifa-filter-driver').forEach(sel => {
       const cur = sel.value;
       sel.innerHTML = '<option value="">-- Seleccionar Conductor --</option>';
       drivers.forEach(d => {
@@ -752,27 +768,78 @@
 
     // Poblado de selects de cuentas bancarias
     let accounts = MotoData.getAccounts ? MotoData.getAccounts() : [];
-    // Si no hay cuentas, dejar el select vacío con mensaje
     if (!accounts) accounts = [];
     const accountSelectIds = [
-      'filter-account', 'dashboard-filter-account', 'mov-cuenta', 'mov-cuenta-destino',
+      'filter-account', 'dashboard-filter-account', 'account-filter',
+      'mov-cuenta', 'mov-cuenta-destino', 'fin-tx-account', 'modal-doc-account',
       'cuenta-recaudo', 'cuenta-pago', 'doc-cuenta', 'sp-account', 'buy-account', 'sell-account'
     ];
+    const optionalAccountIds = new Set(['cuenta-pago', 'doc-cuenta', 'modal-doc-account', 'buy-account', 'sell-account', 'sp-account']);
 
     accountSelectIds.forEach(id => {
       const sel = document.getElementById(id);
       if (!sel) return;
       const cur = sel.value;
       const hasAll = id.includes('filter');
-      sel.innerHTML = hasAll ? '<option value="all">Todas las cuentas</option>' : '';
+      if (hasAll) {
+        sel.innerHTML = '<option value="all">Todas las cuentas</option>';
+      } else if (optionalAccountIds.has(id)) {
+        sel.innerHTML = '<option value="">-- Sin descontar / No afecta caja --</option>';
+      } else if (accounts.length === 0) {
+        sel.innerHTML = '<option value="">-- Sin cuentas (Crea una en Gastos y Cuentas) --</option>';
+      } else {
+        sel.innerHTML = '';
+      }
       accounts.forEach(a => {
         const opt = document.createElement('option');
         opt.value = a.name;
         opt.textContent = `${a.name} (${a.type || 'Bancaria'})`;
         sel.appendChild(opt);
       });
-      if (cur) sel.value = cur;
+      if (cur && Array.from(sel.options).some(o => o.value === cur)) {
+        sel.value = cur;
+      }
     });
+
+    // Poblado dinámico de selects de repuestos en bodega
+    const parts = MotoData.getSpareParts ? MotoData.getSpareParts() : [];
+    ['usage-part', 'repuesto-select'].forEach(id => {
+      const sel = document.getElementById(id);
+      if (!sel) return;
+      const cur = sel.value;
+      if (parts.length === 0) {
+        sel.innerHTML = '<option value="">-- Sin repuestos en bodega --</option>';
+      } else {
+        sel.innerHTML = '<option value="">-- Seleccionar repuesto --</option>';
+        parts.forEach(p => {
+          const price = Number(p.unitPrice ?? p.price ?? 0);
+          const stock = Number(p.stock ?? 0);
+          const opt = document.createElement('option');
+          opt.value = p.code || p.name;
+          opt.textContent = `${p.name} (Stock: ${stock} · $${price.toLocaleString('es-CO')})`;
+          sel.appendChild(opt);
+        });
+      }
+      if (cur && Array.from(sel.options).some(o => o.value === cur)) sel.value = cur;
+    });
+
+    // Badges dinámicos en cabeceras de formularios
+    const activeCount = vehicles.length;
+    const fleetBadge = document.getElementById('form-moto-fleet-badge');
+    if (fleetBadge) fleetBadge.textContent = `Flota activa: ${activeCount}`;
+
+    const docs = MotoData.getDocuments ? MotoData.getDocuments() : [];
+    const alertDocsCount = docs.filter(d => {
+      const st = MotoData.computeDocumentStatus ? MotoData.computeDocumentStatus(d.expiry).status : (d.status || 'valid');
+      return st === 'expired' || st === 'expiring';
+    }).length;
+    const soatAlertsBadge = document.getElementById('form-soat-alerts-badge');
+    if (soatAlertsBadge) {
+      soatAlertsBadge.textContent = alertDocsCount > 0 ? `${alertDocsCount} alerta${alertDocsCount === 1 ? '' : 's'} documental${alertDocsCount === 1 ? '' : 'es'}` : 'Documentación al día';
+      soatAlertsBadge.className = alertDocsCount > 0
+        ? 'font-label text-label-md px-gutter-sm py-1 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap'
+        : 'font-label text-label-md px-gutter-sm py-1 rounded-full bg-success-container text-on-success-container whitespace-nowrap';
+    }
 
     const saldoTotalEl = document.getElementById('mov-saldo-total');
     if (saldoTotalEl) {
@@ -911,8 +978,12 @@
             const tr = document.createElement('tr');
             tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
             tr.dataset.docType = d.type;
-            const isExp = d.status === 'expired';
-            const badgeClass = isExp ? 'bg-light-error-container text-light-on-error-container' : 'bg-success-container text-on-success-container';
+            const computed = MotoData.computeDocumentStatus ? MotoData.computeDocumentStatus(d.expiry) : { status: d.status || 'valid', statusText: d.statusText || 'Vigente' };
+            const isExp = computed.status === 'expired';
+            const isSoon = computed.status === 'expiring';
+            const badgeClass = isExp
+              ? 'bg-light-error-container text-light-on-error-container'
+              : (isSoon ? 'bg-warning-container text-on-warning-container' : 'bg-success-container text-on-success-container');
 
             tr.innerHTML = `
               <td class="px-gutter-md py-3">
@@ -928,7 +999,7 @@
               </td>
               <td class="px-gutter-md py-3">
                 <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold ${badgeClass}">
-                  ${d.statusText || (isExp ? 'Vencido' : 'Vigente')}
+                  ${computed.statusText}
                 </span>
               </td>
             `;
@@ -940,10 +1011,14 @@
       // 3. Alertas de Documentos y Mantenimientos en Banner y Sidebar Badges
       const docs = MotoData.getDocuments ? MotoData.getDocuments() : [];
       const orders = MotoData.getMaintenanceOrders ? MotoData.getMaintenanceOrders() : [];
-      const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
 
-      const expiredDocs = docs.filter(d => d.status === 'expired');
-      const expiringDocs = docs.filter(d => d.status === 'expiring');
+      const docsWithStatus = docs.map(d => ({
+        ...d,
+        computed: MotoData.computeDocumentStatus ? MotoData.computeDocumentStatus(d.expiry) : { status: d.status || 'valid', statusText: d.statusText || 'Vigente' }
+      }));
+      const expiredDocs = docsWithStatus.filter(d => d.computed.status === 'expired');
+      const expiringDocs = docsWithStatus.filter(d => d.computed.status === 'expiring');
+      const validDocsList = docsWithStatus.filter(d => d.computed.status === 'valid');
       const pendingMaint = orders.filter(o => o.status !== 'done');
 
       // Sidebar badges
@@ -970,7 +1045,7 @@
         }
       }
 
-      // Banner de Alerta Crítica (Vencidos)
+      // Banner de Alerta Crítica (Vencidos) en Dashboard y Documentación
       const alertBannerErr = document.getElementById('alert-banner-error');
       const alertBannerErrText = document.getElementById('alert-banner-error-text');
       if (alertBannerErr) {
@@ -978,11 +1053,31 @@
           alertBannerErr.classList.remove('hidden');
           alertBannerErr.classList.add('flex');
           if (alertBannerErrText) {
-            alertBannerErrText.innerHTML = `<strong>Alerta crítica:</strong> ${expiredDocs[0].type} vencido en <span class="font-mono text-mono-md">${expiredDocs[0].plate}</span> (${expiredDocs[0].driver || 'Conductor'}). Unidad requiere renovación inmediata.`;
+            alertBannerErrText.innerHTML = `<strong>Alerta crítica:</strong> ${expiredDocs[0].type} vencido en <span class="font-mono text-mono-md">${expiredDocs[0].plate}</span> (${expiredDocs[0].driver || 'Sin conductor'}). Unidad requiere renovación inmediata.`;
           }
         } else {
           alertBannerErr.classList.add('hidden');
           alertBannerErr.classList.remove('flex');
+        }
+      }
+
+      const docPageAlert = document.getElementById('doc-alert-error');
+      const docPageAlertText = document.getElementById('doc-alert-error-text');
+      if (docPageAlert) {
+        if (expiredDocs.length > 0) {
+          docPageAlert.classList.remove('hidden');
+          docPageAlert.classList.add('flex');
+          if (docPageAlertText) {
+            docPageAlertText.innerHTML = `<strong>Documento vencido (${expiredDocs.length}):</strong> ${expiredDocs[0].type} de <strong>${expiredDocs[0].plate}</strong> venció el ${expiredDocs[0].expiry}.`;
+          }
+          const renewTopBtn = docPageAlert.querySelector('.renew-doc-btn');
+          if (renewTopBtn) {
+            renewTopBtn.dataset.plate = expiredDocs[0].plate;
+            renewTopBtn.dataset.doc = expiredDocs[0].type;
+          }
+        } else {
+          docPageAlert.classList.add('hidden');
+          docPageAlert.classList.remove('flex');
         }
       }
 
@@ -1010,7 +1105,7 @@
       const kpiDocInv = document.getElementById('kpi-doc-investment');
 
       const totalDocs = docs.length;
-      const validDocsCount = docs.filter(d => d.status === 'valid').length;
+      const validDocsCount = validDocsList.length;
       let totalDocCost = 0;
       docs.forEach(d => { totalDocCost += Number(d.cost || 0); });
 
@@ -1033,8 +1128,11 @@
       let totalStockVal = 0;
       let lowStockCount = 0;
       parts.forEach(p => {
-        totalStockVal += (p.stock || 0) * (p.price || 0);
-        if ((p.stock || 0) <= (p.min || 0)) lowStockCount++;
+        const qty = Number(p.stock ?? 0);
+        const price = Number(p.unitPrice ?? p.price ?? 0);
+        const minQty = Number(p.minStock ?? p.min ?? 2);
+        totalStockVal += qty * price;
+        if (qty <= minQty) lowStockCount++;
       });
 
       let totalMaintExpense = 0;
@@ -1050,6 +1148,84 @@
       if (kpiStockItems) kpiStockItems.textContent = `${parts.length} ítems`;
       if (kpiStockLow) kpiStockLow.textContent = `${lowStockCount} bajo stock`;
       if (kpiStockVal) kpiStockVal.textContent = `Valorizado en $ ${totalStockVal.toLocaleString('es-CO')}`;
+    }
+
+    function renderDashboardCharts(matchedTxs, vehicles) {
+      // 1. Gráfico de barras semanal: Ingresos vs Gastos
+      const cashflowEl = document.getElementById('cashflow-chart');
+      if (cashflowEl) {
+        const buckets = [
+          { label: 'Sem 1', inc: 0, exp: 0 },
+          { label: 'Sem 2', inc: 0, exp: 0 },
+          { label: 'Sem 3', inc: 0, exp: 0 },
+          { label: 'Sem 4+', inc: 0, exp: 0 }
+        ];
+        matchedTxs.forEach(t => {
+          if (t.category === 'Apertura de cuenta' || t.category === 'Transferencia') return;
+          const day = t.date ? Number((t.date.split('-')[2] || '1')) : 1;
+          const idx = day <= 7 ? 0 : (day <= 14 ? 1 : (day <= 21 ? 2 : 3));
+          const amt = Number(t.amount || 0);
+          if (t.type === 'income') buckets[idx].inc += amt;
+          else if (t.type === 'expense') buckets[idx].exp += amt;
+        });
+        const maxVal = Math.max(1, ...buckets.flatMap(b => [b.inc, b.exp]));
+
+        cashflowEl.innerHTML = buckets.map(b => {
+          const incPct = Math.round((b.inc / maxVal) * 100);
+          const expPct = Math.round((b.exp / maxVal) * 100);
+          return `
+            <div class="flex flex-col items-center gap-2 h-full justify-end">
+              <div class="w-full flex items-end justify-center gap-1.5 h-[150px]">
+                <div class="w-5 sm:w-7 rounded-t bg-light-primary transition-all duration-300" style="height: ${b.inc > 0 ? Math.max(8, incPct) : 3}%" title="Ingresos ${b.label}: $${b.inc.toLocaleString('es-CO')}"></div>
+                <div class="w-5 sm:w-7 rounded-t bg-light-tertiary-container transition-all duration-300" style="height: ${b.exp > 0 ? Math.max(8, expPct) : 3}%" title="Gastos ${b.label}: $${b.exp.toLocaleString('es-CO')}"></div>
+              </div>
+              <div class="text-center">
+                <span class="font-label text-label-sm text-light-on-surface-variant block">${b.label}</span>
+                <span class="font-mono text-body-xs text-light-outline tabular-nums">$${Math.round((b.inc - b.exp) / 1000)}k</span>
+              </div>
+            </div>
+          `;
+        }).join('');
+      }
+
+      // 2. Ingresos y gastos por motocarro (Top 6)
+      const vehMap = {};
+      (vehicles || []).forEach(v => { vehMap[v.plate] = v; });
+
+      const renderUnitBars = (containerId, txType, barClass) => {
+        const el = document.getElementById(containerId);
+        if (!el) return;
+        const totals = {};
+        matchedTxs.forEach(t => {
+          if (t.type !== txType || !t.plate || t.plate === 'General' || t.plate === 'General flota') return;
+          totals[t.plate] = (totals[t.plate] || 0) + Number(t.amount || 0);
+        });
+        const sorted = Object.entries(totals).sort((a, b) => b[1] - a[1]).slice(0, 6);
+        if (sorted.length === 0) {
+          el.innerHTML = `<p class="font-body text-body-sm text-light-on-surface-variant py-6 text-center">Sin ${txType === 'income' ? 'ingresos' : 'gastos'} asociados a motocarros en este período.</p>`;
+          return;
+        }
+        const maxU = Math.max(1, sorted[0][1]);
+        el.innerHTML = sorted.map(([plate, amt]) => {
+          const pct = Math.max(6, Math.round((amt / maxU) * 100));
+          const v = vehMap[plate] || {};
+          const drv = v.driver && v.driver !== 'Sin conductor' ? ` · ${v.driver}` : '';
+          return `
+            <div class="flex flex-col gap-1">
+              <div class="flex items-center justify-between text-xs">
+                <span class="font-mono font-bold text-light-on-surface">${plate}<span class="font-body font-normal text-light-on-surface-variant">${drv}</span></span>
+                <span class="font-mono font-semibold text-light-on-surface tabular-nums">$ ${amt.toLocaleString('es-CO')}</span>
+              </div>
+              <div class="w-full h-2.5 rounded-full bg-light-surface-container overflow-hidden">
+                <div class="h-full rounded-full ${barClass}" style="width: ${pct}%"></div>
+              </div>
+            </div>
+          `;
+        }).join('');
+      };
+
+      renderUnitBars('income-by-unit-chart', 'income', 'bg-light-primary');
+      renderUnitBars('expense-by-unit-chart', 'expense', 'bg-light-tertiary-container');
     }
 
     function applyDashboardFilters() {
@@ -1082,19 +1258,35 @@
       });
 
       const netBalance = incTotal - expTotal;
-      const hasSpecificFilter = acct !== 'all' || drv !== 'all';
+      const hasSpecificFilter = acct !== 'all' || drv !== 'all' || Boolean(dFrom) || Boolean(dTo);
+
+      // Period label
+      const periodLbl = document.getElementById('chart-period-label');
+      if (periodLbl) {
+        periodLbl.textContent = (dFrom || dTo)
+          ? `Comparativa del ${dFrom || 'inicio'} al ${dTo || 'hoy'}`
+          : 'Comparativa por semana (Todos los movimientos)';
+      }
 
       // Live KPI Cards
       const incEl = document.getElementById('kpi-income');
+      const incDeltaEl = document.getElementById('kpi-income-delta');
       const expEl = document.getElementById('kpi-expense');
+      const expDeltaEl = document.getElementById('kpi-expense-delta');
       const balEl = document.getElementById('kpi-balance');
+      const balStatusEl = document.getElementById('kpi-balance-status');
       const fleetCountEl = document.getElementById('kpi-fleet-count');
       const fleetRateEl = document.getElementById('kpi-fleet-rate');
       const fleetSubEl = document.getElementById('kpi-fleet-sub');
 
+      const incCount = matchedTxs.filter(t => t.type === 'income').length;
+      const expCount = matchedTxs.filter(t => t.type === 'expense').length;
       if (incEl) incEl.textContent = '$ ' + incTotal.toLocaleString('es-CO');
+      if (incDeltaEl) incDeltaEl.textContent = `${incCount} reg.`;
       if (expEl) expEl.textContent = '$ ' + expTotal.toLocaleString('es-CO');
+      if (expDeltaEl) expDeltaEl.textContent = `${expCount} reg.`;
       if (balEl) balEl.textContent = '$ ' + netBalance.toLocaleString('es-CO');
+      if (balStatusEl) balStatusEl.textContent = netBalance >= 0 ? 'Disponible' : 'Déficit';
 
       if (fleetCountEl) {
         const inRoute = vehicles.filter(v => v.status === 'route').length;
@@ -1120,7 +1312,8 @@
           activeBadge.classList.add('flex');
           const acctText = acct !== 'all' ? `Cuenta: ${acct}` : 'Todas las cuentas';
           const drvText = drv !== 'all' ? `Conductor: ${drv}` : 'Todos los conductores';
-          if (activeBadgeText) activeBadgeText.textContent = `Filtro aplicado: ${acctText} · ${drvText} (${matchCount} movimientos)`;
+          const dateText = (dFrom || dTo) ? ` · Fechas: ${dFrom || '...'} a ${dTo || '...'}` : '';
+          if (activeBadgeText) activeBadgeText.textContent = `Filtro: ${acctText} · ${drvText}${dateText} (${matchCount} mov.)`;
           if (activeBadgeStats) activeBadgeStats.textContent = `Ingresos: $${incTotal.toLocaleString('es-CO')} | Gastos: $${expTotal.toLocaleString('es-CO')} | Neto: $${netBalance.toLocaleString('es-CO')}`;
         }
       } else {
@@ -1163,6 +1356,7 @@
         }
       }
 
+      renderDashboardCharts(matchedTxs, vehicles);
       renderDashboardAccounts();
       renderDashboardMaintAndDocs();
     }
@@ -1176,6 +1370,14 @@
       resetFiltersBtn.addEventListener('click', () => {
         if (filterAccount) filterAccount.value = 'all';
         if (filterDriver) filterDriver.value = 'all';
+        if (fromInput) fromInput.value = '';
+        if (toInput) toInput.value = '';
+        document.querySelectorAll('.preset-btn').forEach(b => {
+          const isAll = b.dataset.preset === 'all';
+          b.className = isAll
+            ? 'preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-secondary-container text-light-on-secondary-container transition-colors'
+            : 'preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors';
+        });
         applyDashboardFilters();
       });
     }
@@ -1207,6 +1409,31 @@
             ? 'preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-secondary-container text-light-on-secondary-container transition-colors'
             : 'preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors';
         });
+        const preset = btn.dataset.preset;
+        const now = new Date();
+        const toIso = (d) => d.toISOString().split('T')[0];
+        if (preset === 'all') {
+          if (fromInput) fromInput.value = '';
+          if (toInput) toInput.value = '';
+        } else if (preset === 'today') {
+          const t = toIso(now);
+          if (fromInput) fromInput.value = t;
+          if (toInput) toInput.value = t;
+        } else if (preset === '7d') {
+          const d7 = new Date(now);
+          d7.setDate(d7.getDate() - 6);
+          if (fromInput) fromInput.value = toIso(d7);
+          if (toInput) toInput.value = toIso(now);
+        } else if (preset === 'month') {
+          const start = new Date(now.getFullYear(), now.getMonth(), 1);
+          if (fromInput) fromInput.value = toIso(start);
+          if (toInput) toInput.value = toIso(now);
+        } else if (preset === 'prev') {
+          const start = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+          const end = new Date(now.getFullYear(), now.getMonth(), 0);
+          if (fromInput) fromInput.value = toIso(start);
+          if (toInput) toInput.value = toIso(end);
+        }
         applyDashboardFilters();
       });
     });
@@ -1242,14 +1469,17 @@
 
       // Actualizar contadores de pestañas de flota dinámicamente
       const fleetActiveVehs = data.vehicles.filter(v => v.status !== 'sold');
+      const soldCount = data.vehicles.filter(v => v.status === 'sold').length;
       const azulCount = fleetActiveVehs.filter(v => !(v.color || '').toLowerCase().includes('salm')).length;
       const salmonCount = fleetActiveVehs.filter(v => (v.color || '').toLowerCase().includes('salm')).length;
       const todosEl = document.getElementById('count-todos');
       const azulEl = document.getElementById('count-azul');
       const salmonEl = document.getElementById('count-salmon');
+      const soldEl = document.getElementById('count-sold');
       if (todosEl) todosEl.textContent = fleetActiveVehs.length;
       if (azulEl) azulEl.textContent = azulCount;
       if (salmonEl) salmonEl.textContent = salmonCount;
+      if (soldEl) soldEl.textContent = soldCount;
 
       // Contar motocarros por conductor para detectar turno intercalado (>=2 motocarros)
       const driverVehicleCount = {};
@@ -1271,7 +1501,9 @@
         else if (currentFilter === 'sold') matchesFilter = isSold;
         else if (currentFilter === 'Azul') matchesFilter = !isSalmon && !isSold;
         else if (currentFilter === 'Salmón') matchesFilter = isSalmon && !isSold;
-        else matchesFilter = (v.status === currentFilter);
+        else if (currentFilter === 'active' || currentFilter === 'route') matchesFilter = !isSold && v.status === 'route';
+        else if (currentFilter === 'unassigned') matchesFilter = !isSold && (!v.driver || v.driver === 'Sin conductor' || v.status === 'idle' || v.status === 'available');
+        else matchesFilter = !isSold && (v.status === currentFilter);
 
         const cedulaStr = v.cedula || '';
         const searchStr = `${v.plate} ${vColor} ${v.model} ${v.driver} ${cedulaStr} ${v.phone}`.toLowerCase();
@@ -1313,7 +1545,9 @@
                 <span class="font-mono text-mono-md text-light-on-surface font-bold whitespace-nowrap">${v.plate}</span>
                 ${colorBadge}
               </div>
-              <p class="font-body text-body-sm text-light-on-surface-variant">${v.model}</p>
+              <p class="font-body text-body-sm text-light-on-surface-variant">${v.model || 'Bajaj RE'}</p>
+              ${v.chassis && v.chassis !== '-' ? `<p class="font-mono text-body-xs text-light-outline">Chasis: ${v.chassis}</p>` : ''}
+              ${v.ownerName ? `<p class="font-body text-body-xs text-light-outline">Prop: ${v.ownerName}${v.ownerCedula ? ' · C.C. ' + v.ownerCedula : ''}</p>` : ''}
             </td>
             <td class="px-gutter-md py-3.5">
               <div class="flex flex-col">
@@ -1375,7 +1609,7 @@
       const activeVehs = data.vehicles.filter(v => v.status !== 'sold');
       const inRoute = activeVehs.filter(v => v.status === 'route').length;
       const inWorkshop = activeVehs.filter(v => v.status === 'workshop').length;
-      const available = activeVehs.filter(v => v.status === 'available').length;
+      const available = activeVehs.filter(v => v.status === 'available' || v.status === 'idle' || !v.driver || v.driver === 'Sin conductor').length;
       const driversAssigned = new Set(activeVehs.filter(v => v.driver && v.driver !== 'Sin conductor').map(v => v.driver)).size;
 
       const kpiTotalEl = document.getElementById('fleet-kpi-total');
@@ -1610,11 +1844,15 @@
     if (buyForm) {
       buyForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const plate = document.getElementById('buy-plate')?.value.trim().toUpperCase() || 'MCT-999';
+        const plate = document.getElementById('buy-plate')?.value.trim().toUpperCase() || '';
+        if (!plate) {
+          alert('Por favor ingresa la placa del motocarro.');
+          return;
+        }
         const color = (document.querySelector('input[name="buyColor"]:checked')?.value) || (document.getElementById('buy-color')?.value) || 'Azul';
         const model = document.getElementById('buy-model')?.value.trim() || 'Bajaj RE 4S';
-        const price = Number(document.getElementById('buy-price')?.value || 18500000);
-        const account = document.getElementById('buy-account')?.value || 'Bancolombia Ahorros';
+        const price = Number(document.getElementById('buy-price')?.value || 0);
+        const account = document.getElementById('buy-account')?.value || '';
         const supplier = document.getElementById('buy-supplier')?.value.trim() || 'Distribuidor';
         const driver = document.getElementById('buy-driver')?.value.trim() || 'Sin conductor';
         const cedula = document.getElementById('buy-cedula')?.value.trim() || '-';
@@ -1624,10 +1862,11 @@
           plate, color, model, price, account, supplier, driver, cedula, phone,
           dailyRate: 45000,
           license: 'A2',
-          venceLicencia: '2028-11-20'
+          venceLicencia: ''
         });
 
         toggleBuyModal(false);
+        buyForm.reset();
         renderFleetTable();
         alert(`¡Motocarro ${plate} (${color}) comprado y agregado a la flota con éxito!`);
       });
@@ -1658,20 +1897,25 @@
       sellForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const plate = document.getElementById('sell-plate')?.value;
-        const price = Number(document.getElementById('sell-price')?.value || 12000000);
+        const price = Number(document.getElementById('sell-price')?.value || 0);
         const buyer = document.getElementById('sell-buyer')?.value.trim() || 'Particular';
-        const account = document.getElementById('sell-account')?.value || 'Bancolombia Ahorros';
+        const account = document.getElementById('sell-account')?.value || '';
         const notes = document.getElementById('sell-notes')?.value.trim() || 'Venta de motocarro';
 
         if (!plate) {
           alert('Por favor selecciona la placa del motocarro a vender.');
           return;
         }
+        if (price <= 0) {
+          alert('Por favor ingresa un valor de venta válido.');
+          return;
+        }
 
         MotoData.sellVehicle({ plate, price, buyer, account, notes });
         toggleSellModal(false);
+        sellForm.reset();
         renderFleetTable();
-        alert(`¡Motocarro ${plate} marcado como vendido! Ingreso registrado en ${account}.`);
+        alert(`¡Motocarro ${plate} marcado como vendido!${account ? ' Ingreso registrado en ' + account + '.' : ''}`);
       });
     }
 
@@ -1791,6 +2035,11 @@
           tariffFormGrid.appendChild(lbl);
         });
       }
+      const scEl = document.getElementById('selected-count');
+      if (scEl) {
+        const checkedCnt = document.querySelectorAll('.tarifa-vehiculo:checked').length;
+        scEl.textContent = `${checkedCnt} seleccionado${checkedCnt === 1 ? '' : 's'}`;
+      }
     }
 
     document.querySelectorAll('.tx-tab').forEach(tab => {
@@ -1814,52 +2063,64 @@
       if (!finModal) return;
       finModal.classList.toggle('hidden', !show);
       finModal.classList.toggle('flex', show);
+      if (show && typeof populateDynamicSelects === 'function') populateDynamicSelects();
     }
 
+    document.getElementById('edit-tariff-btn')?.addEventListener('click', () => navigateTo('form-tarifa'));
     document.getElementById('open-fin-modal-btn')?.addEventListener('click', () => toggleFinModal(true));
     document.getElementById('close-fin-modal-btn')?.addEventListener('click', () => toggleFinModal(false));
     document.getElementById('cancel-fin-btn')?.addEventListener('click', () => toggleFinModal(false));
 
     setupVehicleAutoFiller({
-      driverSelectId: 'quick-tarifa-driver',
-      colorSelectId: 'quick-tarifa-color',
-      plateSelectId: 'modal-tx-plate',
-      badgeId: 'quick-tarifa-auto-badge',
-      badgeTextId: 'quick-tarifa-auto-badge-text'
+      driverSelectId: 'fin-modal-driver',
+      colorSelectId: 'fin-modal-color',
+      plateSelectId: 'fin-modal-plate',
+      badgeId: 'fin-modal-auto-badge',
+      badgeTextId: 'fin-modal-auto-badge-text'
     });
 
     const finForm = document.getElementById('fin-form');
     if (finForm) {
       finForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const plate = (document.getElementById('fin-modal-plate') || document.getElementById('modal-tx-plate'))?.value;
-        const amount = Number(finForm.querySelector('input[type="number"]')?.value || document.getElementById('modal-tx-amount')?.value || 45000);
-        const acct = finForm.querySelectorAll('select')[1]?.value || document.getElementById('modal-tx-account')?.value || 'Nequi Flota';
-        const concept = finForm.querySelector('input[placeholder*="Ej."]')?.value || 'Recaudo tarifa diaria';
+        const txType = document.getElementById('fin-tx-type')?.value || 'income';
+        const plate = (document.getElementById('fin-modal-plate') || document.getElementById('modal-tx-plate'))?.value || '';
+        const amount = Number((document.getElementById('fin-amount') || finForm.querySelector('input[type="number"]'))?.value || 0);
+        const acct = (document.getElementById('fin-tx-account') || finForm.querySelectorAll('select')[1])?.value || '';
+        const concept = (document.getElementById('fin-concept') || finForm.querySelector('input[placeholder*="Ej."]'))?.value.trim() || (txType === 'income' ? 'Recaudo tarifa diaria' : 'Gasto operativo');
 
-        if (!plate) {
+        if (!acct) {
+          alert('Por favor selecciona o crea una cuenta financiera antes de registrar el movimiento.');
+          return;
+        }
+        if (isNaN(amount) || amount <= 0) {
+          alert('Por favor ingresa un monto válido mayor a 0.');
+          return;
+        }
+        if (txType === 'income' && !plate) {
           alert('Por favor selecciona la placa del motocarro.');
           return;
         }
 
-        const vehicles = MotoData.getVehicles();
+        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
         const v = vehicles.find(veh => veh.plate === plate) || {};
 
         MotoData.addTransaction({
-          type: 'income',
+          type: txType,
           account: acct,
-          plate: plate,
+          plate: plate || 'General flota',
           driver: v.driver || 'Conductor',
-          category: 'Tarifa diaria',
+          category: txType === 'income' ? 'Tarifa diaria' : 'Operativo',
           concept: concept,
           amount: amount,
           date: new Date().toISOString().split('T')[0]
         });
 
         toggleFinModal(false);
+        finForm.reset();
         renderTarifasMovements();
         renderTarifasKPIs();
-        alert(`Recaudo de $ ${amount.toLocaleString('es-CO')} registrado para el motocarro ${plate}.`);
+        alert(`${txType === 'income' ? 'Recaudo' : 'Gasto'} de $ ${amount.toLocaleString('es-CO')} registrado en ${acct}.`);
       });
     }
 
@@ -2051,6 +2312,17 @@
                 ${isDone ? 'Terminado' : 'En taller'}
               </span>
             </td>
+            <td class="px-gutter-md py-3 text-right whitespace-nowrap">
+              <div class="inline-flex items-center gap-1 justify-end">
+                <button type="button" class="complete-order-btn inline-flex items-center gap-1 px-2 py-1 rounded text-xs font-label font-semibold ${isDone ? 'text-light-on-surface-variant hover:bg-light-surface-container' : 'text-success hover:bg-success-container/50'}" data-id="${o.id}" title="${isDone ? 'Reabrir orden' : 'Marcar terminada'}">
+                  <span class="material-symbols-outlined text-[16px]">${isDone ? 'replay' : 'check_circle'}</span>
+                  <span>${isDone ? 'Reabrir' : 'Terminar'}</span>
+                </button>
+                <button type="button" class="delete-order-btn inline-flex items-center p-1 rounded text-red-500 hover:text-red-700 hover:bg-red-50 transition" data-id="${o.id}" title="Eliminar orden">
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
+                </button>
+              </div>
+            </td>
           `;
           ordersTableBody.appendChild(tr);
         }
@@ -2059,7 +2331,7 @@
       if (visible === 0) {
         ordersTableBody.innerHTML = `
           <tr>
-            <td colspan="6" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
+            <td colspan="7" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
               <div class="flex flex-col items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-[44px] text-light-outline">build</span>
                 <p class="font-headline text-headline-sm text-light-on-surface">No hay órdenes de mantenimiento en taller</p>
@@ -2072,6 +2344,25 @@
             </td>
           </tr>
         `;
+      } else {
+        ordersTableBody.querySelectorAll('.complete-order-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const res = window.MotoData.completeMaintenanceOrder(btn.dataset.id);
+            if (res && res.success) {
+              renderOrdersTable();
+            }
+          });
+        });
+        ordersTableBody.querySelectorAll('.delete-order-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (confirm('¿Seguro que deseas eliminar esta orden de mantenimiento?')) {
+              const res = window.MotoData.deleteMaintenanceOrder(btn.dataset.id);
+              if (res && res.success) {
+                renderOrdersTable();
+              }
+            }
+          });
+        });
       }
     }
 
@@ -2102,8 +2393,11 @@
       const parts = MotoData.getSpareParts ? MotoData.getSpareParts() : [];
       const stockAllEl = document.getElementById('count-stock-all');
       const stockLowEl = document.getElementById('count-stock-low');
+      const stockLowTabEl = document.getElementById('badge-stock-low-tab');
+      const lowCount = parts.filter(p => (p.stock ?? p.qty ?? 0) <= (p.minStock ?? p.min ?? 2)).length;
       if (stockAllEl) stockAllEl.textContent = parts.length;
-      if (stockLowEl) stockLowEl.textContent = parts.filter(p => (p.stock || 0) <= (p.minStock || p.min || 2)).length;
+      if (stockLowEl) stockLowEl.textContent = lowCount;
+      if (stockLowTabEl) stockLowTabEl.textContent = lowCount;
 
       stockBody.innerHTML = '';
       if (parts.length === 0) {
@@ -2171,6 +2465,91 @@
       });
     }
 
+    // Tabla e ingreso de Uso / Descuento Directo de Repuestos
+    function renderUsageTable() {
+      const usageBody = document.getElementById('usage-table-body');
+      if (!usageBody) return;
+      const usages = MotoData.getPartUsages ? MotoData.getPartUsages() : [];
+      usageBody.innerHTML = '';
+
+      if (usages.length === 0) {
+        usageBody.innerHTML = `
+          <tr>
+            <td colspan="6" class="px-gutter-md py-8 text-center text-light-on-surface-variant font-body">
+              <p class="font-body text-body-md text-light-on-surface font-medium">Aún no se han registrado consumos de repuestos</p>
+              <p class="font-body text-body-sm text-light-outline mt-0.5">Selecciona un motocarro y un repuesto del inventario para descontarlo del stock.</p>
+            </td>
+          </tr>
+        `;
+        return;
+      }
+
+      usages.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.className = 'hover:bg-light-surface-container-low transition-colors duration-state-change';
+        tr.innerHTML = `
+          <td class="px-gutter-md py-3"><span class="font-mono text-mono-md font-bold text-light-on-surface whitespace-nowrap">${u.plate || '-'}</span></td>
+          <td class="px-gutter-md py-3 font-body text-body-md text-light-on-surface">${u.partName || u.partCode || '-'}</td>
+          <td class="px-gutter-md py-3"><span class="font-label text-label-sm px-2 py-0.5 rounded bg-light-surface-container text-light-on-surface-variant">${u.service || 'Mantenimiento'}</span></td>
+          <td class="px-gutter-md py-3 font-mono text-mono-md tabular-nums whitespace-nowrap">${u.qty || 1} und.</td>
+          <td class="px-gutter-md py-3 font-body text-body-sm text-light-outline tabular-nums whitespace-nowrap">${u.date || '-'}</td>
+          <td class="px-gutter-md py-3 text-right font-mono text-mono-md font-semibold text-light-on-surface tabular-nums whitespace-nowrap">$ ${(u.total || 0).toLocaleString('es-CO')}</td>
+        `;
+        usageBody.appendChild(tr);
+      });
+    }
+
+    const partUsageForm = document.getElementById('part-usage-form');
+    if (partUsageForm) {
+      partUsageForm.addEventListener('submit', (e) => {
+        e.preventDefault();
+        const plate = document.getElementById('usage-plate')?.value || '';
+        const partKey = document.getElementById('usage-part')?.value || '';
+        const qty = Math.max(1, Number(document.getElementById('usage-qty')?.value || 1));
+
+        if (!plate) {
+          alert('Por favor selecciona la placa del motocarro.');
+          return;
+        }
+        if (!partKey) {
+          alert('Por favor selecciona un repuesto del inventario.');
+          return;
+        }
+
+        const parts = MotoData.getSpareParts ? MotoData.getSpareParts() : [];
+        const partObj = parts.find(p => (p.code || p.name) === partKey) || {};
+        const availStock = Number(partObj.stock ?? 0);
+        if (partObj.name && availStock <= 0) {
+          alert(`El repuesto "${partObj.name}" tiene stock en 0. Ingresa más unidades en Inventario.`);
+          return;
+        }
+        if (partObj.name && qty > availStock) {
+          alert(`Solo hay ${availStock} unidad(es) disponible(s) de "${partObj.name}".`);
+          return;
+        }
+
+        const res = MotoData.addPartUsage({
+          plate: plate,
+          partCode: partObj.code || partKey,
+          partName: partObj.name || partKey,
+          service: partObj.category || 'Consumo taller',
+          qty: qty,
+          unitPrice: Number(partObj.unitPrice ?? partObj.price ?? 0),
+          date: new Date().toISOString().split('T')[0]
+        });
+
+        if (res && res.success) {
+          partUsageForm.reset();
+          const qtyInput = document.getElementById('usage-qty');
+          if (qtyInput) qtyInput.value = '1';
+          if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
+          renderUsageTable();
+          renderStockTable();
+          alert(`Uso de ${qty} und. de "${partObj.name || partKey}" descontado para el motocarro ${plate}.`);
+        }
+      });
+    }
+
     // Modal Ingresar Nuevo Repuesto
     const partModal = document.getElementById('spare-part-modal');
     function togglePartModal(show) {
@@ -2194,8 +2573,8 @@
     document.getElementById('sp-tipo-inicial')?.addEventListener('change', updateSpAccountState);
     document.getElementById('sp-tipo-compra')?.addEventListener('change', updateSpAccountState);
 
-    // Conectar todos los botones que abren el modal de repuestos
-    document.querySelectorAll('#open-part-modal-btn, #add-part-btn, .btn-open-spare-modal').forEach(btn => {
+    // Conectar los botones que abren el modal de repuestos
+    document.querySelectorAll('#open-part-modal-btn, .btn-open-spare-modal').forEach(btn => {
       btn.addEventListener('click', (e) => {
         e.preventDefault();
         togglePartModal(true);
@@ -2431,15 +2810,17 @@
       maintForm.addEventListener('submit', (e) => {
         e.preventDefault();
         const plate = document.getElementById('maint-modal-plate')?.value;
-        const cost = Number(maintForm.querySelector('input[type="number"]')?.value || 150000);
-        const desc = maintForm.querySelector('input[type="text"]')?.value || 'Mantenimiento preventivo';
+        const type = document.getElementById('maint-modal-type')?.value || 'Preventivo';
+        const desc = (document.getElementById('maint-modal-desc') || maintForm.querySelector('input[type="text"]'))?.value.trim() || `Mantenimiento ${type.toLowerCase()}`;
+        const date = document.getElementById('maint-modal-date')?.value || new Date().toISOString().split('T')[0];
+        const cost = Number((document.getElementById('maint-modal-cost') || maintForm.querySelector('input[type="number"]'))?.value || 0);
 
         if (!plate) {
           alert('Por favor selecciona la placa del motocarro.');
           return;
         }
 
-        const vehicles = MotoData.getVehicles();
+        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
         const v = vehicles.find(veh => veh.plate === plate) || {};
 
         MotoData.addMaintenanceOrder({
@@ -2447,21 +2828,25 @@
           driver: v.driver || 'Conductor',
           cost: cost,
           desc: desc,
-          type: 'Preventivo',
-          date: new Date().toISOString().split('T')[0],
+          type: type,
+          date: date,
           status: 'scheduled'
         });
 
         toggleMaintModal(false);
+        maintForm.reset();
         renderOrdersTable();
         alert(`Orden de mantenimiento programada para ${plate}.`);
       });
     }
 
     renderOrdersTable();
+    renderStockTable();
+    renderUsageTable();
     window.addEventListener('motocontrol-data-updated', () => {
       renderOrdersTable();
       renderStockTable();
+      renderUsageTable();
     });
   }
 
@@ -2515,7 +2900,11 @@
           okType = doc.type === typeFilter;
         }
 
-        let docState = doc.status || 'valid';
+        const computed = (MotoData.computeDocumentStatus && doc.expiry)
+          ? MotoData.computeDocumentStatus(doc.expiry)
+          : { status: doc.status || 'valid', statusText: doc.statusText || 'Vigente' };
+        let docState = computed.status || 'valid';
+        const docStatusText = computed.statusText || 'Por vencer';
         if (docState === 'expiring') docState = 'soon';
         const okState = st === 'all' || docState === st;
         const searchTarget = `${doc.plate} ${driverName} ${driverCedula} ${doc.type} ${doc.entity || ''} ${doc.number || ''}`.toLowerCase();
@@ -2533,7 +2922,7 @@
           if (docState === 'expired') {
             badgeHtml = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container font-label text-label-sm font-semibold">Vencido</span>';
           } else if (docState === 'soon' || docState === 'expiring') {
-            badgeHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container font-label text-label-sm font-semibold">${doc.statusText || 'Por vencer'}</span>`;
+            badgeHtml = `<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container font-label text-label-sm font-semibold">${docStatusText}</span>`;
           } else {
             badgeHtml = '<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container font-label text-label-sm font-semibold">Vigente</span>';
           }
@@ -2560,11 +2949,14 @@
             <td class="px-gutter-md py-3">${badgeHtml}</td>
             <td class="px-gutter-md py-3 text-right">
               <div class="inline-flex items-center gap-2 justify-end">
-                <button class="runt-doc-row-btn inline-flex items-center gap-1 px-2.5 py-1 rounded border border-light-outline-variant hover:bg-light-secondary-container/30 text-light-primary font-label text-label-sm font-semibold transition-colors" data-plate="${doc.plate}" data-doc="${doc.type}" type="button" title="Consultar en RUNT (Opción A)">
+                <button class="runt-doc-row-btn inline-flex items-center gap-1 px-2.5 py-1 rounded border border-light-outline-variant hover:bg-light-secondary-container/30 text-light-primary font-label text-label-sm font-semibold transition-colors" data-plate="${doc.plate}" data-doc="${doc.type}" type="button" title="Consulta Manual RUNT / R5">
                   <span class="material-symbols-outlined text-[15px]">manage_search</span>
                   <span>RUNT</span>
                 </button>
                 <button class="renew-doc-btn font-label text-label-md text-light-primary hover:underline whitespace-nowrap" data-doc="${doc.type}" data-plate="${doc.plate}" type="button">${docState === 'expired' ? 'Renovar' : 'Actualizar'}</button>
+                <button class="delete-doc-btn inline-flex items-center p-1 rounded text-red-500 hover:text-red-700 hover:bg-red-50 transition" data-id="${doc.id}" data-doc="${doc.type}" data-plate="${doc.plate}" type="button" title="Eliminar documento">
+                  <span class="material-symbols-outlined text-[16px]">delete</span>
+                </button>
               </div>
             </td>
           `;
@@ -2601,6 +2993,15 @@
       tableBody.querySelectorAll('.runt-doc-row-btn').forEach(btn => {
         btn.addEventListener('click', () => openRuntModal(btn.dataset.plate, btn.dataset.doc));
       });
+
+      tableBody.querySelectorAll('.delete-doc-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          if (confirm(`¿Seguro que deseas eliminar el documento ${btn.dataset.doc} del motocarro ${btn.dataset.plate}?`)) {
+            const res = window.MotoData.deleteDocument(btn.dataset.id);
+            if (res && res.success) renderDocsTable();
+          }
+        });
+      });
     }
 
     if (searchInput) searchInput.addEventListener('input', renderDocsTable);
@@ -2627,6 +3028,7 @@
     function toggleDocModal(show, plate = '', docType = '') {
       if (!docModal) return;
       if (show) {
+        if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
         if (plate && modalPlate) modalPlate.value = plate;
         if (docType && modalDoc) modalDoc.value = docType;
         docModal.classList.remove('hidden');
@@ -2652,38 +3054,59 @@
     if (docModalForm) {
       docModalForm.addEventListener('submit', (e) => {
         e.preventDefault();
-        const plate = modalPlate?.value || 'MCT-109';
+        const plate = modalPlate?.value || '';
         const type = modalDoc?.value || 'SOAT';
         const number = document.getElementById('modal-doc-number')?.value.trim() || `POL-${Date.now().toString().slice(-6)}`;
-        const expiry = document.getElementById('modal-doc-expiry')?.value || '2027-11-22';
-        const cost = Number(document.getElementById('modal-doc-cost')?.value || 615000);
+        const expiry = document.getElementById('modal-doc-expiry')?.value || '';
+        const cost = Number(document.getElementById('modal-doc-cost')?.value || 0);
+        const account = document.getElementById('modal-doc-account')?.value || '';
 
-        const vehicles = MotoData.getVehicles();
+        if (!plate) {
+          alert('Por favor selecciona la placa del motocarro.');
+          return;
+        }
+        if (!expiry) {
+          alert('Por favor selecciona la nueva fecha de vencimiento.');
+          return;
+        }
+
+        const vehicles = MotoData.getVehicles ? MotoData.getVehicles() : [];
         const v = vehicles.find(veh => veh.plate === plate) || {};
+        const entityName = type === 'SOAT' ? 'Aseguradora SOAT' : (type.includes('Tecno') ? 'CDA Autorizado' : 'Tránsito / Gobernación');
 
-        MotoData.addDocument({
-          plate: plate,
-          driver: v.driver || 'Conductor asignado',
-          cedula: v.cedula || '-',
-          type: type,
-          entity: type === 'SOAT' ? 'Seguros Sura' : (type.includes('Tecno') ? 'CDA Central' : 'Tránsito / Gobernación'),
-          number: number,
-          expiry: expiry,
-          status: 'valid',
-          statusText: 'Vigente',
-          cost: cost
-        });
+        if (MotoData.quickUpdateDocumentByPlate) {
+          MotoData.quickUpdateDocumentByPlate(plate, {
+            type: type,
+            expiry: expiry,
+            number: number,
+            entity: entityName,
+            cost: cost
+          });
+        } else {
+          MotoData.addDocument({
+            plate: plate,
+            driver: v.driver || 'Conductor asignado',
+            cedula: v.cedula || '-',
+            type: type,
+            entity: entityName,
+            number: number,
+            expiry: expiry,
+            cost: cost
+          });
+        }
 
-        MotoData.addTransaction({
-          type: 'expense',
-          account: 'Bancolombia Ahorros',
-          plate: plate,
-          driver: v.driver || 'Conductor asignado',
-          category: 'SOAT / Tecnomecánica',
-          concept: `Renovación ${type} ${plate} (${number})`,
-          amount: cost,
-          date: new Date().toISOString().split('T')[0]
-        });
+        if (cost > 0 && account) {
+          MotoData.addTransaction({
+            type: 'expense',
+            account: account,
+            plate: plate,
+            driver: v.driver || 'Conductor asignado',
+            category: 'SOAT / Tecnomecánica',
+            concept: `Renovación ${type} ${plate} (${number})`,
+            amount: cost,
+            date: new Date().toISOString().split('T')[0]
+          });
+        }
 
         toggleDocModal(false);
         renderDocsTable();
@@ -2832,6 +3255,19 @@
         const plate = runtSelectVehicle?.value || '';
         if (plate) {
           navigator.clipboard.writeText(plate).catch(() => {});
+        }
+      });
+    }
+
+    // Botón RUNT Oficial (Copia cédula del propietario o conductor automáticamente)
+    const btnOpenRunt = document.getElementById('btn-open-runt');
+    if (btnOpenRunt) {
+      btnOpenRunt.addEventListener('click', () => {
+        const plate = runtSelectVehicle?.value || '';
+        const v = (MotoData.getVehicles ? MotoData.getVehicles() : []).find(veh => veh.plate === plate) || {};
+        const cc = v.ownerCedula || (v.cedula && v.cedula !== '-' ? v.cedula : '');
+        if (cc) {
+          navigator.clipboard.writeText(cc).catch(() => {});
         }
       });
     }
@@ -3002,10 +3438,13 @@
             </td>
             <td class="px-gutter-md py-3">
               <p class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.concept || '-'}</p>
-              <p class="font-mono text-body-xs text-light-outline">${t.plate || 'General'}${t.driver ? ' · ' + t.driver : ''}</p>
             </td>
             <td class="px-gutter-md py-3">
               <span class="font-label text-label-sm px-2 py-0.5 rounded ${isInc ? 'bg-success-container text-on-success-container' : 'bg-light-surface-container text-light-on-surface-variant'}">${t.category || (isInc ? 'Ingreso' : 'Operativo')}</span>
+            </td>
+            <td class="px-gutter-md py-3">
+              <p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap">${t.plate || 'General'}</p>
+              ${t.driver && t.driver !== '-' ? `<p class="font-body text-body-xs text-light-outline whitespace-nowrap">${t.driver}</p>` : ''}
             </td>
             <td class="px-gutter-md py-3">
               <span class="font-body text-body-sm text-light-on-surface whitespace-nowrap">${t.account || '-'}</span>
@@ -3015,6 +3454,11 @@
                 ${isInc ? '+' : '-'} $ ${(t.amount || 0).toLocaleString('es-CO')}
               </span>
             </td>
+            <td class="px-gutter-md py-3 text-right whitespace-nowrap">
+              <button type="button" class="delete-tx-btn inline-flex items-center p-1 rounded text-red-500 hover:text-red-700 hover:bg-red-50 transition" data-id="${t.id}" title="Eliminar movimiento">
+                <span class="material-symbols-outlined text-[16px]">delete</span>
+              </button>
+            </td>
           `;
           ledgerBody.appendChild(tr);
         }
@@ -3023,7 +3467,7 @@
       if (visible === 0) {
         ledgerBody.innerHTML = `
           <tr>
-            <td colspan="5" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
+            <td colspan="7" class="px-gutter-md py-12 text-center text-light-on-surface-variant font-body">
               <div class="flex flex-col items-center justify-center gap-2">
                 <span class="material-symbols-outlined text-[44px] text-light-outline">account_balance_wallet</span>
                 <p class="font-headline text-headline-sm text-light-on-surface">No hay movimientos en el libro contable</p>
@@ -3036,6 +3480,18 @@
             </td>
           </tr>
         `;
+      } else {
+        ledgerBody.querySelectorAll('.delete-tx-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            if (confirm('¿Seguro que deseas eliminar este movimiento contable? El saldo de la cuenta se recalculará automáticamente.')) {
+              const res = window.MotoData.deleteTransaction(btn.dataset.id);
+              if (res && res.success) {
+                renderLedgerTable();
+                if (typeof renderAccountsCards === 'function') renderAccountsCards();
+              }
+            }
+          });
+        });
       }
 
       if (countEl) countEl.textContent = `Mostrando ${visible} movimiento${visible === 1 ? '' : 's'}`;
@@ -3429,6 +3885,54 @@
       if (selectedCount) selectedCount.textContent = `${count} seleccionado${count === 1 ? '' : 's'}`;
     }
 
+    const tarifaDriverFilter = document.getElementById('tarifa-filter-driver');
+    const tarifaColorFilter = document.getElementById('tarifa-filter-color');
+    const tarifaPlateText = document.getElementById('tarifa-loaded-plate-text');
+    const tarifaPlateBadge = document.getElementById('tarifa-loaded-plate-badge');
+    const tarifaGrid = document.getElementById('tarifa-form-vehicles-grid');
+
+    function updateTarifaVehicleMatch() {
+      const dVal = (tarifaDriverFilter?.value || '').trim().toLowerCase();
+      const cVal = (tarifaColorFilter?.value || '').trim().toLowerCase();
+      const vehs = (MotoData.getVehicles ? MotoData.getVehicles() : []).filter(v => v.status !== 'sold');
+      const matched = vehs.filter(v => {
+        const okD = !dVal || (v.driver || '').toLowerCase() === dVal;
+        const okC = !cVal || (v.color || '').toLowerCase().includes(cVal.replace('ó', 'o')) || (v.color || '').toLowerCase() === cVal;
+        return okD && okC;
+      });
+      if (tarifaPlateText) {
+        if (matched.length === 1) {
+          tarifaPlateText.textContent = `${matched[0].plate} (${matched[0].color || 'Azul'})`;
+        } else if (matched.length > 1 && (dVal || cVal)) {
+          tarifaPlateText.textContent = `${matched.map(m => m.plate).join(', ')}`;
+        } else if (!dVal && !cVal) {
+          tarifaPlateText.textContent = '- Escoja conductor y color -';
+        } else {
+          tarifaPlateText.textContent = 'Sin coincidencia';
+        }
+      }
+      if (tarifaPlateBadge) {
+        tarifaPlateBadge.textContent = matched.length > 0 && (dVal || cVal) ? `${matched.length} und.` : '';
+      }
+      if (dVal || cVal) {
+        const matchedSet = new Set(matched.map(m => m.plate));
+        document.querySelectorAll('.tarifa-vehiculo').forEach(cb => {
+          cb.checked = matchedSet.has(cb.value);
+        });
+        updateTarifaCount();
+      }
+    }
+
+    if (tarifaDriverFilter) tarifaDriverFilter.addEventListener('change', updateTarifaVehicleMatch);
+    if (tarifaColorFilter) tarifaColorFilter.addEventListener('change', updateTarifaVehicleMatch);
+    if (tarifaGrid) {
+      tarifaGrid.addEventListener('change', (e) => {
+        if (e.target && e.target.classList.contains('tarifa-vehiculo')) {
+          updateTarifaCount();
+        }
+      });
+    }
+
     if (valorDiario) valorDiario.addEventListener('input', updateProjection);
     if (valorDominical) valorDominical.addEventListener('input', updateProjection);
 
@@ -3477,19 +3981,116 @@
 
     // Formulario Mantenimiento y Repuestos
     setupVehicleAutoFiller({
-      driverSelectId: 'maint-filter-driver',
-      colorSelectId: 'maint-filter-color',
-      plateSelectId: 'maint-motocarro',
-      badgeId: 'maint-auto-badge',
-      badgeTextId: 'maint-auto-badge-text'
+      driverSelectId: 'mant-filter-driver',
+      colorSelectId: 'mant-filter-color',
+      plateSelectId: 'mant-motocarro',
+      badgeId: 'mant-auto-badge',
+      badgeTextId: 'mant-auto-badge-text'
     });
 
-    // Formulario Mantenimiento y Repuestos (Con Cálculo Dinámico de Intervalos en Días / Km)
+    // Formulario Mantenimiento y Repuestos (Con Cálculo Dinámico de Intervalos en Días / Km y Repuestos)
     const mantServiceSelect = document.getElementById('mant-service-type');
     const mantFechaInput = document.getElementById('mant-fecha');
     const mantNextDateInput = document.getElementById('mant-next-date');
     const mantNextInfo = document.getElementById('mant-next-info');
     const mantManoObra = document.getElementById('mano-obra');
+    const mantPlacaSelect = document.getElementById('mant-motocarro');
+    const repuestoEquipoInput = document.getElementById('repuesto-equipo');
+    const totalOrdenEl = document.getElementById('total-orden');
+    const partsTbodyEl = document.getElementById('parts-tbody');
+    let orderParts = [];
+
+    function syncMantEquipo() {
+      if (repuestoEquipoInput && mantPlacaSelect) {
+        repuestoEquipoInput.value = mantPlacaSelect.value || 'Sin placa';
+      }
+    }
+
+    function renderOrderParts() {
+      const labor = Number(mantManoObra?.value || 0);
+      let partsTotal = 0;
+      orderParts.forEach(p => { partsTotal += p.qty * p.unitPrice; });
+      if (totalOrdenEl) {
+        totalOrdenEl.textContent = '$ ' + (labor + partsTotal).toLocaleString('es-CO');
+      }
+      if (!partsTbodyEl) return;
+      partsTbodyEl.innerHTML = '';
+      if (orderParts.length === 0) {
+        partsTbodyEl.innerHTML = `
+          <tr>
+            <td colspan="5" class="px-gutter-sm py-4 text-center font-body text-body-sm text-light-outline">
+              Ningún repuesto agregado aún. Opcionalmente elige uno arriba y pulsa "Agregar repuesto".
+            </td>
+          </tr>
+        `;
+        return;
+      }
+      orderParts.forEach((p, idx) => {
+        const sub = p.qty * p.unitPrice;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-gutter-sm py-2 font-body text-body-sm text-light-on-surface font-medium">${p.partName}</td>
+          <td class="px-gutter-sm py-2 font-mono text-mono-md text-light-on-surface-variant">${p.plate || '-'}</td>
+          <td class="px-gutter-sm py-2 font-mono text-mono-md text-right tabular-nums">${p.qty}</td>
+          <td class="px-gutter-sm py-2 font-mono text-mono-md text-right tabular-nums">$ ${sub.toLocaleString('es-CO')}</td>
+          <td class="px-gutter-sm py-2 text-right">
+            <button type="button" class="remove-order-part-btn text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50" data-idx="${idx}" title="Quitar repuesto">
+              <span class="material-symbols-outlined text-[16px]">close</span>
+            </button>
+          </td>
+        `;
+        partsTbodyEl.appendChild(tr);
+      });
+      partsTbodyEl.querySelectorAll('.remove-order-part-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          orderParts.splice(Number(btn.dataset.idx), 1);
+          renderOrderParts();
+        });
+      });
+    }
+
+    ['change', 'input'].forEach(ev => {
+      mantPlacaSelect?.addEventListener(ev, syncMantEquipo);
+    });
+    document.getElementById('mant-filter-driver')?.addEventListener('change', () => setTimeout(syncMantEquipo, 20));
+    document.getElementById('mant-filter-color')?.addEventListener('change', () => setTimeout(syncMantEquipo, 20));
+    mantManoObra?.addEventListener('input', renderOrderParts);
+
+    document.getElementById('btn-add-order-part')?.addEventListener('click', () => {
+      const partKey = document.getElementById('repuesto-select')?.value || '';
+      const qty = Math.max(1, Number(document.getElementById('repuesto-cantidad')?.value || 1));
+      const plate = mantPlacaSelect?.value || '';
+      if (!partKey) {
+        alert('Selecciona un repuesto del inventario antes de agregarlo.');
+        return;
+      }
+      const parts = MotoData.getSpareParts ? MotoData.getSpareParts() : [];
+      const partObj = parts.find(p => (p.code || p.name) === partKey) || {};
+      const alreadyAddedQty = orderParts.filter(op => op.partCode === (partObj.code || partKey)).reduce((s, op) => s + op.qty, 0);
+      const avail = Number(partObj.stock ?? 0);
+      if (partObj.name && (qty + alreadyAddedQty) > avail) {
+        alert(`Stock insuficiente para "${partObj.name}". Disponible: ${avail} und.`);
+        return;
+      }
+      const existingItem = orderParts.find(op => op.partCode === (partObj.code || partKey));
+      if (existingItem) {
+        existingItem.qty += qty;
+      } else {
+        orderParts.push({
+          partCode: partObj.code || partKey,
+          partName: partObj.name || partKey,
+          service: partObj.category || 'Repuesto',
+          plate: plate || 'General',
+          qty: qty,
+          unitPrice: Number(partObj.unitPrice ?? partObj.price ?? 0)
+        });
+      }
+      syncMantEquipo();
+      renderOrderParts();
+    });
+
+    syncMantEquipo();
+    renderOrderParts();
 
     function populateMantServiceOptions() {
       if (!mantServiceSelect) return;
@@ -3589,7 +4190,7 @@
           return;
         }
 
-        const placaSelect = document.getElementById('maint-motocarro');
+        const placaSelect = document.getElementById('mant-motocarro') || document.getElementById('maint-motocarro');
         let placa = (placaSelect?.value || '').trim().toUpperCase();
         if (!placa && activeVehicles.length > 0) {
           placa = activeVehicles[0].plate;
@@ -3611,12 +4212,17 @@
         const serviceName = opt?.dataset.name || opt?.text || 'Mantenimiento Preventivo';
         const tipo = (document.getElementById('mant-clasificacion') || document.getElementById('tipo-mantenimiento'))?.value || (opt?.dataset.class || 'Preventivo');
         const costoInput = (document.getElementById('mano-obra') || document.getElementById('costo-estimado'));
-        const costo = Number(costoInput?.value || 0);
+        const laborCost = Number(costoInput?.value || 0);
+        const partsTotal = orderParts.reduce((s, p) => s + (p.qty * p.unitPrice), 0);
+        const totalCost = laborCost + partsTotal;
         const descInput = document.getElementById('proximo-preventivo') || document.getElementById('descripcion-trabajo');
         const desc = descInput?.value.trim() || serviceName;
-        const cuenta = document.getElementById('cuenta-pago')?.value || 'Caja Efectivo';
+        const cuenta = document.getElementById('cuenta-pago')?.value || '';
         const nextDate = mantNextDateInput?.value || '';
         const km = Number(document.getElementById('mant-km')?.value || 0);
+        const partsSummary = orderParts.length > 0
+          ? orderParts.map(p => `${p.partName} (x${p.qty})`).join(', ')
+          : 'Sin repuestos adicionales';
 
         isSubmittingMant = true;
         setTimeout(() => { isSubmittingMant = false; }, 1000);
@@ -3624,31 +4230,48 @@
         const v = vehicles.find(veh => veh.plate === placa) || {};
 
         try {
+          orderParts.forEach(p => {
+            if (MotoData.addPartUsage) {
+              MotoData.addPartUsage({
+                plate: placa,
+                partCode: p.partCode,
+                partName: p.partName,
+                service: serviceName,
+                qty: p.qty,
+                unitPrice: p.unitPrice,
+                date: fecha
+              });
+            }
+          });
+
           MotoData.addMaintenanceOrder({
             plate: placa,
             driver: v.driver || 'Conductor asignado',
             type: tipo,
             serviceName: serviceName,
+            partsUsed: partsSummary,
             desc: desc,
-            cost: costo,
+            cost: totalCost,
             date: fecha,
             nextDate: nextDate,
             km: km,
             status: 'scheduled'
           });
 
-          if (costo > 0) {
+          if (totalCost > 0 && cuenta) {
             MotoData.addTransaction({
               type: 'expense',
               account: cuenta,
               plate: placa,
               category: 'Mantenimiento',
               concept: `${tipo}: ${serviceName} - ${placa}`,
-              amount: costo,
+              amount: totalCost,
               date: fecha
             });
           }
 
+          orderParts = [];
+          renderOrderParts();
           alert(`¡Orden de mantenimiento para ${placa} (${serviceName}) guardada exitosamente!`);
           navigateTo('mantenimientos');
           if (typeof renderMaintenanceTable === 'function') renderMaintenanceTable();
@@ -3715,9 +4338,9 @@
         }
 
         const val = Number(document.getElementById('doc-valor')?.value || 0);
-        const cuenta = document.getElementById('doc-cuenta')?.value || 'Bancolombia Ahorros';
+        const cuenta = document.getElementById('doc-cuenta')?.value || '';
         const numero = document.getElementById('doc-numero')?.value.trim() || `POL-${Date.now().toString().slice(-6)}`;
-        const entidad = document.getElementById('doc-entidad')?.value.trim() || 'Seguros Bolívar';
+        const entidad = document.getElementById('doc-entidad')?.value.trim() || (tipo === 'SOAT' ? 'Aseguradora SOAT' : 'CDA / Tránsito');
 
         isSubmittingDoc = true;
         setTimeout(() => { isSubmittingDoc = false; }, 1000);
@@ -3725,19 +4348,6 @@
         const v = vehicles.find(veh => veh.plate === placa) || {};
 
         try {
-          MotoData.addDocument({
-            plate: placa,
-            driver: v.driver || 'Conductor asignado',
-            cedula: v.cedula || '-',
-            type: tipo,
-            entity: entidad,
-            number: numero,
-            cost: val,
-            expiry: vence,
-            status: 'valid',
-            statusText: 'Vigente'
-          });
-
           if (MotoData.quickUpdateDocumentByPlate) {
             MotoData.quickUpdateDocumentByPlate(placa, {
               type: tipo,
@@ -3746,9 +4356,20 @@
               entity: entidad,
               cost: val
             });
+          } else {
+            MotoData.addDocument({
+              plate: placa,
+              driver: v.driver || 'Conductor asignado',
+              cedula: v.cedula || '-',
+              type: tipo,
+              entity: entidad,
+              number: numero,
+              cost: val,
+              expiry: vence
+            });
           }
 
-          if (val > 0) {
+          if (val > 0 && cuenta) {
             MotoData.addTransaction({
               type: 'expense',
               account: cuenta,
@@ -3761,6 +4382,7 @@
             });
           }
 
+          docForm.reset();
           alert(`¡Documento ${tipo} para el motocarro ${placa} guardado exitosamente con vencimiento ${vence}!`);
           navigateTo('documentacion');
           if (typeof renderDocumentsTable === 'function') renderDocumentsTable();
@@ -3783,6 +4405,20 @@
       badgeTextId: 'mov-auto-badge-text'
     });
 
+    const cuentaDestinoWrap = document.getElementById('cuenta-destino-wrap');
+    function updateMovTipoUI() {
+      const tipoRadio = document.querySelector('input[name="movTipo"]:checked') || document.querySelector('input[name="tipo-movimiento"]:checked');
+      const isTransf = tipoRadio ? tipoRadio.value.toLowerCase().includes('transferencia') : false;
+      if (cuentaDestinoWrap) {
+        cuentaDestinoWrap.classList.toggle('hidden', !isTransf);
+        cuentaDestinoWrap.classList.toggle('flex', isTransf);
+      }
+    }
+    document.querySelectorAll('input[name="movTipo"], input[name="tipo-movimiento"]').forEach(r => {
+      r.addEventListener('change', updateMovTipoUI);
+    });
+    updateMovTipoUI();
+
     const formMovimiento = document.getElementById('mov-form') || document.getElementById('form-movimiento');
     if (formMovimiento) {
       let isSubmittingMov = false;
@@ -3798,13 +4434,21 @@
         const esIngreso = tipoVal.includes('ingreso');
         const esTransferencia = tipoVal.includes('transferencia');
 
-        const cuenta = document.getElementById('mov-cuenta')?.value || 'Caja Efectivo';
-        const cuentaDestino = document.getElementById('mov-cuenta-destino')?.value || 'Bancolombia Ahorros';
+        const cuenta = document.getElementById('mov-cuenta')?.value || '';
+        const cuentaDestino = document.getElementById('mov-cuenta-destino')?.value || '';
         const categoria = document.getElementById('mov-categoria')?.value || 'Operativo';
         const placa = document.getElementById('mov-motocarro')?.value || 'General flota';
         const montoInput = document.getElementById('mov-monto');
         const monto = Number(montoInput?.value || 0);
 
+        if (!cuenta) {
+          alert('⚠️ Por favor selecciona o crea una cuenta de dinero primero.');
+          return;
+        }
+        if (esTransferencia && (!cuentaDestino || cuentaDestino === cuenta)) {
+          alert('⚠️ Selecciona una cuenta destino distinta a la cuenta origen.');
+          return;
+        }
         if (isNaN(monto) || monto <= 0) {
           alert('⚠️ Por favor ingresa un monto válido mayor a 0.');
           montoInput?.focus();
@@ -3856,6 +4500,8 @@
             alert(`¡Movimiento de ${esIngreso ? 'ingreso' : 'egreso'} por $${monto.toLocaleString('es-CO')} en ${cuenta} registrado con éxito!`);
           }
 
+          formMovimiento.reset();
+          updateMovTipoUI();
           navigateTo('gastos');
           if (typeof renderFinanceContext === 'function') renderFinanceContext();
         } catch (err) {

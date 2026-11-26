@@ -12,6 +12,7 @@ const DEFAULT_INITIAL_DATA = {
   documents: [],
   accounts: [],
   spareParts: [],
+  partUsages: [],
   maintenanceTypes: [
     {
       id: 'mt-aceite',
@@ -95,6 +96,7 @@ window.MotoData = {
     if (!Array.isArray(this.data.documents)) this.data.documents = [];
     if (!Array.isArray(this.data.accounts)) this.data.accounts = [];
     if (!Array.isArray(this.data.spareParts)) this.data.spareParts = [];
+    if (!Array.isArray(this.data.partUsages)) this.data.partUsages = [];
     if (!Array.isArray(this.data.maintenanceTypes) || this.data.maintenanceTypes.length === 0) {
       this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
     }
@@ -161,6 +163,7 @@ window.MotoData = {
         if (!this.data.documents) this.data.documents = [];
         if (!this.data.accounts) this.data.accounts = [];
         if (!this.data.spareParts) this.data.spareParts = [];
+        if (!this.data.partUsages) this.data.partUsages = [];
         if (!this.data.maintenanceTypes || this.data.maintenanceTypes.length === 0) {
           this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
         }
@@ -452,17 +455,23 @@ window.MotoData = {
   // 2. Compra de Nuevo Motocarro (Alta + Egreso Financiero)
   buyVehicle(buyData) {
     const data = this.getCleanData();
+    const driverName = (buyData.driver || '').trim() || 'Sin conductor';
+    const hasDriver = driverName !== 'Sin conductor';
+    const cedulaVal = hasDriver ? ((buyData.cedula || '').trim() || '-') : '-';
     const newVehicle = {
       plate: buyData.plate.toUpperCase().trim(),
       color: buyData.color || 'Azul',
       model: buyData.model || 'Bajaj RE 4S',
-      driver: buyData.driver || 'Sin conductor',
-      cedula: buyData.cedula || '-',
-      phone: buyData.phone || '-',
+      chassis: buyData.chassis || '-',
+      ownerName: buyData.ownerName || (hasDriver ? driverName : 'Propietario Flota'),
+      ownerCedula: buyData.ownerCedula || (cedulaVal !== '-' ? cedulaVal : ''),
+      driver: driverName,
+      cedula: cedulaVal,
+      phone: hasDriver ? ((buyData.phone || '').trim() || '-') : '-',
       license: buyData.license || 'A2',
       venceLicencia: 'Vigente',
-      status: (buyData.driver && buyData.driver !== 'Sin conductor') ? 'route' : 'idle',
-      statusText: (buyData.driver && buyData.driver !== 'Sin conductor') ? 'En ruta' : 'Sin conductor',
+      status: hasDriver ? 'route' : 'idle',
+      statusText: hasDriver ? 'En ruta' : 'Sin conductor',
       dailyRate: Number(buyData.dailyRate || 45000),
       soatExpiry: buyData.soatExpiry || 'Vigente',
       tecnoExpiry: buyData.tecnoExpiry || 'Vigente',
@@ -474,12 +483,13 @@ window.MotoData = {
 
     data.vehicles.unshift(newVehicle);
 
-    // Registrar egreso contable de la compra
-    if (buyData.price && Number(buyData.price) > 0) {
+    // Registrar egreso contable de la compra solo si se indicó cuenta válida
+    if (buyData.price && Number(buyData.price) > 0 && buyData.account) {
       this.addTransaction({
         type: 'expense',
-        account: buyData.account || 'Bancolombia Ahorros',
+        account: buyData.account,
         plate: newVehicle.plate,
+        driver: newVehicle.driver,
         category: 'Compra de vehículo',
         concept: `Compra motocarro nuevo ${newVehicle.plate} (${newVehicle.color})`,
         amount: Number(buyData.price),
@@ -505,11 +515,11 @@ window.MotoData = {
       v.driver = 'Desvinculado (Vendido)';
       v.cedula = '-';
 
-      // Registrar ingreso contable de la venta
-      if (saleData.price && Number(saleData.price) > 0) {
+      // Registrar ingreso contable de la venta solo si se indicó cuenta válida
+      if (saleData.price && Number(saleData.price) > 0 && saleData.account) {
         this.addTransaction({
           type: 'income',
-          account: saleData.account || 'Bancolombia Ahorros',
+          account: saleData.account,
           plate: plate,
           category: 'Venta de vehículo',
           concept: `Venta motocarro ${plate} a ${v.buyer}`,
@@ -614,13 +624,48 @@ window.MotoData = {
     }
   },
 
+  computeDocumentStatus(expiryStr) {
+    if (!expiryStr || expiryStr === 'Vigente') {
+      return { status: 'valid', statusText: 'Vigente' };
+    }
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const exp = new Date(expiryStr + 'T00:00:00');
+    if (isNaN(exp.getTime())) {
+      return { status: 'valid', statusText: 'Vigente' };
+    }
+    const diffDays = Math.ceil((exp.getTime() - today.getTime()) / (1000 * 60 * 60 * 24));
+    if (diffDays < 0) {
+      return { status: 'expired', statusText: `Vencido (${Math.abs(diffDays)}d)` };
+    }
+    if (diffDays <= 30) {
+      return { status: 'expiring', statusText: diffDays === 0 ? 'Vence hoy' : `Vence en ${diffDays}d` };
+    }
+    return { status: 'valid', statusText: 'Vigente' };
+  },
+
+  syncVehicleDocExpiry(plate, docType, expiry) {
+    if (!this.data?.vehicles || !plate || !expiry) return;
+    const cleanPlate = plate.trim().toUpperCase();
+    const v = this.data.vehicles.find(veh => (veh.plate || '').toUpperCase() === cleanPlate);
+    if (!v) return;
+    const t = (docType || '').toLowerCase();
+    if (t.includes('soat')) {
+      v.soatExpiry = expiry;
+    } else if (t.includes('tecno')) {
+      v.tecnoExpiry = expiry;
+    }
+  },
+
   quickUpdateDocumentByPlate(plate, docData) {
-    if (!this.data.documents) this.data.documents = [];
+    const data = this.getCleanData();
     const cleanPlate = (plate || '').trim().toUpperCase();
     const docType = docData.type || 'SOAT';
+    const computed = this.computeDocumentStatus(docData.expiry);
+    const v = data.vehicles.find(veh => (veh.plate || '').toUpperCase() === cleanPlate) || null;
 
-    const existing = this.data.documents.find(d => 
-      (d.plate || '').toUpperCase() === cleanPlate && 
+    const existing = data.documents.find(d =>
+      (d.plate || '').toUpperCase() === cleanPlate &&
       (d.type || '').toLowerCase() === (docType || '').toLowerCase()
     );
 
@@ -628,26 +673,33 @@ window.MotoData = {
       existing.expiry = docData.expiry;
       if (docData.number) existing.number = docData.number;
       if (docData.entity) existing.entity = docData.entity;
-      if (docData.cost) existing.cost = Number(docData.cost);
-      existing.status = docData.status || 'valid';
-      existing.statusText = docData.statusText || 'Vigente';
+      if (docData.cost !== undefined && docData.cost !== null && Number(docData.cost) > 0) {
+        existing.cost = Number(docData.cost);
+      }
+      if (v) {
+        existing.driver = v.driver || existing.driver;
+        existing.cedula = v.cedula || existing.cedula || '-';
+      }
+      existing.status = computed.status;
+      existing.statusText = computed.statusText;
       existing.lastUpdated = new Date().toISOString();
     } else {
-      const v = this.data.vehicles ? this.data.vehicles.find(veh => (veh.plate || '').toUpperCase() === cleanPlate) : null;
-      this.data.documents.unshift({
+      data.documents.unshift({
         id: 'doc-' + Date.now(),
         plate: cleanPlate,
-        driver: v ? v.driver : 'Conductor',
+        driver: v ? v.driver : 'Sin conductor',
+        cedula: v ? (v.cedula || '-') : '-',
         type: docType,
-        number: docData.number || 'Certificado Oficial',
-        entity: docData.entity || (docType === 'SOAT' ? 'Seguradora RUNT' : (docType === 'Tecnomecánica' ? 'CDA Certificado' : (docType.includes('Gobernación') ? 'Gobernación' : 'Alcaldía / Tránsito'))),
+        number: docData.number || 'Registro Manual',
+        entity: docData.entity || (docType === 'SOAT' ? 'Aseguradora SOAT' : (docType.includes('Tecno') ? 'CDA Certificado' : (docType.includes('Gobern') ? 'Gobernación' : 'Alcaldía / Tránsito'))),
         expiry: docData.expiry,
         cost: Number(docData.cost || 0),
-        status: docData.status || 'valid',
-        statusText: docData.statusText || 'Vigente',
+        status: computed.status,
+        statusText: computed.statusText,
         lastUpdated: new Date().toISOString()
       });
     }
+    this.syncVehicleDocExpiry(cleanPlate, docType, docData.expiry);
     this.persist();
     return true;
   },
@@ -672,15 +724,36 @@ window.MotoData = {
 
   addTransaction(tx) {
     const data = this.getCleanData();
-    if (!tx.id) tx.id = 'tx-' + Date.now();
-    data.transactions.unshift(tx);
-    
-    const acct = data.accounts.find(a => a.name.toLowerCase() === (tx.account || '').toLowerCase());
-    if (acct) {
-      if (tx.type === 'income') acct.balance += Number(tx.amount || 0);
-      else if (tx.type === 'expense') acct.balance -= Number(tx.amount || 0);
+    if (!tx.id) tx.id = 'tx-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
+    const { skipBalanceUpdate, ...cleanTx } = tx;
+    data.transactions.unshift(cleanTx);
+
+    if (!skipBalanceUpdate) {
+      const acct = data.accounts.find(a => a.name.toLowerCase() === (cleanTx.account || '').toLowerCase());
+      if (acct) {
+        if (cleanTx.type === 'income') acct.balance += Number(cleanTx.amount || 0);
+        else if (cleanTx.type === 'expense') acct.balance -= Number(cleanTx.amount || 0);
+      }
     }
     this.persist();
+  },
+
+  deleteTransaction(id) {
+    const data = this.getCleanData();
+    const idx = data.transactions.findIndex(t => t.id === id);
+    if (idx === -1) return { success: false, message: 'Movimiento no encontrado.' };
+    const tx = data.transactions[idx];
+    // Revertir impacto en saldo si la cuenta aún existe y no fue apertura
+    if (tx.category !== 'Apertura de cuenta') {
+      const acct = data.accounts.find(a => a.name.toLowerCase() === (tx.account || '').toLowerCase());
+      if (acct) {
+        if (tx.type === 'income') acct.balance -= Number(tx.amount || 0);
+        else if (tx.type === 'expense') acct.balance += Number(tx.amount || 0);
+      }
+    }
+    data.transactions.splice(idx, 1);
+    this.persist();
+    return { success: true };
   },
 
   addMaintenanceOrder(order) {
@@ -690,11 +763,84 @@ window.MotoData = {
     this.persist();
   },
 
+  completeMaintenanceOrder(id) {
+    const data = this.getCleanData();
+    const order = data.maintenanceOrders.find(o => o.id === id);
+    if (!order) return { success: false };
+    order.status = order.status === 'done' ? 'scheduled' : 'done';
+    this.persist();
+    return { success: true, status: order.status };
+  },
+
+  deleteMaintenanceOrder(id) {
+    const data = this.getCleanData();
+    const prevLen = data.maintenanceOrders.length;
+    data.maintenanceOrders = data.maintenanceOrders.filter(o => o.id !== id);
+    if (data.maintenanceOrders.length === prevLen) return { success: false };
+    this.persist();
+    return { success: true };
+  },
+
   addDocument(doc) {
     const data = this.getCleanData();
     if (!doc.id) doc.id = 'doc-' + Date.now();
+    const computed = this.computeDocumentStatus(doc.expiry);
+    doc.status = computed.status;
+    doc.statusText = computed.statusText;
     data.documents.unshift(doc);
+    this.syncVehicleDocExpiry(doc.plate, doc.type, doc.expiry);
     this.persist();
+  },
+
+  deleteDocument(id) {
+    const data = this.getCleanData();
+    const prevLen = data.documents.length;
+    data.documents = data.documents.filter(d => d.id !== id);
+    if (data.documents.length === prevLen) return { success: false };
+    this.persist();
+    return { success: true };
+  },
+
+  getPartUsages() {
+    const data = this.getCleanData();
+    return data.partUsages || [];
+  },
+
+  addPartUsage(usageData) {
+    const data = this.getCleanData();
+    if (!Array.isArray(data.partUsages)) data.partUsages = [];
+    const qty = Math.max(1, Number(usageData.qty || 1));
+    let unitPrice = Number(usageData.unitPrice || 0);
+    let partName = usageData.partName || '';
+    let service = usageData.service || 'Mantenimiento';
+
+    // Descontar del inventario real si existe en spareParts
+    const part = data.spareParts.find(p =>
+      (usageData.partCode && p.code === usageData.partCode) ||
+      (partName && (p.name || '').toLowerCase() === partName.toLowerCase())
+    );
+    if (part) {
+      part.stock = Math.max(0, Number(part.stock || 0) - qty);
+      if (!unitPrice) unitPrice = Number(part.unitPrice ?? part.price ?? 0);
+      partName = part.name;
+      if (!usageData.service && part.category) service = part.category;
+    }
+
+    const total = qty * unitPrice;
+    const record = {
+      id: 'use-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+      plate: (usageData.plate || '').toUpperCase(),
+      partCode: part ? part.code : (usageData.partCode || '-'),
+      partName: partName,
+      service: service,
+      qty: qty,
+      unitPrice: unitPrice,
+      total: total,
+      date: usageData.date || new Date().toISOString().split('T')[0]
+    };
+    data.partUsages.unshift(record);
+    this.persist();
+    return { success: true, record };
   },
 
   getVehicles() {
@@ -735,6 +881,7 @@ window.MotoData = {
       documents: [],
       accounts: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.accounts)),
       spareParts: [],
+      partUsages: [],
       maintenanceTypes: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes)),
       settings: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.settings))
     };
@@ -745,7 +892,7 @@ window.MotoData = {
     this.saveToLocal();
     if (this.isFirebaseActive && this.db) {
       try {
-        await this.db.collection('motocontrol_app').doc('fleet_data').set(this.getCleanData());
+        await this.db.collection('motocontrol_app').doc('fleet_data').set(JSON.parse(JSON.stringify(this.getCleanData())));
       } catch (e) {
         console.error('Error clearing Firestore:', e);
       }
@@ -781,6 +928,7 @@ window.MotoData = {
     this.data.accounts.push(newAccount);
 
     if (balance > 0) {
+      // skipBalanceUpdate: true evita sumar el saldo inicial por segunda vez a newAccount.balance
       this.addTransaction({
         id: 'tx-init-' + Date.now(),
         type: 'income',
@@ -789,7 +937,8 @@ window.MotoData = {
         concept: `Saldo inicial apertura ${name}`,
         amount: balance,
         date: new Date().toISOString().split('T')[0],
-        plate: 'General'
+        plate: 'General',
+        skipBalanceUpdate: true
       });
     } else {
       this.persist();

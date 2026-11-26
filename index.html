@@ -96,7 +96,10 @@
             'label-lg': ['14px', { lineHeight: '20px', letterSpacing: '0.1px', fontWeight: '600' }],
             'label-md': ['12px', { lineHeight: '16px', letterSpacing: '0.2px', fontWeight: '600' }],
             'label-sm': ['11px', { lineHeight: '14px', letterSpacing: '0.3px', fontWeight: '600' }],
+            'label-xs': ['11px', { lineHeight: '14px', letterSpacing: '0.2px', fontWeight: '600' }],
+            'body-xs': ['11px', { lineHeight: '15px', letterSpacing: '0.1px', fontWeight: '400' }],
             'mono-md': ['13px', { lineHeight: '18px', letterSpacing: '0px', fontWeight: '500' }],
+            'mono-sm': ['12px', { lineHeight: '16px', letterSpacing: '0px', fontWeight: '500' }],
           },
           transitionDuration: {
             'state-change': '100ms',
@@ -293,9 +296,10 @@
 </div>
 <div class="flex flex-wrap items-center gap-gutter-sm">
 <span class="font-label text-label-xs text-light-on-surface-variant font-medium">Período:</span>
+<button class="preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-secondary-container text-light-on-secondary-container transition-colors" data-preset="all" type="button">Todo</button>
 <button class="preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors" data-preset="today" type="button">Hoy</button>
 <button class="preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors" data-preset="7d" type="button">7 días</button>
-<button class="preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-secondary-container text-light-on-secondary-container transition-colors" data-preset="month" type="button">Este mes</button>
+<button class="preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors" data-preset="month" type="button">Este mes</button>
 <button class="preset-btn px-2.5 py-1 rounded font-label text-label-sm bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container transition-colors" data-preset="prev" type="button">Mes anterior</button>
 </div>
 </div>
@@ -308,9 +312,6 @@
 </label>
 <select class="w-full px-3 py-2 rounded border border-light-outline-variant bg-light-surface-container-low font-body text-body-sm text-light-on-surface focus:border-light-primary focus:ring-light-primary" id="dashboard-filter-account">
 <option value="all">Todas las cuentas</option>
-<option value="Bancolombia">Bancolombia Ahorros</option>
-<option value="Nequi">Nequi Flota</option>
-<option value="Efectivo">Caja Efectivo</option>
 </select>
 </div>
 <!-- Filtro Conductor -->
@@ -326,13 +327,13 @@
 <!-- Rango Fechas: Desde -->
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-xs text-light-on-surface-variant font-semibold" for="date-from">Desde</label>
-<input class="w-full px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-low text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="date-from" type="date" value="2026-11-01"/>
+<input class="w-full px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-low text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="date-from" type="date" value=""/>
 </div>
 <!-- Rango Fechas: Hasta y Botón Limpiar -->
 <div class="flex items-end gap-2">
 <div class="flex-1 flex flex-col gap-1">
 <label class="font-label text-label-xs text-light-on-surface-variant font-semibold" for="date-to">Hasta</label>
-<input class="w-full px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-low text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="date-to" type="date" value="2026-11-22"/>
+<input class="w-full px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-low text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="date-to" type="date" value=""/>
 </div>
 <button id="btn-dashboard-reset-filters" class="px-3 py-2 rounded border border-light-outline-variant bg-light-surface-container-lowest text-light-on-surface-variant hover:text-light-error hover:bg-light-surface-container-low text-xs font-label whitespace-nowrap" title="Restablecer filtros" type="button">
 Limpiar
@@ -399,7 +400,7 @@ Limpiar
 <header class="flex flex-wrap items-center justify-between gap-gutter-sm">
 <div>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Ingresos vs. Gastos</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="chart-period-label">Comparativa por semana (01 nov – 22 nov 2026)</p>
+<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="chart-period-label">Comparativa por semana (Todos los movimientos)</p>
 </div>
 <div class="flex items-center gap-gutter-md">
 <span class="inline-flex items-center gap-1.5">
@@ -675,7 +676,7 @@ Limpiar
 <header class="flex flex-wrap items-center justify-between gap-gutter-sm">
 <div>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Directorio de vehículos y conductores</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="fleet-count-label">Mostrando 8 motocarros registrados</p>
+<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="fleet-count-label">Mostrando 0 motocarros registrados</p>
 </div>
 <button class="inline-flex items-center justify-center gap-gutter-xs px-gutter-md py-2 rounded bg-light-surface-container-lowest text-light-on-surface border border-light-outline-variant hover:bg-light-surface-container-low transition-colors duration-state-change" data-component-id="button-secondary" data-component-type="button" data-component-variant="secondary" id="open-assign-secondary-btn" type="button">
 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">person_add</span>
@@ -821,9 +822,6 @@ Limpiar
 </div>
 <select aria-label="Filtrar por cuenta" class="px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest font-label text-label-sm text-light-on-surface" id="account-filter">
 <option value="all">Todas las cuentas</option>
-<option value="Bancolombia">Bancolombia</option>
-<option value="Nequi">Nequi Flota</option>
-<option value="Efectivo">Caja Efectivo</option>
 </select>
 </div>
 </header>
@@ -916,7 +914,7 @@ Limpiar
 <button aria-controls="panel-inventory" aria-selected="false" class="main-tab inline-flex items-center gap-gutter-xs px-gutter-md py-2 rounded bg-light-surface-container-low text-light-on-surface-variant hover:bg-light-surface-container font-label text-label-lg transition-colors duration-state-change" data-main-tab="inventory" id="tab-maint-inventory" role="tab" type="button">
 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">inventory_2</span>
 <span>Repuestos en Stock</span>
-<span class="inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-warning-container text-on-warning-container font-label text-label-sm tabular-nums">3</span>
+<span class="hidden inline-flex items-center justify-center min-w-5 h-5 px-1.5 rounded-full bg-warning-container text-on-warning-container font-label text-label-sm tabular-nums" id="badge-stock-low-tab">0</span>
 </button>
 </div>
 </section>
@@ -980,6 +978,9 @@ Limpiar
 <th class="px-gutter-md py-3 text-light-on-surface-variant" scope="col">
 <span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Estado</span>
 </th>
+<th class="px-gutter-md py-3 text-right text-light-on-surface-variant" scope="col">
+<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Acción</span>
+</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="orders-table-body">
@@ -994,34 +995,30 @@ Limpiar
 <header class="flex flex-wrap items-center justify-between gap-gutter-sm">
 <div>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Repuestos utilizados por equipo</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Registra qué repuesto del inventario se instaló y en qué motocarro se gastó</p>
+<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm">Registra qué repuesto del inventario se instaló y en qué motocarro se gastó (descuenta stock automáticamente)</p>
 </div>
 </header>
 <!-- Quick Usage Form -->
-<form class="p-gutter-md rounded bg-light-surface-container-low border border-light-outline-variant grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-gutter-sm items-end" id="part-usage-form">
+<form class="p-gutter-md rounded bg-light-surface-container-low border border-light-outline-variant grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-gutter-sm items-end" id="part-usage-form" novalidate>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">Equipo (Motocarro)</span>
-<select class="vehicle-plate-select rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="usage-plate">
-<option value="">-- Sin motocarros --</option>
+<select class="vehicle-plate-select h-10 px-3 rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="usage-plate">
+<option value="">-- Seleccionar placa --</option>
 </select>
 </label>
 <label class="flex flex-col gap-1 lg:col-span-2">
-<span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">Repuesto utilizado</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" id="usage-part">
-<option value="Aceite 20W50 4T (Litro)|$ 28.000|Cambio de aceite">Aceite 20W50 4T ($ 28.000)</option>
-<option value="Bandas de freno traseras|$ 42.000|Frenos">Bandas de freno traseras ($ 42.000)</option>
-<option value="Kit de embrague Bajaj RE|$ 165.000|Correctivo">Kit de embrague Bajaj RE ($ 165.000)</option>
-<option value="Bujía NGK + Filtro aire|$ 32.000|Preventivo">Bujía NGK + Filtro aire ($ 32.000)</option>
-<option value="Llanta 4.00-8 reforzada|$ 115.000|Llantas">Llanta 4.00-8 reforzada ($ 115.000)</option>
+<span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">Repuesto del inventario</span>
+<select class="h-10 px-3 rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" id="usage-part">
+<option value="">-- Agrega repuestos en "Repuestos en Stock" --</option>
 </select>
 </label>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">Cantidad</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="usage-qty" max="10" min="1" type="number" value="1"/>
+<input class="h-10 px-3 rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="usage-qty" max="100" min="1" type="number" value="1"/>
 </label>
-<button class="inline-flex items-center justify-center gap-gutter-xs px-gutter-md py-2 rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
+<button class="h-10 inline-flex items-center justify-center gap-gutter-xs px-gutter-md rounded bg-light-primary text-light-on-primary hover:bg-light-primary-container transition-colors duration-state-change" data-component-id="button-primary" data-component-type="button" data-component-variant="primary" type="submit">
 <span aria-hidden="true" class="material-symbols-outlined text-[18px]">add</span>
-<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Registrar gasto</span>
+<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Registrar uso</span>
 </button>
 </form>
 <!-- Parts Used Log Table -->
@@ -1085,7 +1082,10 @@ Limpiar
 <thead>
 <tr class="bg-light-surface-container-low border-b border-light-outline-variant">
 <th class="px-gutter-md py-3 text-light-on-surface-variant" scope="col">
-<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Código y repuesto</span>
+<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Código</span>
+</th>
+<th class="px-gutter-md py-3 text-light-on-surface-variant" scope="col">
+<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Repuesto</span>
 </th>
 <th class="px-gutter-md py-3 text-light-on-surface-variant" scope="col">
 <span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Categoría</span>
@@ -1099,150 +1099,13 @@ Limpiar
 <th class="px-gutter-md py-3 text-light-on-surface-variant" scope="col">
 <span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Costo unit.</span>
 </th>
-<th class="px-gutter-md py-3 text-light-on-surface-variant" scope="col">
-<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Estado</span>
+<th class="px-gutter-md py-3 text-right text-light-on-surface-variant" scope="col">
+<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Estado y Acción</span>
 </th>
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="stock-table-body">
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="rep-014 kit de embrague bajaj" data-stock-state="low">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">REP-014</p>
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Kit de embrague Bajaj RE</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Transmisión</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-error tabular-nums whitespace-nowrap" data-design-text-token="mono-md">1 und.</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="mono-md">3 und.</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 165.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-component-id="badge-error" data-component-type="badge" data-component-variant="error" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Crítico</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="rep-022 bandas de freno traseras" data-stock-state="low">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">REP-022</p>
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Bandas de freno traseras</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Frenos</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-warning tabular-nums whitespace-nowrap" data-design-text-token="mono-md">2 juegos</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="mono-md">5 juegos</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 42.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Stock bajo</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="rep-045 llanta 4.00-8" data-stock-state="low">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">REP-045</p>
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Llanta 4.00-8 reforzada</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Llantas</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-warning tabular-nums whitespace-nowrap" data-design-text-token="mono-md">2 und.</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="mono-md">4 und.</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 115.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-warning-container text-on-warning-container whitespace-nowrap" data-component-id="badge-warning" data-component-type="badge" data-component-variant="warning" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Stock bajo</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="rep-008 aceite 20w50 4t" data-stock-state="ok">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">REP-008</p>
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Aceite 20W50 4T (Litro)</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Lubricantes</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">18 litros</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="mono-md">10 litros</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 28.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Disponible</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="rep-019 bujia ngk filtro aire" data-stock-state="ok">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">REP-019</p>
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Bujía NGK + Filtro aire</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Motor</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">14 kits</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="mono-md">6 kits</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 32.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Disponible</span>
-</span>
-</td>
-</tr>
-<tr class="hover:bg-light-surface-container-low transition-colors duration-state-change" data-search="rep-031 guaya acelerador" data-stock-state="ok">
-<td class="px-gutter-md py-3">
-<p class="font-mono text-mono-md text-light-on-surface whitespace-nowrap" data-design-text-token="mono-md">REP-031</p>
-<p class="font-body text-body-md text-light-on-surface whitespace-nowrap" data-design-text-token="body-md">Guaya de acelerador</p>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-body text-body-md text-light-on-surface-variant whitespace-nowrap" data-design-text-token="body-md">Controles</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">9 und.</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-outline tabular-nums whitespace-nowrap" data-design-text-token="mono-md">4 und.</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="font-mono text-mono-md text-light-on-surface tabular-nums whitespace-nowrap" data-design-text-token="mono-md">$ 18.000</span>
-</td>
-<td class="px-gutter-md py-3">
-<span class="inline-flex items-center px-2.5 py-0.5 rounded-full bg-success-container text-on-success-container whitespace-nowrap" data-component-id="badge-success" data-component-type="badge" data-component-variant="success" role="status">
-<span class="font-label text-label-sm" data-design-text-token="label-sm">Disponible</span>
-</span>
-</td>
-</tr>
+<!-- Populated dynamically by JS -->
 </tbody>
 </table>
 </div>
@@ -1346,7 +1209,7 @@ Limpiar
 <div class="flex flex-wrap items-center gap-2">
 <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface hover:bg-light-surface-container font-label text-label-md transition-colors" id="btn-open-runt-assistant" type="button">
 <span class="material-symbols-outlined text-[18px] text-light-primary">policy</span>
-<span>🔍 Consultar RUNT (Opción A)</span>
+<span>Consulta Manual RUNT / R5</span>
 </button>
 <button class="inline-flex items-center gap-1.5 px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface hover:bg-light-surface-container font-label text-label-md transition-colors" id="btn-open-email-alerts-modal" type="button">
 <span class="material-symbols-outlined text-[18px] text-light-primary">notifications_active</span>
@@ -1423,23 +1286,24 @@ Limpiar
 <select aria-label="Cuenta" class="px-3 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest font-label text-label-sm text-light-on-surface" id="filter-account">
 <option value="all">Todas las cuentas</option>
 </select>
-</select>
 <select aria-label="Categoría de gasto" class="px-3 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest font-label text-label-sm text-light-on-surface" id="filter-category">
 <option value="all">Todas las categorías</option>
 <option value="Mantenimiento">Mantenimiento</option>
 <option value="Repuestos">Repuestos</option>
-<option value="Documentación">SOAT / Tecno</option>
-<option value="Ingreso">Ingresos (Tarifas)</option>
+<option value="SOAT / Tecnomecánica">SOAT / Tecno</option>
+<option value="Tarifa">Ingresos (Tarifas)</option>
+<option value="Combustible">Combustible</option>
+<option value="Administrativo">Administrativo</option>
 </select>
 </div>
 <div class="flex flex-wrap items-center gap-gutter-sm">
 <label class="flex items-center gap-gutter-xs">
 <span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">Desde</span>
-<input class="px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="filter-date-from" type="date" value="2026-11-01"/>
+<input class="px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="filter-date-from" type="date" value=""/>
 </label>
 <label class="flex items-center gap-gutter-xs">
 <span class="font-label text-label-sm text-light-on-surface-variant" data-design-text-token="label-sm">Hasta</span>
-<input class="px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="filter-date-to" type="date" value="2026-11-22"/>
+<input class="px-2.5 py-1.5 rounded border border-light-outline-variant bg-light-surface-container-lowest text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="filter-date-to" type="date" value=""/>
 </label>
 <button class="px-2.5 py-1.5 rounded border border-light-outline-variant text-light-on-surface-variant hover:text-light-error font-label text-label-sm hover:bg-light-surface-container-low transition-colors" id="btn-clear-gastos-filters" type="button">Restablecer</button>
 </div>
@@ -1449,7 +1313,7 @@ Limpiar
 <header class="flex flex-wrap items-center justify-between gap-gutter-sm">
 <div>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">Historial de ingresos y gastos por cuenta</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="ledger-count">Mostrando 6 movimientos recientes</p>
+<p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="ledger-count">Mostrando 0 movimientos</p>
 </div>
 </header>
 <div class="w-full overflow-x-auto border border-light-outline-variant rounded min-w-0">
@@ -1474,6 +1338,9 @@ Limpiar
 </th>
 <th class="px-gutter-md py-3 text-right text-light-on-surface-variant" scope="col">
 <span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Monto</span>
+</th>
+<th class="px-gutter-md py-3 text-right text-light-on-surface-variant" scope="col">
+<span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Acción</span>
 </th>
 </tr>
 </thead>
@@ -1503,7 +1370,7 @@ Limpiar
 </div>
 </div>
 </div>
-<span class="font-label text-label-md px-gutter-sm py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container whitespace-nowrap" data-design-text-token="label-md">Flota activa: 8</span>
+<span class="font-label text-label-md px-gutter-sm py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container whitespace-nowrap" data-design-text-token="label-md" id="form-moto-fleet-badge">Flota activa: 0</span>
 </div>
 </header>
 <main class="flex-1 px-gutter-md lg:px-page-margin py-gutter-lg">
@@ -1713,7 +1580,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 </div>
 </div>
-<span class="font-label text-label-md px-gutter-sm py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container whitespace-nowrap" data-design-text-token="label-md">3 tarifas activas</span>
+<span class="font-label text-label-md px-gutter-sm py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container whitespace-nowrap" data-design-text-token="label-md" id="form-tarifa-badge">Tarifas de flota</span>
 </div>
 </header>
 <main class="flex-1 px-gutter-md lg:px-page-margin py-gutter-lg">
@@ -1738,19 +1605,19 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-md">
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="nombre-tarifa">Nombre de la tarifa *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="nombre-tarifa" name="nombreTarifa" required="" type="text" value="Tarifa Zona Centro"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="nombre-tarifa" name="nombreTarifa" placeholder="Ej. Tarifa Estándar 2026" required="" type="text" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="valor-diario">Valor diario (COP) *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="valor-diario" min="10000" name="valorDiario" required="" step="1000" type="number" value="58000"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="valor-diario" min="10000" name="valorDiario" placeholder="Ej. 50000" required="" step="1000" type="number" value="50000"/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="valor-dominical">Tarifa domingo / festivo (COP)</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="valor-dominical" min="0" name="valorDominical" step="1000" type="number" value="46000"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="valor-dominical" min="0" name="valorDominical" placeholder="Ej. 45000" step="1000" type="number" value="45000"/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="vigencia-desde">Vigente desde *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="vigencia-desde" name="vigenciaDesde" required="" type="date" value="2026-11-23"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="vigencia-desde" name="vigenciaDesde" required="" type="date" value=""/>
 </div>
 </div>
 <!-- Live Projection Summary (Turno intercalado 1 día sí, 1 día no) -->
@@ -1763,8 +1630,8 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <p class="font-body text-body-sm text-light-on-surface-variant" data-design-text-token="body-sm" id="proyeccion-detalle">Esquema día de por medio (promedio 3.5 turnos/semana · 15 días/mes)</p>
 </div>
 <div class="text-right">
-<p class="font-headline text-headline-md text-light-primary tabular-nums" data-design-text-token="headline-md" id="proyeccion-semanal">$ 197.000</p>
-<p class="font-mono text-body-xs text-light-outline tabular-nums font-semibold" id="proyeccion-mensual">Est. mensual: $ 846.000 (15 turnos)</p>
+<p class="font-headline text-headline-md text-light-primary tabular-nums" data-design-text-token="headline-md" id="proyeccion-semanal">$ 0</p>
+<p class="font-mono text-body-xs text-light-outline tabular-nums font-semibold" id="proyeccion-mensual">Est. mensual: $ 0 (15 turnos)</p>
 </div>
 </div>
 </section>
@@ -1775,7 +1642,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">electric_rickshaw</span>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">2. Motocarros que aplican esta tarifa</h2>
 </div>
-<span class="font-label text-label-md text-light-primary tabular-nums" data-design-text-token="label-md" id="selected-count">3 seleccionados</span>
+<span class="font-label text-label-md text-light-primary tabular-nums" data-design-text-token="label-md" id="selected-count">0 seleccionados</span>
 </div>
 <div class="p-3.5 bg-light-surface-container-low rounded-md border border-light-outline-variant flex flex-col gap-2 shadow-xs">
 <div class="flex items-center justify-between">
@@ -1948,15 +1815,15 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mov-monto">Monto (COP) *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-monto" min="1000" required="" step="500" type="number" value="65000"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-monto" min="500" placeholder="Ej. 50000" required="" step="500" type="number" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mov-fecha">Fecha *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-fecha" required="" type="date" value="2026-11-22"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-fecha" required="" type="date" value=""/>
 </div>
 <div class="md:col-span-2 flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mov-descripcion">Concepto / Observación *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-descripcion" required="" type="text" value="Tanqueo gasolina corriente + lavado semanal"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mov-descripcion" placeholder="Ej. Tanqueo gasolina, pago tarifa diaria, repuesto..." required="" type="text" value=""/>
 </div>
 </div>
 </section>
@@ -1991,7 +1858,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 </div>
 </div>
-<span class="font-mono text-mono-md px-gutter-sm py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container tabular-nums whitespace-nowrap" data-design-text-token="mono-md">OT-2026-089</span>
+<span class="font-mono text-mono-md px-gutter-sm py-1 rounded-full bg-light-secondary-container text-light-on-secondary-container tabular-nums whitespace-nowrap" data-design-text-token="mono-md">Nueva Orden</span>
 </div>
 </header>
 <main class="flex-1 px-gutter-md lg:px-page-margin py-gutter-lg">
@@ -2060,7 +1927,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mant-fecha">Fecha de ejecución *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-fecha" name="fecha" required="" type="date" value="2026-11-24"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mant-fecha" name="fecha" required="" type="date" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mant-km">Kilometraje al ingreso</label>
@@ -2094,7 +1961,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <span aria-hidden="true" class="material-symbols-outlined text-[20px] text-light-primary">inventory_2</span>
 <h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm">2. Repuestos utilizados del stock</h2>
 </div>
-<button class="inline-flex items-center gap-gutter-xs px-gutter-sm py-1.5 rounded bg-light-secondary-container text-light-on-secondary-container hover:bg-light-surface-variant transition-colors duration-state-change" id="add-part-btn" type="button">
+<button class="inline-flex items-center gap-gutter-xs px-gutter-sm py-1.5 rounded bg-light-secondary-container text-light-on-secondary-container hover:bg-light-surface-variant transition-colors duration-state-change" id="btn-add-order-part" type="button">
 <span aria-hidden="true" class="material-symbols-outlined text-[16px]">add</span>
 <span class="font-label text-label-md whitespace-nowrap" data-design-text-token="label-md">Agregar repuesto</span>
 </button>
@@ -2104,6 +1971,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <div class="md:col-span-6 flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="repuesto-select">Repuesto en inventario</label>
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2 focus:border-light-primary focus:ring-light-primary" id="repuesto-select">
+<option value="">-- Sin repuestos en inventario --</option>
 </select>
 </div>
 <div class="md:col-span-3 flex flex-col gap-gutter-xs">
@@ -2124,6 +1992,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <th class="px-gutter-sm py-2 font-label text-label-md text-light-on-surface-variant whitespace-nowrap" scope="col">Equipo</th>
 <th class="px-gutter-sm py-2 font-label text-label-md text-light-on-surface-variant text-right whitespace-nowrap" scope="col">Cant.</th>
 <th class="px-gutter-sm py-2 font-label text-label-md text-light-on-surface-variant text-right whitespace-nowrap" scope="col">Subtotal</th>
+<th class="px-gutter-sm py-2 font-label text-label-md text-light-on-surface-variant text-right whitespace-nowrap" scope="col">Quitar</th>
 </tr>
 </thead>
 <tbody class="divide-y divide-light-outline-variant" id="parts-tbody">
@@ -2141,24 +2010,22 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <div class="grid grid-cols-1 md:grid-cols-3 gap-gutter-md">
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="mano-obra">Mano de obra (COP)</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mano-obra" min="0" step="5000" type="number" value="35000"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="mano-obra" min="0" step="5000" type="number" value="0"/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="cuenta-pago">Cuenta donde sale el dinero *</label>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="cuenta-pago">Cuenta donde sale el dinero</label>
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="cuenta-pago">
-<option selected="" value="Caja Efectivo">Caja Efectivo</option>
-<option value="Nequi Flota">Nequi Flota</option>
-<option value="Bancolombia Ahorros">Bancolombia Ahorros</option>
+<option value="">-- Sin cuentas creadas --</option>
 </select>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="proximo-preventivo">Próxima fecha preventiva *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="proximo-preventivo" required="" type="date" value="2026-12-22"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="proximo-preventivo">Observación / Nota de trabajo</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="proximo-preventivo" placeholder="Ej. Ajuste de frenos y cambio de aceite" type="text" value=""/>
 </div>
 </div>
 <div class="rounded bg-light-surface-container-low border border-light-outline-variant p-gutter-md flex flex-wrap items-center justify-between gap-gutter-md">
 <span class="font-label text-label-lg text-light-on-surface" data-design-text-token="label-lg">Total orden (repuestos + mano de obra)</span>
-<span class="font-headline text-headline-md text-light-primary tabular-nums" data-design-text-token="headline-md" id="total-orden">$ 105.000</span>
+<span class="font-headline text-headline-md text-light-primary tabular-nums" data-design-text-token="headline-md" id="total-orden">$ 0</span>
 </div>
 </section>
 <!-- Form Footer Actions -->
@@ -2192,7 +2059,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 </div>
 </div>
-<span class="font-label text-label-md px-gutter-sm py-1 rounded-full bg-light-error-container text-light-on-error-container whitespace-nowrap" data-design-text-token="label-md">2 vencimientos críticos</span>
+<span class="font-label text-label-md px-gutter-sm py-1 rounded-full bg-light-surface-container text-light-on-surface-variant whitespace-nowrap" data-design-text-token="label-md" id="form-soat-alerts-badge">Control documental</span>
 </div>
 </header>
 <main class="flex-1 px-gutter-md lg:px-page-margin py-gutter-lg">
@@ -2260,12 +2127,12 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-numero">Número de póliza o certificado *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md uppercase tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-numero" required="" type="text" value="SOAT-88412093-CO"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-numero">Número de póliza o certificado</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md uppercase tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-numero" placeholder="Ej. POL-2026-8812" type="text" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-entidad">Aseguradora o CDA *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-entidad" required="" type="text" value="Seguros Bolívar"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-entidad">Aseguradora, CDA o Entidad</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-entidad" placeholder="Ej. SURA, Seguros del Estado, CDA..." type="text" value=""/>
 </div>
 </div>
 </section>
@@ -2277,23 +2144,21 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 <div class="grid grid-cols-1 md:grid-cols-2 gap-gutter-md">
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-expedicion">Fecha de expedición *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-expedicion" required="" type="date" value="2026-11-22"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-expedicion">Fecha de expedición</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-expedicion" type="date" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
 <label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-vencimiento">Fecha de vencimiento *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-vencimiento" required="" type="date" value="2027-11-22"/>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-vencimiento" required="" type="date" value=""/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-valor">Valor pagado (COP) *</label>
-<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-valor" min="0" required="" step="1000" type="number" value="342800"/>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-valor">Valor pagado (COP)</label>
+<input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md tabular-nums px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-valor" min="0" placeholder="Ej. 350000 (0 si no genera gasto)" step="1000" type="number" value="0"/>
 </div>
 <div class="flex flex-col gap-gutter-xs">
-<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-cuenta">Cuenta donde sale el dinero *</label>
+<label class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md" for="doc-cuenta">Cuenta donde sale el dinero</label>
 <select class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md px-gutter-sm py-2.5 focus:border-light-primary focus:ring-light-primary" id="doc-cuenta">
-<option selected="" value="Bancolombia Ahorros">Bancolombia Ahorros</option>
-<option value="Nequi Flota">Nequi Flota</option>
-<option value="Caja Efectivo">Caja Efectivo</option>
+<option value="">-- Sin descontar de cuenta --</option>
 </select>
 </div>
 </div>
@@ -2324,65 +2189,6 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 </div>
 <!-- Universal Modals Container -->
-<div aria-labelledby="tx-modal-title" aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="tx-modal" role="dialog">
-<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-md p-gutter-lg flex flex-col gap-gutter-md">
-<header class="flex items-center justify-between gap-gutter-sm">
-<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm" id="tx-modal-title">Registrar movimiento</h2>
-<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low" id="close-tx-modal-btn" type="button">
-<span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
-</button>
-</header>
-<form class="flex flex-col gap-gutter-md" id="tx-form" novalidate>
-<div class="grid grid-cols-2 gap-gutter-sm">
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Tipo</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" id="tx-type">
-<option value="income">Ingreso (Tarifa)</option>
-<option value="expense">Gasto / Mantenimiento</option>
-</select>
-</label>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Cuenta</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" id="tx-account">
-<option>Nequi Flota</option>
-<option>Bancolombia Ahorros</option>
-<option>Caja Efectivo</option>
-</select>
-</label>
-</div>
-<div class="p-2.5 bg-light-surface-container-low rounded border border-light-outline-variant flex flex-col gap-1.5">
-<div class="flex items-center justify-between">
-<span class="font-label text-label-sm font-semibold text-light-on-surface">Motocarro (por Conductor y Color):</span>
-<span class="hidden text-[11px] font-label text-success flex items-center gap-1 font-semibold" id="tx-auto-badge">
-<span class="material-symbols-outlined text-[13px]">check_circle</span>
-<span>Placa cargada</span>
-</span>
-</div>
-<div class="grid grid-cols-2 gap-1.5">
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-sm text-light-on-surface px-2 py-1.5" id="tx-modal-driver">
-<option value="">-- Conductor --</option>
-</select>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-sm text-light-on-surface px-2 py-1.5" id="tx-modal-color">
-<option value="">-- Color --</option>
-<option value="Azul">🔵 Azul</option>
-<option value="Salmón">🟠 Salmón</option>
-</select>
-</div>
-<select class="rounded border-2 border-light-primary bg-light-surface-container-lowest font-mono text-mono-md font-bold text-light-on-surface px-2 py-1.5" id="tx-modal-plate">
-<!-- Populated with plates -->
-</select>
-</div>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Valor (COP)</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="tx-amount" min="1000" step="1000" type="number" value="45000"/>
-</label>
-<div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs">
-<button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-tx-btn" type="button">Cancelar</button>
-<button class="px-gutter-md py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container" type="submit">Guardar registro</button>
-</div>
-</form>
-</div>
-</div>
 <div aria-labelledby="assign-modal-title" aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="assign-modal" role="dialog">
 <div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-xl p-gutter-lg flex flex-col gap-gutter-md max-h-[90vh] overflow-y-auto shadow-2xl">
 <header class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
@@ -2513,17 +2319,15 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <div class="grid grid-cols-2 gap-gutter-sm">
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Tipo</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface">
+<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface px-2.5 py-2" id="fin-tx-type">
 <option value="income">Ingreso (Tarifa)</option>
 <option value="expense">Gasto / Repuesto</option>
 </select>
 </label>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Cuenta</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface">
-<option>Nequi Flota</option>
-<option>Bancolombia Ahorros</option>
-<option>Caja Efectivo</option>
+<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface px-2.5 py-2" id="fin-tx-account">
+<option value="">-- Sin cuentas creadas --</option>
 </select>
 </label>
 </div>
@@ -2532,7 +2336,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <span class="font-label text-label-sm font-semibold text-light-on-surface">Motocarro (por Conductor y Color):</span>
 <span class="hidden text-[11px] font-label text-success flex items-center gap-1 font-semibold" id="fin-modal-auto-badge">
 <span class="material-symbols-outlined text-[13px]">check_circle</span>
-<span>Placa cargada</span>
+<span id="fin-modal-auto-badge-text">Placa cargada</span>
 </span>
 </div>
 <div class="grid grid-cols-2 gap-1.5">
@@ -2551,11 +2355,11 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Concepto</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" placeholder="Ej. Tarifa diaria o cambio de llanta" type="text"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface px-2.5 py-2" id="fin-concept" placeholder="Ej. Tarifa diaria o cambio de llanta" type="text"/>
 </label>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Valor (COP)</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" min="1000" step="1000" type="number" value="45000"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface px-2.5 py-2" id="fin-amount" min="500" step="1000" type="number" value="50000"/>
 </label>
 <div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs">
 <button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-fin-btn" type="button">Cancelar</button>
@@ -2598,24 +2402,24 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Tipo</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface">
-<option>Preventivo</option>
-<option>Correctivo</option>
+<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface px-2.5 py-2" id="maint-modal-type">
+<option value="Preventivo">Preventivo</option>
+<option value="Correctivo">Correctivo</option>
 </select>
 </label>
 </div>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Trabajo y repuesto a descontar</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" placeholder="Ej. Cambio de aceite + bandas de freno" type="text"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface px-2.5 py-2" id="maint-modal-desc" placeholder="Ej. Cambio de aceite + bandas de freno" type="text"/>
 </label>
 <div class="grid grid-cols-2 gap-gutter-sm">
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Fecha programada</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" type="date" value="2026-11-28"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface px-2.5 py-2" id="maint-modal-date" type="date" value=""/>
 </label>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Costo estimado (COP)</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" step="5000" type="number" value="150000"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface px-2.5 py-2" id="maint-modal-cost" min="0" step="5000" type="number" value="0"/>
 </label>
 </div>
 <div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs">
@@ -2659,7 +2463,7 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Documento</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" id="modal-doc-type">
+<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface px-2.5 py-2" id="modal-doc-type">
 <option value="SOAT">SOAT (Seguro Obligatorio)</option>
 <option value="Tecnomecánica">Revisión Técnico-Mecánica</option>
 <option value="Impuesto Departamental">Impuesto Vehicular (Gobernación)</option>
@@ -2669,90 +2473,27 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Número de póliza / certificado</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface uppercase" id="modal-doc-number" placeholder="Ej. SOA-992014" type="text"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface uppercase px-2.5 py-2" id="modal-doc-number" placeholder="Ej. POL-2026-8812" type="text"/>
 </label>
 <div class="grid grid-cols-2 gap-gutter-sm">
 <label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Nuevo vencimiento</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="modal-doc-expiry" type="date" value="2027-11-22"/>
+<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Nuevo vencimiento *</span>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface px-2.5 py-2" id="modal-doc-expiry" type="date" value=""/>
 </label>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Valor pagado (COP)</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" id="modal-doc-cost" step="5000" type="number" value="560000"/>
+<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface px-2.5 py-2" id="modal-doc-cost" min="0" step="5000" type="number" value="0"/>
 </label>
 </div>
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Cuenta de pago (si genera egreso)</span>
+<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface px-2.5 py-2" id="modal-doc-account">
+<option value="">-- Solo registrar fecha (Sin movimiento de caja) --</option>
+</select>
+</label>
 <div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs">
 <button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-doc-btn" type="button">Cancelar</button>
 <button class="px-gutter-md py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container" type="submit">Guardar renovación</button>
-</div>
-</form>
-</div>
-</div>
-<div aria-labelledby="expense-modal-title" aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="expense-modal" role="dialog">
-<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-md p-gutter-lg flex flex-col gap-gutter-md">
-<header class="flex items-center justify-between gap-gutter-sm">
-<h2 class="font-headline text-headline-sm text-light-on-surface" data-design-text-token="headline-sm" id="expense-modal-title">Registrar gasto o ingreso</h2>
-<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low" id="close-expense-modal-btn" type="button">
-<span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
-</button>
-</header>
-<form class="flex flex-col gap-gutter-md" id="expense-form">
-<div class="grid grid-cols-2 gap-gutter-sm">
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Movimiento</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface">
-<option>Gasto / Egreso</option>
-<option>Ingreso</option>
-<option>Transferencia entre cuentas</option>
-</select>
-</label>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Cuenta</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface">
-<option>Bancolombia Ahorros</option>
-<option>Nequi Flota</option>
-<option>Caja Efectivo</option>
-</select>
-</label>
-</div>
-<div class="grid grid-cols-2 gap-gutter-sm">
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Categoría</span>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface">
-<option>Mantenimiento</option>
-<option>Repuestos</option>
-<option>SOAT / Tecnomecánica</option>
-<option>Tarifa diaria</option>
-</select>
-</label>
-<div class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface">Motocarro (Conductor y Color)</span>
-<div class="grid grid-cols-2 gap-1.5">
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-sm text-light-on-surface px-2 py-1.5" id="expense-modal-driver">
-<option value="">-- Conductor --</option>
-</select>
-<select class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-sm text-light-on-surface px-2 py-1.5" id="expense-modal-color">
-<option value="">-- Color --</option>
-<option value="Azul">🔵 Azul</option>
-<option value="Salmón">🟠 Salmón</option>
-</select>
-</div>
-<select class="rounded border-2 border-light-primary bg-light-surface-container-lowest font-mono text-mono-md font-bold text-light-on-surface px-2 py-1.5" id="expense-modal-plate">
-<!-- Populated -->
-</select>
-</div>
-</div>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Concepto</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-body text-body-md text-light-on-surface" placeholder="Ej. Cambio de aceite o recaudo turno" type="text"/>
-</label>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-md text-light-on-surface" data-design-text-token="label-md">Valor (COP)</span>
-<input class="rounded border border-light-outline-variant bg-light-surface-container-lowest font-mono text-mono-md text-light-on-surface" step="1000" type="number" value="65000"/>
-</label>
-<div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs">
-<button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-expense-btn" type="button">Cancelar</button>
-<button class="px-gutter-md py-2 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container" type="submit">Guardar</button>
 </div>
 </form>
 </div>
@@ -2859,14 +2600,7 @@ Crear Cuenta y Acceder
 <span aria-hidden="true" class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<div class="flex flex-col gap-gutter-sm bg-light-secondary-container/40 p-gutter-sm rounded border border-light-secondary-container">
-<div class="flex items-start gap-2">
-<span aria-hidden="true" class="material-symbols-outlined text-[18px] text-light-primary mt-0.5">info</span>
-<p class="font-body text-body-sm text-light-on-surface" data-design-text-token="body-sm">
-          Actualmente MotoControl opera con almacenamiento local activo (LocalStorage). Pega tus credenciales de proyecto de <strong>Firebase Console</strong> para sincronizar en la nube.
-        </p>
-</div>
-</div>
+<div class="hidden p-gutter-sm rounded font-body text-body-sm" id="fb-status-msg"></div>
 <form class="flex flex-col gap-gutter-md" id="firebase-config-form" novalidate>
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="fb-apiKey">API Key *</label>
@@ -2896,7 +2630,6 @@ Crear Cuenta y Acceder
 <label class="font-label text-label-md text-light-on-surface" for="fb-appId">App ID *</label>
 <input class="w-full rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md px-gutter-sm py-2 focus:border-light-primary" id="fb-appId" name="appId" placeholder="1:123456789:web:abcdef" required="" type="text" value="1:790738974246:web:113b64310f1f12af70d8e7"/>
 </div>
-<div class="hidden p-gutter-sm rounded font-body text-body-sm" id="fb-status-msg"></div>
 <div class="flex items-center justify-between gap-gutter-sm pt-gutter-xs border-t border-light-outline-variant">
 <button class="px-gutter-md py-2 rounded text-light-error hover:bg-light-error-container/30 font-label text-label-md" id="clear-fb-btn" type="button">
           Restablecer a Local
@@ -3129,11 +2862,9 @@ Crear Cuenta y Acceder
 </div>
 <div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface" for="buy-account">Cuenta donde sale el pago *</label>
-<select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="buy-account" required="">
-<option value="Bancolombia Ahorros">Bancolombia Ahorros</option>
-<option value="Nequi Flota">Nequi Flota</option>
-<option value="Caja Efectivo">Caja Efectivo</option>
+<label class="font-label text-label-md text-light-on-surface" for="buy-account">Cuenta donde sale el pago (Opcional)</label>
+<select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="buy-account">
+<option value="">-- Sin descontar de cuenta --</option>
 </select>
 </div>
 <div class="flex flex-col gap-1">
@@ -3219,11 +2950,9 @@ Crear Cuenta y Acceder
 <input class="rounded border-2 border-warning bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md font-bold focus:border-warning" id="sell-price" min="0" required="" step="100000" type="number" value="13000000"/>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-md text-light-on-surface font-semibold" for="sell-account">Cuenta donde ingresa el dinero *</label>
-<select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="sell-account" required="">
-<option value="Bancolombia Ahorros">Bancolombia Ahorros</option>
-<option value="Nequi Flota">Nequi Flota</option>
-<option value="Caja Efectivo">Caja Efectivo</option>
+<label class="font-label text-label-md text-light-on-surface font-semibold" for="sell-account">Cuenta donde ingresa el dinero (Opcional)</label>
+<select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-body text-body-md focus:border-light-primary" id="sell-account">
+<option value="">-- Sin ingresar a cuenta --</option>
 </select>
 </div>
 </div>
@@ -3234,7 +2963,7 @@ Crear Cuenta y Acceder
 </div>
 <div class="flex flex-col gap-1">
 <label class="font-label text-label-md text-light-on-surface" for="sell-date">Fecha de venta *</label>
-<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="sell-date" required="" type="date" value="2026-11-23"/>
+<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 py-2 font-mono text-mono-md focus:border-light-primary" id="sell-date" required="" type="date" value=""/>
 </div>
 </div>
 <div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs border-t border-light-outline-variant">
@@ -3300,88 +3029,96 @@ Crear Cuenta y Acceder
 </div>
 </div>
 
-<!-- MODAL: Asistente Consulta RUNT Oficial (Opción A) -->
+<!-- MODAL: Consulta Manual de Documentos (RUNT / R5) -->
 <div aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/40 hidden items-center justify-center p-gutter-md" id="runt-assistant-modal" role="dialog">
 <div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-xl p-gutter-lg flex flex-col gap-gutter-md max-h-[90vh] overflow-y-auto shadow-2xl">
 <header class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
-<div class="flex items-center gap-2">
-<span class="material-symbols-outlined text-[26px] text-light-primary">policy</span>
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[24px] text-light-primary">policy</span>
 <div>
-<h2 class="font-headline text-headline-sm text-light-on-surface">Consulta Asistida RUNT (Opción A)</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant">Consulta oficial gratuita de SOAT, Tecno e Impuestos sin cobros de APIs</p>
+<h2 class="font-headline text-headline-sm text-light-on-surface">Consulta Manual de Documentos (RUNT / R5)</h2>
+<p class="font-body text-body-sm text-light-on-surface-variant">Copia placa y cédula para consultar en R5 o RUNT y guarda aquí la nueva fecha</p>
 </div>
 </div>
-<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low" id="close-runt-modal-btn" type="button">
+<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low shrink-0" id="close-runt-modal-btn" type="button">
 <span class="material-symbols-outlined text-[20px]">close</span>
 </button>
 </header>
-<div class="bg-light-surface-container-low p-gutter-md rounded-md border border-light-outline-variant flex flex-col gap-gutter-sm">
-<div class="flex items-center justify-between">
-<span class="font-label text-label-sm font-bold text-light-primary flex items-center gap-1">
+
+<!-- Bloque 1: Datos del Motocarro -->
+<section class="bg-light-surface-container-low p-gutter-md rounded-md border border-light-outline-variant flex flex-col gap-3">
+<div class="flex items-center justify-between gap-2">
+<span class="font-label text-label-md text-light-primary flex items-center gap-1.5">
 <span class="material-symbols-outlined text-[16px]">pin</span>
-<span>1. Datos del Motocarro para la Consulta:</span>
+<span>1. Datos del motocarro para consulta manual</span>
 </span>
-<span class="text-xs text-light-outline font-body">Copia con un clic</span>
+<span class="font-body text-body-sm text-light-outline">1 clic para copiar</span>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-3 gap-gutter-sm">
+
+<!-- Fila 1: Selección completa del Motocarro -->
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant font-semibold" for="runt-select-vehicle">Motocarro:</label>
-<select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-1.5 font-mono text-mono-md font-bold focus:border-light-primary" id="runt-select-vehicle">
+<label class="font-label text-label-md text-light-on-surface-variant" for="runt-select-vehicle">Motocarro seleccionado</label>
+<select class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md font-semibold focus:border-light-primary focus:ring-light-primary" id="runt-select-vehicle">
 </select>
 </div>
+
+<!-- Fila 2: Cédula Propietario y Cédula Conductor alineadas -->
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant font-semibold">Cédula Propietario (RUNT):</label>
-<div class="flex items-center gap-1">
-<input class="w-full rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-2.5 py-1.5 font-mono text-mono-sm font-bold" id="runt-display-owner-cedula" readonly="" type="text" value=""/>
-<button class="p-1.5 rounded border border-light-outline-variant bg-light-surface hover:bg-light-primary hover:text-white transition-colors" id="btn-copy-owner-cedula" title="Copiar Cédula Propietario" type="button">
-<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<label class="font-label text-label-md text-light-on-surface-variant" for="runt-display-owner-cedula">Cédula del Propietario (RUNT)</label>
+<div class="flex items-center gap-1.5">
+<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-3 font-mono text-mono-md font-semibold focus:outline-none" id="runt-display-owner-cedula" readonly="" type="text" value=""/>
+<button class="h-10 w-10 shrink-0 inline-flex items-center justify-center rounded border border-light-outline-variant bg-light-surface text-light-primary hover:bg-light-primary hover:text-light-on-primary transition-colors" id="btn-copy-owner-cedula" title="Copiar cédula del propietario" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
 </button>
 </div>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant">Cédula Conductor:</label>
-<div class="flex items-center gap-1">
-<input class="w-full rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-2.5 py-1.5 font-mono text-mono-sm" id="runt-display-driver-cedula" readonly="" type="text" value=""/>
-<button class="p-1.5 rounded border border-light-outline-variant bg-light-surface hover:bg-light-primary hover:text-white transition-colors" id="btn-copy-driver-cedula" title="Copiar Cédula Conductor" type="button">
-<span class="material-symbols-outlined text-[16px]">content_copy</span>
+<label class="font-label text-label-md text-light-on-surface-variant" for="runt-display-driver-cedula">Cédula del Conductor</label>
+<div class="flex items-center gap-1.5">
+<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface-container text-light-on-surface px-3 font-mono text-mono-md focus:outline-none" id="runt-display-driver-cedula" readonly="" type="text" value=""/>
+<button class="h-10 w-10 shrink-0 inline-flex items-center justify-center rounded border border-light-outline-variant bg-light-surface text-light-primary hover:bg-light-primary hover:text-light-on-primary transition-colors" id="btn-copy-driver-cedula" title="Copiar cédula del conductor" type="button">
+<span class="material-symbols-outlined text-[18px]">content_copy</span>
 </button>
 </div>
 </div>
 </div>
-<!-- Enlaces directos de consulta -->
-<div class="flex flex-wrap items-center gap-2 pt-2 border-t border-light-outline-variant">
-<button class="inline-flex items-center gap-1 px-3 py-1.5 rounded bg-light-surface border border-light-outline-variant text-light-primary font-label text-label-sm hover:bg-light-primary hover:text-light-on-primary transition-colors shadow-xs" id="btn-copy-plate" type="button">
-<span class="material-symbols-outlined text-[15px]">content_copy</span>
+
+<!-- Fila 3: Barra de botones simétricos en 1 sola línea -->
+<div class="grid grid-cols-1 sm:grid-cols-3 gap-2 pt-2 border-t border-light-outline-variant">
+<button class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-light-surface border border-light-outline-variant text-light-primary font-label text-label-md hover:bg-light-secondary-container/40 transition-colors" id="btn-copy-plate" type="button">
+<span class="material-symbols-outlined text-[16px]">content_copy</span>
 <span id="btn-copy-plate-text">Copiar Placa</span>
 </button>
-<!-- Opción R5: Solo Placa y Sin Captcha -->
-<a class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-emerald-600 text-white font-label text-label-sm font-bold hover:bg-emerald-700 shadow-xs transition-colors" href="https://www.r5.com.co/soat" id="btn-open-r5" rel="noopener noreferrer" target="_blank" title="R5 te permite consultar el SOAT ingresando únicamente la placa, sin pedir cédula ni captcha.">
+<a class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-success text-on-success font-label text-label-md hover:bg-success/90 transition-colors" href="https://www.r5.com.co/soat" id="btn-open-r5" rel="noopener noreferrer" target="_blank" title="Abrir R5 (copia la placa automáticamente)">
 <span class="material-symbols-outlined text-[16px]">bolt</span>
-<span>Consultar en R5 (Solo Placa · Sin Captcha)</span>
+<span>Abrir R5 (SOAT)</span>
 </a>
-<!-- Opción Oficial RUNT -->
-<a class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded bg-light-primary text-light-on-primary font-label text-label-sm font-semibold hover:bg-light-primary-container shadow-xs ml-auto transition-colors" href="https://www.runt.gov.co/consultaCiudadana/#/consultaVehiculo" id="btn-open-runt" rel="noopener noreferrer" target="_blank" title="Portal oficial RUNT (Requiere Cédula del Propietario y resolver captcha)">
+<a class="h-10 w-full inline-flex items-center justify-center gap-1.5 px-3 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container transition-colors" href="https://www.runt.gov.co/consultaCiudadana/#/consultaVehiculo" id="btn-open-runt" rel="noopener noreferrer" target="_blank" title="Abrir Portal Oficial RUNT (copia cédula del propietario)">
 <span class="material-symbols-outlined text-[16px]">open_in_new</span>
-<span>Portal RUNT Oficial</span>
+<span>Abrir RUNT Oficial</span>
 </a>
 </div>
-</div>
-<form class="flex flex-col gap-gutter-sm border-t border-light-outline-variant pt-gutter-sm" id="runt-update-form" novalidate>
-<div class="flex items-center justify-between">
-<div class="flex items-center gap-1.5 text-light-on-surface font-label text-label-sm font-bold">
+</section>
+
+<!-- Bloque 2: Formulario de Actualización Manual -->
+<form class="flex flex-col gap-3 pt-1" id="runt-update-form" novalidate>
+<div class="flex flex-wrap items-center justify-between gap-2 border-b border-light-outline-variant pb-2">
+<div class="flex items-center gap-1.5 text-light-on-surface font-label text-label-md">
 <span class="material-symbols-outlined text-[18px] text-success">update</span>
-<span>2. Registrar / Actualizar Fecha en MotoControl:</span>
+<span>2. Registrar nueva vigencia en MotoControl</span>
 </div>
-<div class="flex items-center gap-1">
-<span class="text-[11px] text-light-on-surface-variant font-medium">Atajos:</span>
-<button class="btn-quick-date px-2 py-0.5 rounded border border-light-outline-variant bg-light-surface text-[11px] font-semibold hover:bg-light-secondary-container" data-days="365" type="button">+1 Año</button>
-<button class="btn-quick-date px-2 py-0.5 rounded border border-light-outline-variant bg-light-surface text-[11px] font-semibold hover:bg-light-secondary-container" data-days="180" type="button">+6 Meses</button>
+<div class="flex items-center gap-1.5">
+<span class="font-body text-body-sm text-light-on-surface-variant">Atajos:</span>
+<button class="btn-quick-date px-2.5 py-1 rounded border border-light-outline-variant bg-light-surface font-label text-label-sm text-light-on-surface hover:bg-light-secondary-container/50 transition-colors" data-days="365" type="button">+1 Año</button>
+<button class="btn-quick-date px-2.5 py-1 rounded border border-light-outline-variant bg-light-surface font-label text-label-sm text-light-on-surface hover:bg-light-secondary-container/50 transition-colors" data-days="180" type="button">+6 Meses</button>
 </div>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant font-medium" for="runt-doc-type">Tipo de Vigencia *</label>
-<select class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-2 font-body text-body-sm focus:border-light-primary" id="runt-doc-type" required="">
+<label class="font-label text-label-md text-light-on-surface-variant" for="runt-doc-type">Tipo de documento *</label>
+<select class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="runt-doc-type" required="">
 <option selected="" value="SOAT">SOAT (Seguro Obligatorio)</option>
 <option value="Tecnomecánica">Revisión Técnico-Mecánica (CDA)</option>
 <option value="Impuesto Departamental">Impuesto Vehicular (Gobernación)</option>
@@ -3389,23 +3126,25 @@ Crear Cuenta y Acceder
 </select>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant font-semibold" for="runt-expiry-date">Nueva Fecha de Vencimiento *</label>
-<input class="rounded border-2 border-light-primary bg-light-surface text-light-on-surface px-2.5 py-2 font-mono text-mono-md font-bold focus:border-light-primary" id="runt-expiry-date" required="" type="date"/>
+<label class="font-label text-label-md text-light-on-surface-variant" for="runt-expiry-date">Nueva fecha de vencimiento *</label>
+<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="runt-expiry-date" required="" type="date"/>
 </div>
 </div>
-<div class="grid grid-cols-1 sm:grid-cols-2 gap-gutter-sm">
+
+<div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant" for="runt-entity">Aseguradora / CDA / Entidad</label>
-<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-1.5 font-body text-body-sm focus:border-light-primary" id="runt-entity" placeholder="Ej. Seguros del Estado, SURA, CDA..." type="text"/>
+<label class="font-label text-label-md text-light-on-surface-variant" for="runt-entity">Aseguradora / CDA / Entidad</label>
+<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="runt-entity" placeholder="Ej. SURA, Seguros del Estado, CDA..." type="text"/>
 </div>
 <div class="flex flex-col gap-1">
-<label class="font-label text-label-xs text-light-on-surface-variant" for="runt-number">Número Póliza / Certificado</label>
-<input class="rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-2.5 py-1.5 font-mono text-mono-sm uppercase focus:border-light-primary" id="runt-number" placeholder="Ej. POL-2026-8812" type="text"/>
+<label class="font-label text-label-md text-light-on-surface-variant" for="runt-number">Número de póliza / certificado</label>
+<input class="w-full h-10 rounded border border-light-outline-variant bg-light-surface text-light-on-surface px-3 font-body text-body-md uppercase focus:border-light-primary focus:ring-light-primary" id="runt-number" placeholder="Ej. POL-2026-8812" type="text"/>
 </div>
 </div>
-<div class="flex items-center justify-end gap-gutter-sm pt-gutter-xs">
-<button class="px-gutter-md py-2 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low" id="cancel-runt-modal-btn" type="button">Cerrar</button>
-<button class="px-gutter-md py-2 rounded bg-success text-on-success font-label text-label-md font-bold hover:bg-success/90 shadow-sm" type="submit">
+
+<div class="flex items-center justify-end gap-2 pt-3 border-t border-light-outline-variant">
+<button class="h-10 px-4 rounded border border-light-outline-variant font-label text-label-md text-light-on-surface hover:bg-light-surface-container-low transition-colors" id="cancel-runt-modal-btn" type="button">Cerrar</button>
+<button class="h-10 px-5 rounded bg-light-primary text-light-on-primary font-label text-label-md hover:bg-light-primary-container shadow-xs transition-colors" type="submit">
 Guardar y Actualizar Vigencia
 </button>
 </div>
