@@ -333,7 +333,13 @@
     }
   }
 
-  if (openFbBtn) openFbBtn.addEventListener('click', () => toggleFbModal(true));
+  if (openFbBtn) openFbBtn.addEventListener('click', () => {
+    if (window.AuthManager && typeof window.AuthManager.can === 'function' && !window.AuthManager.can('firebase_config')) {
+      alert('Solo el Administrador Principal puede ver o modificar la configuración de Firebase.');
+      return;
+    }
+    toggleFbModal(true);
+  });
   if (closeFbBtn) closeFbBtn.addEventListener('click', () => toggleFbModal(false));
   if (cancelFbBtn) cancelFbBtn.addEventListener('click', () => toggleFbModal(false));
 
@@ -415,10 +421,71 @@
   }
 
   // =========================================================================
-  // SISTEMA DE AUTENTICACIÓN (LOGIN, REGISTRO, SESIÓN Y CIERRE DE SESIÓN)
+  // CONTROL DE PERMISOS POR ROL (OWNER / CO-ADMIN / OPERADOR SOLO INGRESO)
+  // =========================================================================
+  function applyRolePermissions() {
+    const am = window.AuthManager;
+    if (!am) return;
+    const cur = am.getCurrentUser();
+    if (!cur) return;
+
+    const canEdit = am.can('edit');
+    const canDelete = am.can('delete');
+    const canManageUsers = am.can('manage_users');
+    const canAudit = am.can('view_audit');
+
+    // Controles de edición bloqueados para Operador (Solo Ingreso)
+    const editSelectors = [
+      '#edit-tariff-btn', '#btn-open-intervals-config', '#btn-open-intervals-from-form',
+      '#btn-open-new-maint-type', '#btn-open-buy-modal', '#btn-open-sell-modal',
+      '#open-account-modal-btn', '#btn-open-email-alerts-modal', '.reassign-btn',
+      '.complete-order-btn', '.renew-doc-btn'
+    ];
+    editSelectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        el.classList.toggle('hidden', !canEdit);
+      });
+    });
+
+    // Controles de eliminación bloqueados para Operador (Solo Ingreso)
+    const deleteSelectors = [
+      '.delete-vehicle-btn', '.delete-order-btn', '.btn-del-part',
+      '.delete-doc-btn', '.delete-tx-btn', '.btn-delete-account'
+    ];
+    deleteSelectors.forEach(sel => {
+      document.querySelectorAll(sel).forEach(el => {
+        el.classList.toggle('hidden', !canDelete);
+      });
+    });
+
+    // Selectores de plan de trabajo (solo lectura para Operador)
+    ['workplan-azul-days', 'workplan-salmon-days', 'workplan-day31-color'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.disabled = !canEdit;
+    });
+
+    // Botón Firebase (solo Administrador Principal)
+    const fbBadge = document.getElementById('firebase-status-badge');
+    if (fbBadge) {
+      fbBadge.classList.toggle('cursor-pointer', am.can('firebase_config'));
+      fbBadge.classList.toggle('cursor-default', !am.can('firebase_config'));
+    }
+
+    // Pestañas del modal de seguridad
+    const secTabUsers = document.getElementById('sec-tab-btn-users');
+    const secTabAudit = document.getElementById('sec-tab-btn-audit');
+    if (secTabUsers) secTabUsers.classList.toggle('hidden', !canManageUsers);
+    if (secTabAudit) secTabAudit.classList.toggle('hidden', !canAudit);
+  }
+
+  // =========================================================================
+  // SISTEMA DE AUTENTICACIÓN SEGURA, ROLES Y AUDITORÍA DE TURNOS
   // =========================================================================
   function initAuthLogic() {
+    const appShell = document.getElementById('app-main-shell');
     const authModal = document.getElementById('auth-modal');
+    const authTabsBar = document.getElementById('auth-tabs-bar');
+    const authSecPill = document.getElementById('auth-security-pill');
     const tabLogin = document.getElementById('tab-auth-login');
     const tabRegister = document.getElementById('tab-auth-register');
     const loginForm = document.getElementById('login-form');
@@ -440,7 +507,9 @@
 
     function setAuthMode(mode) {
       clearFeedback();
-      if (mode === 'login') {
+      const canSetup = window.AuthManager && window.AuthManager.needsInitialSetup();
+      const effectiveMode = (mode === 'register' && canSetup) ? 'register' : 'login';
+      if (effectiveMode === 'login') {
         tabLogin?.classList.add('bg-light-surface-container-lowest', 'text-light-on-surface', 'font-bold', 'shadow-xs');
         tabLogin?.classList.remove('text-light-on-surface-variant', 'font-medium');
         tabRegister?.classList.remove('bg-light-surface-container-lowest', 'text-light-on-surface', 'font-bold', 'shadow-xs');
@@ -464,9 +533,19 @@
     if (tabLogin) tabLogin.addEventListener('click', () => setAuthMode('login'));
     if (tabRegister) tabRegister.addEventListener('click', () => setAuthMode('register'));
 
+    const togglePassBtn = document.getElementById('toggle-login-pass');
+    const loginPassInp = document.getElementById('login-password');
+    if (togglePassBtn && loginPassInp) {
+      togglePassBtn.addEventListener('click', () => {
+        const isPass = loginPassInp.type === 'password';
+        loginPassInp.type = isPass ? 'text' : 'password';
+        togglePassBtn.innerHTML = `<span class="material-symbols-outlined text-[18px]">${isPass ? 'visibility_off' : 'visibility'}</span>`;
+      });
+    }
+
     function updateProfileUI(user) {
       if (!user) return;
-      const initials = (user.name || user.username || 'AR')
+      const initials = (user.name || user.username || 'US')
         .split(' ')
         .map(w => w[0])
         .slice(0, 2)
@@ -481,79 +560,121 @@
 
       if (sideAvatar) sideAvatar.textContent = initials;
       if (sideName) sideName.textContent = user.name || user.username;
-      if (sideRole) sideRole.textContent = user.role || 'Administrador Flota';
+      if (sideRole) sideRole.textContent = user.role || 'Administrador';
       if (headAvatar) headAvatar.textContent = initials;
       if (headName) headName.textContent = user.name || user.username;
     }
 
+    function syncAuthChrome() {
+      const canSetup = window.AuthManager && window.AuthManager.needsInitialSetup();
+      if (authTabsBar) {
+        authTabsBar.classList.toggle('hidden', !canSetup);
+        authTabsBar.classList.toggle('flex', canSetup);
+      }
+      if (authSecPill) {
+        authSecPill.classList.toggle('hidden', canSetup);
+        authSecPill.classList.toggle('inline-flex', !canSetup);
+      }
+      const projWrap = document.getElementById('reg-project-verify-wrap');
+      if (projWrap) {
+        const needVerify = Boolean(canSetup && window.AuthManager && window.AuthManager.cloudHasExistingData);
+        projWrap.classList.toggle('hidden', !needVerify);
+        projWrap.classList.toggle('flex', needVerify);
+      }
+      if (!canSetup) {
+        setAuthMode('login');
+      }
+    }
+
     function checkAuth() {
       const cur = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
+      syncAuthChrome();
       if (!cur) {
+        if (appShell) appShell.classList.add('hidden');
         if (authModal) {
           authModal.classList.remove('hidden');
           authModal.classList.add('flex');
         }
       } else {
+        if (appShell) appShell.classList.remove('hidden');
         if (authModal) {
           authModal.classList.add('hidden');
           authModal.classList.remove('flex');
         }
         updateProfileUI(cur);
+        applyRolePermissions();
       }
     }
 
     if (loginForm) {
-      loginForm.addEventListener('submit', (e) => {
+      loginForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const id = document.getElementById('login-identifier')?.value.trim();
         const pass = document.getElementById('login-password')?.value.trim();
+        const remember = document.getElementById('login-remember')?.checked !== false;
         if (!window.AuthManager) return;
-        const res = window.AuthManager.login(id, pass);
-        if (res.success) {
-          clearFeedback();
-          checkAuth();
-        } else {
-          showFeedback(res.message, true);
+
+        const submitBtn = document.getElementById('btn-login-submit');
+        if (submitBtn) {
+          submitBtn.disabled = true;
+          submitBtn.textContent = 'Verificando...';
+        }
+        try {
+          const res = await window.AuthManager.login(id, pass, remember);
+          if (res.success) {
+            clearFeedback();
+            loginForm.reset();
+            if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
+            checkAuth();
+            const activeView = window.location.hash.replace('#', '') || 'dashboard';
+            navigateTo(activeView);
+          } else {
+            showFeedback(res.message, true);
+          }
+        } finally {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = 'Ingresar al Sistema';
+          }
         }
       });
     }
 
     if (registerForm) {
-      registerForm.addEventListener('submit', (e) => {
+      registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
         const name = document.getElementById('reg-name')?.value.trim();
-        const id = document.getElementById('reg-identifier')?.value.trim();
-        const role = document.getElementById('reg-role')?.value;
+        const email = document.getElementById('reg-identifier')?.value.trim();
         const pass = document.getElementById('reg-password')?.value.trim();
+        const projectVerify = document.getElementById('reg-project-verify')?.value.trim() || '';
         if (!window.AuthManager) return;
-        const res = window.AuthManager.register(name, id, role, pass);
+
+        const res = await window.AuthManager.registerInitialOwner({ name, email, password: pass, projectVerify });
         if (res.success) {
           clearFeedback();
+          registerForm.reset();
+          if (typeof populateDynamicSelects === 'function') populateDynamicSelects();
           checkAuth();
+          navigateTo('dashboard');
+          alert(`¡Bienvenido ${res.user.name}! Tu cuenta de Administrador Principal está protegida y el registro público ha quedado bloqueado.`);
         } else {
           showFeedback(res.message, true);
         }
       });
     }
 
-    document.querySelectorAll('.quick-demo-btn').forEach(btn => {
-      btn.addEventListener('click', () => {
-        const u = btn.dataset.user;
-        const p = btn.dataset.pass;
-        const uInput = document.getElementById('login-identifier');
-        const pInput = document.getElementById('login-password');
-        if (uInput) uInput.value = u;
-        if (pInput) pInput.value = p;
-        if (window.AuthManager) {
-          const res = window.AuthManager.login(u, p);
-          if (res.success) checkAuth();
-        }
-      });
-    });
-
     function doLogout() {
       if (confirm('¿Deseas cerrar tu sesión en MotoControl?')) {
         if (window.AuthManager) window.AuthManager.logout();
+        const li = document.getElementById('login-identifier');
+        const lp = document.getElementById('login-password');
+        if (li) li.value = '';
+        if (lp) lp.value = '';
+        clearFeedback();
+        if (secModal) {
+          secModal.classList.add('hidden');
+          secModal.classList.remove('flex');
+        }
         checkAuth();
       }
     }
@@ -561,9 +682,239 @@
     document.getElementById('btn-sidebar-logout')?.addEventListener('click', doLogout);
     document.getElementById('btn-header-logout')?.addEventListener('click', doLogout);
 
+    // =========================================================================
+    // CENTRO DE SEGURIDAD, USUARIOS Y AUDITORÍA DE TURNOS
+    // =========================================================================
+    const secModal = document.getElementById('security-center-modal');
+    const secPanelUsers = document.getElementById('sec-panel-users');
+    const secPanelAudit = document.getElementById('sec-panel-audit');
+    const secPanelAccount = document.getElementById('sec-panel-account');
+
+    function switchSecTab(tab) {
+      const canUsers = window.AuthManager?.can('manage_users');
+      const canAudit = window.AuthManager?.can('view_audit');
+      let target = tab;
+      if (target === 'users' && !canUsers) target = canAudit ? 'audit' : 'account';
+      if (target === 'audit' && !canAudit) target = 'account';
+
+      if (secPanelUsers) {
+        secPanelUsers.classList.toggle('hidden', target !== 'users');
+        secPanelUsers.classList.toggle('flex', target === 'users');
+      }
+      if (secPanelAudit) {
+        secPanelAudit.classList.toggle('hidden', target !== 'audit');
+        secPanelAudit.classList.toggle('flex', target === 'audit');
+      }
+      if (secPanelAccount) {
+        secPanelAccount.classList.toggle('hidden', target !== 'account');
+        secPanelAccount.classList.toggle('flex', target === 'account');
+      }
+      document.querySelectorAll('.sec-tab-btn').forEach(btn => {
+        const active = btn.dataset.secTab === target;
+        btn.className = active
+          ? 'sec-tab-btn px-3 py-1.5 rounded font-label text-label-sm bg-light-surface-container-lowest text-light-on-surface font-bold shadow-xs'
+          : 'sec-tab-btn px-3 py-1.5 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface';
+        if (btn.dataset.secTab === 'users' && !canUsers) btn.classList.add('hidden');
+        if (btn.dataset.secTab === 'audit' && !canAudit) btn.classList.add('hidden');
+      });
+      if (target === 'users') renderUsersTable();
+      if (target === 'audit') renderAuditTable();
+    }
+
+    function renderUsersTable() {
+      const tbody = document.getElementById('sec-users-tbody');
+      if (!tbody || !window.AuthManager) return;
+      const users = window.AuthManager.getUsers();
+      tbody.innerHTML = '';
+      users.forEach(u => {
+        const isOwner = u.roleKey === 'owner';
+        const isActive = u.active !== false;
+        const tr = document.createElement('tr');
+        tr.innerHTML = `
+          <td class="px-3 py-2.5">
+            <p class="font-body text-body-sm font-bold text-light-on-surface">${u.name}</p>
+            <p class="font-mono text-body-xs text-light-outline">${u.email}</p>
+          </td>
+          <td class="px-3 py-2.5">
+            ${isOwner
+              ? `<span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-label font-bold bg-light-primary text-light-on-primary">${u.role}</span>`
+              : `<select class="sec-user-role-sel h-8 rounded border border-light-outline-variant bg-light-surface px-2 font-body text-xs" data-uid="${u.id}">
+                  <option value="admin" ${u.roleKey === 'admin' ? 'selected' : ''}>Co-Administrador</option>
+                  <option value="operator" ${u.roleKey === 'operator' ? 'selected' : ''}>Operador (Solo Ingreso)</option>
+                </select>`
+            }
+          </td>
+          <td class="px-3 py-2.5">
+            <span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold ${isActive ? 'bg-success-container text-on-success-container' : 'bg-light-error-container text-light-on-error-container'}">
+              ${isActive ? 'Activo' : 'Bloqueado'}
+            </span>
+          </td>
+          <td class="px-3 py-2.5 text-right whitespace-nowrap">
+            ${isOwner ? '<span class="text-[11px] text-light-outline font-body">Cuenta protegida</span>' : `
+            <div class="inline-flex items-center gap-1.5">
+              <button type="button" class="sec-toggle-user-btn px-2 py-1 rounded border border-light-outline-variant text-xs font-label hover:bg-light-surface-container" data-uid="${u.id}" data-next="${!isActive}">
+                ${isActive ? 'Bloquear' : 'Activar'}
+              </button>
+              <button type="button" class="sec-reset-pass-btn px-2 py-1 rounded border border-light-outline-variant text-xs font-label text-light-primary hover:bg-light-secondary-container/40" data-uid="${u.id}" data-name="${u.name}">
+                Clave
+              </button>
+              <button type="button" class="sec-del-user-btn p-1 rounded text-red-500 hover:bg-red-50" data-uid="${u.id}" data-name="${u.name}" title="Eliminar usuario">
+                <span class="material-symbols-outlined text-[16px]">delete</span>
+              </button>
+            </div>`}
+          </td>
+        `;
+        tbody.appendChild(tr);
+      });
+
+      tbody.querySelectorAll('.sec-user-role-sel').forEach(sel => {
+        sel.addEventListener('change', async () => {
+          const res = await window.AuthManager.adminUpdateUser(sel.dataset.uid, { roleKey: sel.value });
+          if (res.success) renderUsersTable();
+          else alert(res.message);
+        });
+      });
+      tbody.querySelectorAll('.sec-toggle-user-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const res = await window.AuthManager.adminUpdateUser(btn.dataset.uid, { active: btn.dataset.next === 'true' });
+          if (res.success) renderUsersTable();
+          else alert(res.message);
+        });
+      });
+      tbody.querySelectorAll('.sec-reset-pass-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const np = prompt(`Ingresa nueva contraseña (mínimo 6 caracteres) para ${btn.dataset.name}:`);
+          if (!np) return;
+          const res = await window.AuthManager.adminUpdateUser(btn.dataset.uid, { newPassword: np });
+          if (res.success) alert(`✅ Contraseña actualizada para ${btn.dataset.name}.`);
+          else alert(res.message);
+        });
+      });
+      tbody.querySelectorAll('.sec-del-user-btn').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          if (confirm(`¿Seguro que deseas eliminar el acceso de "${btn.dataset.name}"?`)) {
+            const res = await window.AuthManager.adminDeleteUser(btn.dataset.uid);
+            if (res.success) renderUsersTable();
+            else alert(res.message);
+          }
+        });
+      });
+    }
+
+    function renderAuditTable() {
+      const tbody = document.getElementById('audit-logs-tbody');
+      const userSel = document.getElementById('audit-filter-user');
+      const actionSel = document.getElementById('audit-filter-action');
+      const countLbl = document.getElementById('audit-count-label');
+      if (!tbody || !window.MotoData) return;
+
+      const logs = window.MotoData.getAuditLogs ? window.MotoData.getAuditLogs() : [];
+      if (userSel) {
+        const curU = userSel.value || 'all';
+        const names = [...new Set(logs.map(l => l.userName).filter(Boolean))];
+        userSel.innerHTML = '<option value="all">Todos los usuarios</option>';
+        names.forEach(n => {
+          const opt = document.createElement('option');
+          opt.value = n;
+          opt.textContent = n;
+          userSel.appendChild(opt);
+        });
+        if (names.includes(curU)) userSel.value = curU;
+      }
+
+      const fUser = userSel ? userSel.value : 'all';
+      const fAct = actionSel ? actionSel.value : 'all';
+      const filtered = logs.filter(l => (fUser === 'all' || l.userName === fUser) && (fAct === 'all' || l.action === fAct));
+
+      tbody.innerHTML = '';
+      if (filtered.length === 0) {
+        tbody.innerHTML = '<tr><td colspan="4" class="px-3 py-8 text-center text-xs text-light-outline font-body">No hay eventos registrados aún para este filtro.</td></tr>';
+      } else {
+        filtered.forEach(l => {
+          const badgeMap = {
+            'Creación': 'bg-success-container text-on-success-container',
+            'Transferencia': 'bg-light-secondary-container text-light-on-secondary-container',
+            'Edición': 'bg-warning-container text-on-warning-container',
+            'Eliminación': 'bg-light-error-container text-light-on-error-container',
+            'Inicio de sesión': 'bg-light-surface-container text-light-primary'
+          };
+          const cls = badgeMap[l.action] || 'bg-light-surface-container text-light-on-surface';
+          const tr = document.createElement('tr');
+          tr.innerHTML = `
+            <td class="px-3 py-2 font-mono text-[11px] text-light-outline whitespace-nowrap">${l.timestamp || '-'}</td>
+            <td class="px-3 py-2">
+              <p class="font-body text-xs font-bold text-light-on-surface whitespace-nowrap">${l.userName || '-'}</p>
+              <p class="font-body text-[10px] text-light-outline whitespace-nowrap">${l.userRole || ''}</p>
+            </td>
+            <td class="px-3 py-2"><span class="inline-flex px-2 py-0.5 rounded-full text-[11px] font-semibold whitespace-nowrap ${cls}">${l.action}</span></td>
+            <td class="px-3 py-2 font-body text-xs text-light-on-surface">${l.detail || l.module || '-'}</td>
+          `;
+          tbody.appendChild(tr);
+        });
+      }
+      if (countLbl) countLbl.textContent = `${filtered.length} evento${filtered.length === 1 ? '' : 's'}`;
+    }
+
+    function openSecModal() {
+      if (!secModal) return;
+      applyRolePermissions();
+      secModal.classList.remove('hidden');
+      secModal.classList.add('flex');
+      const canUsers = window.AuthManager?.can('manage_users');
+      const canAudit = window.AuthManager?.can('view_audit');
+      switchSecTab(canUsers ? 'users' : (canAudit ? 'audit' : 'account'));
+    }
+
+    document.getElementById('btn-open-security-modal')?.addEventListener('click', openSecModal);
+    document.getElementById('btn-sidebar-security')?.addEventListener('click', openSecModal);
+    document.getElementById('close-security-modal-btn')?.addEventListener('click', () => {
+      secModal?.classList.add('hidden');
+      secModal?.classList.remove('flex');
+    });
+    document.querySelectorAll('.sec-tab-btn').forEach(btn => {
+      btn.addEventListener('click', () => switchSecTab(btn.dataset.secTab));
+    });
+    document.getElementById('audit-filter-user')?.addEventListener('change', renderAuditTable);
+    document.getElementById('audit-filter-action')?.addEventListener('change', renderAuditTable);
+
+    document.getElementById('sec-create-user-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!window.AuthManager) return;
+      const name = document.getElementById('sec-new-name')?.value.trim();
+      const email = document.getElementById('sec-new-email')?.value.trim();
+      const roleKey = document.getElementById('sec-new-role')?.value;
+      const password = document.getElementById('sec-new-password')?.value.trim();
+      const res = await window.AuthManager.adminCreateUser({ name, email, roleKey, password });
+      if (res.success) {
+        e.target.reset();
+        renderUsersTable();
+        alert(`✅ Usuario ${res.user.name} (${res.user.role}) creado correctamente.`);
+      } else {
+        alert('⚠️ ' + res.message);
+      }
+    });
+
+    document.getElementById('sec-change-pass-form')?.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      if (!window.AuthManager) return;
+      const curr = document.getElementById('sec-curr-pass')?.value.trim();
+      const next = document.getElementById('sec-next-pass')?.value.trim();
+      const res = await window.AuthManager.changeOwnPassword(curr, next);
+      if (res.success) {
+        e.target.reset();
+        alert('✅ Tu contraseña se actualizó de forma segura.');
+      } else {
+        alert('⚠️ ' + res.message);
+      }
+    });
+
     function doResetDatabase() {
-      const msg = '¿Deseas vaciar todos los datos de demostración y dejar la base de datos totalmente en blanco?\n\n' +
-                  'Se borrarán los motocarros, repuestos, movimientos y documentos de prueba para que puedas registrar tu flota real desde cero.';
+      if (window.AuthManager && !window.AuthManager.can('reset_db')) {
+        alert('Solo el Administrador Principal puede restablecer la base de datos.');
+        return;
+      }
+      const msg = '¿Deseas vaciar los datos operativos y dejar la base de datos en blanco?\n\n' +
+                  'Se borrarán los motocarros, repuestos, movimientos y documentos.';
       if (confirm(msg)) {
         if (window.MotoData && window.MotoData.clearAllData) {
           window.MotoData.clearAllData().then(() => {
@@ -576,6 +927,7 @@
     document.getElementById('btn-reset-db-header')?.addEventListener('click', doResetDatabase);
     document.getElementById('btn-reset-db-sidebar')?.addEventListener('click', doResetDatabase);
 
+    window.addEventListener('motocontrol-security-ready', checkAuth);
     checkAuth();
   }
 
@@ -1970,7 +2322,10 @@
           const prefix = isTransf ? '⇄ ' : (isInc ? '+ ' : '- ');
 
           tr.innerHTML = `
-            <td class="px-gutter-md py-3.5"><span class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.concept}</span></td>
+            <td class="px-gutter-md py-3.5">
+              <span class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.concept}</span>
+              ${t.createdBy ? `<span class="block font-body text-[11px] text-light-outline">Turno: ${t.createdBy}</span>` : ''}
+            </td>
             <td class="px-gutter-md py-3.5"><span class="font-mono text-mono-md text-light-on-surface font-bold whitespace-nowrap">${t.plate || 'General'}</span></td>
             <td class="px-gutter-md py-3.5"><span class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.account}</span></td>
             <td class="px-gutter-md py-3.5 text-right font-mono text-mono-md font-semibold ${amountClass} tabular-nums whitespace-nowrap">
@@ -3366,6 +3721,7 @@
             </td>
             <td class="px-gutter-md py-3">
               <p class="font-body text-body-md text-light-on-surface whitespace-nowrap">${t.concept || '-'}</p>
+              ${t.createdBy ? `<p class="font-body text-[11px] text-light-outline whitespace-nowrap">Turno: ${t.createdBy}</p>` : ''}
             </td>
             <td class="px-gutter-md py-3">
               <span class="font-label text-label-sm px-2 py-0.5 rounded ${badgeClass}">${badgeText}</span>
@@ -4276,8 +4632,9 @@
         const v = vehicles.find(veh => veh.plate === placa) || {};
 
         try {
+          let docRes = null;
           if (MotoData.quickUpdateDocumentByPlate) {
-            MotoData.quickUpdateDocumentByPlate(placa, {
+            docRes = MotoData.quickUpdateDocumentByPlate(placa, {
               type: tipo,
               expiry: vence,
               number: numero,
@@ -4285,7 +4642,7 @@
               cost: val
             });
           } else {
-            MotoData.addDocument({
+            docRes = MotoData.addDocument({
               plate: placa,
               driver: v.driver || 'Conductor asignado',
               cedula: v.cedula || '-',
@@ -4295,6 +4652,10 @@
               cost: val,
               expiry: vence
             });
+          }
+          if (docRes && docRes.success === false) {
+            alert('⚠️ ' + docRes.message);
+            return;
           }
 
           if (val > 0 && cuenta) {
@@ -4306,7 +4667,7 @@
               category: 'SOAT / Tecnomecánica',
               concept: `Renovación ${tipo} ${placa} (${numero})`,
               amount: val,
-              date: new Date().toISOString().split('T')[0]
+              date: MotoData.getTodayLocalISO ? MotoData.getTodayLocalISO() : new Date().toISOString().split('T')[0]
             });
           }
 
@@ -4460,6 +4821,8 @@
 
     const initialRoute = window.location.hash.replace('#', '') || 'dashboard';
     navigateTo(initialRoute);
+    applyRolePermissions();
+    window.addEventListener('motocontrol-data-updated', () => setTimeout(applyRolePermissions, 0));
   }
 
   if (document.readyState === 'loading') {

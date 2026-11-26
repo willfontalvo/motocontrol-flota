@@ -13,6 +13,7 @@ const DEFAULT_INITIAL_DATA = {
   accounts: [],
   spareParts: [],
   partUsages: [],
+  auditLogs: [],
   maintenanceTypes: [
     {
       id: 'mt-aceite',
@@ -79,7 +80,15 @@ window.MotoData = {
   data: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA)),
 
   init() {
-    this.loadFromLocal();
+    if (window.AuthManager && typeof window.AuthManager.initSecurity === 'function') {
+      window.AuthManager.initSecurity();
+    }
+    const curUser = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
+    if (curUser) {
+      this.loadFromLocal();
+    } else {
+      this.data = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA));
+    }
     this.checkSavedFirebaseConfig();
   },
 
@@ -97,6 +106,7 @@ window.MotoData = {
     if (!Array.isArray(this.data.accounts)) this.data.accounts = [];
     if (!Array.isArray(this.data.spareParts)) this.data.spareParts = [];
     if (!Array.isArray(this.data.partUsages)) this.data.partUsages = [];
+    if (!Array.isArray(this.data.auditLogs)) this.data.auditLogs = [];
     if (!Array.isArray(this.data.maintenanceTypes) || this.data.maintenanceTypes.length === 0) {
       this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
     }
@@ -104,6 +114,83 @@ window.MotoData = {
       this.data.settings = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.settings));
     }
     return this.data;
+  },
+
+  getActor() {
+    const u = window.AuthManager ? window.AuthManager.getCurrentUser() : null;
+    if (!u) return { name: 'Sistema', email: '', roleKey: 'owner', role: 'Sistema' };
+    return {
+      name: u.name || u.username || u.email || 'Usuario',
+      email: u.email || '',
+      roleKey: u.roleKey || 'operator',
+      role: u.role || 'Usuario'
+    };
+  },
+
+  canDo(perm) {
+    if (!window.AuthManager || typeof window.AuthManager.can !== 'function') return { ok: true };
+    const allowed = window.AuthManager.can(perm);
+    if (allowed) return { ok: true };
+    const msgs = {
+      delete: 'Permiso denegado: tu usuario es de Solo Ingreso y no puede eliminar registros.',
+      edit: 'Permiso denegado: tu usuario es de Solo Ingreso y no puede editar o modificar datos.',
+      manage_users: 'Permiso denegado: solo el Administrador Principal puede gestionar usuarios.',
+      reset_db: 'Permiso denegado: solo el Administrador Principal puede restablecer la base de datos.',
+      firebase_config: 'Permiso denegado: solo el Administrador Principal puede cambiar la configuración de Firebase.'
+    };
+    return { ok: false, message: msgs[perm] || 'No tienes permiso para realizar esta acción.' };
+  },
+
+  getNowLocalTimestamp() {
+    const d = new Date();
+    const yyyy = d.getFullYear();
+    const mm = String(d.getMonth() + 1).padStart(2, '0');
+    const dd = String(d.getDate()).padStart(2, '0');
+    const hh = String(d.getHours()).padStart(2, '0');
+    const mi = String(d.getMinutes()).padStart(2, '0');
+    const ss = String(d.getSeconds()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;
+  },
+
+  logAudit(action, moduleName, detail, skipPersist = false) {
+    try {
+      const data = this.getCleanData();
+      if (!Array.isArray(data.auditLogs)) data.auditLogs = [];
+      const actor = this.getActor();
+      data.auditLogs.unshift({
+        id: 'aud-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
+        timestamp: this.getNowLocalTimestamp(),
+        userName: actor.name,
+        userEmail: actor.email,
+        userRole: actor.role,
+        roleKey: actor.roleKey,
+        action: action,
+        module: moduleName,
+        detail: detail
+      });
+      if (data.auditLogs.length > 300) data.auditLogs = data.auditLogs.slice(0, 300);
+      if (!skipPersist) this.persist();
+    } catch (e) {}
+  },
+
+  getAuditLogs() {
+    const data = this.getCleanData();
+    return data.auditLogs || [];
+  },
+
+  async onAuthenticatedLogin(user) {
+    this.loadFromLocal();
+    if (this.db) {
+      await this.syncWithFirestore();
+    }
+    this.logAudit('Inicio de sesión', 'Seguridad', `Ingresó ${user?.name || user?.email || 'usuario'} (${user?.role || ''})`);
+    window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
+    window.dispatchEvent(new CustomEvent('motocontrol-render-dashboard'));
+  },
+
+  onLogout() {
+    this.data = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA));
+    window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
   },
 
   loadFromLocal() {
@@ -164,6 +251,7 @@ window.MotoData = {
         if (!this.data.accounts) this.data.accounts = [];
         if (!this.data.spareParts) this.data.spareParts = [];
         if (!this.data.partUsages) this.data.partUsages = [];
+        if (!this.data.auditLogs) this.data.auditLogs = [];
         if (!this.data.maintenanceTypes || this.data.maintenanceTypes.length === 0) {
           this.data.maintenanceTypes = JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes));
         }
@@ -177,6 +265,7 @@ window.MotoData = {
   },
 
   saveToLocal() {
+    if (window.AuthManager && !window.AuthManager.getCurrentUser()) return;
     try {
       localStorage.setItem('motocontrol_data', JSON.stringify(this.data));
     } catch (e) {
@@ -236,16 +325,39 @@ window.MotoData = {
         this.db.settings({ experimentalAutoDetectLongPolling: true });
       } catch (se) {}
 
-      // Sincronizar inmediatamente y verificar comunicación real con Firestore
-      const syncResult = await this.syncWithFirestore();
-      if (syncResult && !syncResult.success) {
-        this.isFirebaseActive = false;
-        return syncResult;
+      // Sincronizar seguridad (usuarios/roles) primero siempre
+      if (window.AuthManager && typeof window.AuthManager.syncSecurityWithCloud === 'function') {
+        await window.AuthManager.syncSecurityWithCloud();
+      }
+
+      // Cargar fleet_data SOLO si existe sesión autenticada válida
+      const isAuthed = Boolean(window.AuthManager && window.AuthManager.getCurrentUser());
+      if (isAuthed) {
+        const syncResult = await this.syncWithFirestore();
+        if (syncResult && !syncResult.success) {
+          this.isFirebaseActive = false;
+          return syncResult;
+        }
+      } else {
+        // Comprobar sin exponer fleet_data si ya existe información previa en la nube (anti-toma de control inicial)
+        try {
+          const snap = await this.db.collection('motocontrol_app').doc('fleet_data').get();
+          const d = snap.exists ? snap.data() : null;
+          if (window.AuthManager) {
+            window.AuthManager.cloudHasExistingData = Boolean(d && ((d.vehicles && d.vehicles.length > 0) || (d.accounts && d.accounts.length > 0)));
+          }
+        } catch (ce) {}
+        this.isFirebaseActive = true;
+        this.lastFirebaseError = null;
+        this.updateConnectionStatus(true);
+        window.dispatchEvent(new CustomEvent('motocontrol-security-ready'));
+        return { success: true };
       }
 
       this.isFirebaseActive = true;
       this.lastFirebaseError = null;
       this.updateConnectionStatus(true);
+      window.dispatchEvent(new CustomEvent('motocontrol-security-ready'));
       return { success: true };
     } catch (err) {
       console.error('Firebase initialization error:', err);
@@ -366,6 +478,7 @@ window.MotoData = {
   },
 
   async persist() {
+    if (window.AuthManager && !window.AuthManager.getCurrentUser()) return;
     const dataToSave = this.getCleanData();
     this.saveToLocal();
     window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
@@ -428,7 +541,10 @@ window.MotoData = {
 
   // 1. Alta o Modificación de Vehículo
   addVehicle(vehicle) {
+    const chk = this.canDo('create');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const actor = this.getActor();
     if (!vehicle.color) vehicle.color = 'Azul';
     if (!vehicle.driver || vehicle.driver === 'Sin conductor') {
       vehicle.driver = 'Sin conductor';
@@ -439,22 +555,41 @@ window.MotoData = {
     if (!vehicle.ownerName) vehicle.ownerName = vehicle.driver !== 'Sin conductor' ? vehicle.driver : 'Propietario Flota';
     if (!vehicle.ownerCedula) vehicle.ownerCedula = vehicle.cedula && vehicle.cedula !== 'Sin registrar' ? vehicle.cedula : '';
     if (!vehicle.chassis) vehicle.chassis = '-';
+    vehicle.createdBy = actor.name;
+    vehicle.createdByRole = actor.role;
+    vehicle.createdAt = this.getNowLocalTimestamp();
     data.vehicles.unshift(vehicle);
+    this.logAudit('Creación', 'Flota', `Registró motocarro ${vehicle.plate} (${vehicle.color}) · Conductor: ${vehicle.driver}`, true);
     this.persist();
+    return { success: true };
   },
 
   updateVehicle(plate, updateObj) {
+    const chk = this.canDo('edit');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
     const idx = data.vehicles.findIndex(v => v.plate.toUpperCase() === plate.toUpperCase());
     if (idx !== -1) {
-      data.vehicles[idx] = { ...data.vehicles[idx], ...updateObj };
+      const actor = this.getActor();
+      data.vehicles[idx] = {
+        ...data.vehicles[idx],
+        ...updateObj,
+        updatedBy: actor.name,
+        updatedAt: this.getNowLocalTimestamp()
+      };
+      this.logAudit('Edición', 'Flota', `Actualizó ficha del motocarro ${plate.toUpperCase()}`, true);
       this.persist();
+      return { success: true };
     }
+    return { success: false, message: 'Motocarro no encontrado.' };
   },
 
   // 2. Compra de Nuevo Motocarro (Alta + Egreso Financiero)
   buyVehicle(buyData) {
+    const chk = this.canDo('edit');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const actor = this.getActor();
     const driverName = (buyData.driver || '').trim() || 'Sin conductor';
     const hasDriver = driverName !== 'Sin conductor';
     const cedulaVal = hasDriver ? ((buyData.cedula || '').trim() || '-') : '-';
@@ -477,11 +612,14 @@ window.MotoData = {
       tecnoExpiry: buyData.tecnoExpiry || 'Vigente',
       km: Number(buyData.km || 0),
       purchasePrice: Number(buyData.price || 0),
-      purchaseDate: buyData.date || new Date().toISOString().split('T')[0],
-      supplier: buyData.supplier || 'Concesionario'
+      purchaseDate: buyData.date || this.getTodayLocalISO(),
+      supplier: buyData.supplier || 'Concesionario',
+      createdBy: actor.name,
+      createdAt: this.getNowLocalTimestamp()
     };
 
     data.vehicles.unshift(newVehicle);
+    this.logAudit('Creación', 'Flota', `Compró motocarro ${newVehicle.plate} (${newVehicle.color}) por $${Number(buyData.price || 0).toLocaleString('es-CO')}`, true);
 
     // Registrar egreso contable de la compra solo si se indicó cuenta válida
     if (buyData.price && Number(buyData.price) > 0 && buyData.account) {
@@ -493,15 +631,19 @@ window.MotoData = {
         category: 'Compra de vehículo',
         concept: `Compra motocarro nuevo ${newVehicle.plate} (${newVehicle.color})`,
         amount: Number(buyData.price),
-        date: buyData.date || new Date().toISOString().split('T')[0]
+        date: buyData.date || this.getTodayLocalISO(),
+        skipAudit: true
       });
     } else {
       this.persist();
     }
+    return { success: true };
   },
 
   // 3. Venta de Motocarro (Baja de Flota + Ingreso Financiero)
   sellVehicle(saleData) {
+    const chk = this.canDo('edit');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
     const plate = saleData.plate.toUpperCase().trim();
     const idx = data.vehicles.findIndex(v => v.plate.toUpperCase() === plate);
@@ -510,10 +652,11 @@ window.MotoData = {
       v.status = 'sold';
       v.statusText = 'Vendido';
       v.salePrice = Number(saleData.price || 0);
-      v.saleDate = saleData.date || new Date().toISOString().split('T')[0];
+      v.saleDate = saleData.date || this.getTodayLocalISO();
       v.buyer = saleData.buyer || 'Comprador particular';
       v.driver = 'Desvinculado (Vendido)';
       v.cedula = '-';
+      this.logAudit('Edición', 'Flota', `Vendió motocarro ${plate} a ${v.buyer} por $${v.salePrice.toLocaleString('es-CO')}`, true);
 
       // Registrar ingreso contable de la venta solo si se indicó cuenta válida
       if (saleData.price && Number(saleData.price) > 0 && saleData.account) {
@@ -524,16 +667,21 @@ window.MotoData = {
           category: 'Venta de vehículo',
           concept: `Venta motocarro ${plate} a ${v.buyer}`,
           amount: Number(saleData.price),
-          date: saleData.date || new Date().toISOString().split('T')[0]
+          date: saleData.date || this.getTodayLocalISO(),
+          skipAudit: true
         });
       } else {
         this.persist();
       }
+      return { success: true };
     }
+    return { success: false, message: 'Motocarro no encontrado.' };
   },
 
   // 4. Ingreso de Repuestos a Stock
   addSparePart(partData) {
+    const chk = this.canDo('create');
+    if (!chk.ok) return { success: false, message: chk.message };
     if (!this.data.spareParts) this.data.spareParts = [];
     const name = (partData.name || '').trim();
     const code = (partData.code || '').trim();
@@ -549,11 +697,14 @@ window.MotoData = {
     const isInitial = Boolean(partData.isInitial);
 
     if (existing) {
+      const editChk = this.canDo('edit');
+      if (!editChk.ok) return { success: false, message: editChk.message };
       existing.stock = (existing.stock || 0) + qty;
       if (unitPrice > 0) existing.unitPrice = unitPrice;
       if (partData.supplier) existing.supplier = partData.supplier;
       if (minStock > 0) existing.minStock = minStock;
     } else {
+      const actor = this.getActor();
       this.data.spareParts.unshift({
         code: code || ('REP-' + String(this.data.spareParts.length + 1).padStart(3, '0')),
         name: name,
@@ -562,9 +713,13 @@ window.MotoData = {
         minStock: minStock,
         unitPrice: unitPrice,
         supplier: partData.supplier || (isInitial ? 'Inventario Inicial' : 'Proveedor local'),
-        isInitial: isInitial
+        isInitial: isInitial,
+        createdBy: actor.name,
+        createdAt: this.getNowLocalTimestamp()
       });
     }
+
+    this.logAudit('Creación', 'Inventario', `Ingresó repuesto ${name} (+${qty} und.)`, true);
 
     // Registrar egreso contable solo si NO es inventario inicial y se especificó una cuenta
     if (!isInitial && totalCost > 0 && partData.account && partData.account !== 'none' && partData.account !== '') {
@@ -574,7 +729,8 @@ window.MotoData = {
         category: 'Repuestos',
         concept: `Compra stock: ${qty} und. ${name}`,
         amount: totalCost,
-        date: new Date().toISOString().split('T')[0]
+        date: this.getTodayLocalISO(),
+        skipAudit: true
       });
     } else {
       this.persist();
@@ -583,20 +739,26 @@ window.MotoData = {
   },
 
   deleteSparePart(codeOrName) {
+    const chk = this.canDo('delete');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
     const query = String(codeOrName || '').toLowerCase().trim();
+    const target = data.spareParts.find(p => (p.code || '').toLowerCase() === query || (p.name || '').toLowerCase() === query);
     const prevLen = data.spareParts.length;
     data.spareParts = data.spareParts.filter(p => 
       (p.code || '').toLowerCase() !== query && 
       (p.name || '').toLowerCase() !== query
     );
     if (data.spareParts.length === prevLen) return { success: false, message: 'Repuesto no encontrado.' };
+    this.logAudit('Eliminación', 'Inventario', `Eliminó repuesto ${target ? target.name : codeOrName}`, true);
     this.persist();
     return { success: true };
   },
 
   // 5. Agregar y Administrar Tipos de Mantenimiento / Servicio
   addMaintenanceType(typeData) {
+    const chk = this.canDo('edit');
+    if (!chk.ok) return { success: false, message: chk.message };
     if (!this.data.maintenanceTypes) this.data.maintenanceTypes = [];
     const newType = {
       id: 'mt-' + Date.now(),
@@ -609,10 +771,14 @@ window.MotoData = {
       desc: typeData.desc || ''
     };
     this.data.maintenanceTypes.push(newType);
+    this.logAudit('Creación', 'Mantenimientos', `Creó tipo de servicio ${newType.name}`, true);
     this.persist();
+    return { success: true };
   },
 
   updateMaintenanceType(id, updatedData) {
+    const chk = this.canDo('edit');
+    if (!chk.ok) return { success: false, message: chk.message };
     if (!this.data.maintenanceTypes) return;
     const idx = this.data.maintenanceTypes.findIndex(m => m.id === id);
     if (idx !== -1) {
@@ -620,8 +786,11 @@ window.MotoData = {
         ...this.data.maintenanceTypes[idx],
         ...updatedData
       };
+      this.logAudit('Edición', 'Mantenimientos', `Actualizó frecuencia de ${this.data.maintenanceTypes[idx].name}`, true);
       this.persist();
+      return { success: true };
     }
+    return { success: false };
   },
 
   computeDocumentStatus(expiryStr) {
@@ -670,6 +839,9 @@ window.MotoData = {
     );
 
     if (existing) {
+      const chk = this.canDo('edit');
+      if (!chk.ok) return { success: false, message: chk.message };
+      const actor = this.getActor();
       existing.expiry = docData.expiry;
       if (docData.number) existing.number = docData.number;
       if (docData.entity) existing.entity = docData.entity;
@@ -682,8 +854,13 @@ window.MotoData = {
       }
       existing.status = computed.status;
       existing.statusText = computed.statusText;
+      existing.updatedBy = actor.name;
       existing.lastUpdated = new Date().toISOString();
+      this.logAudit('Edición', 'Documentación', `Actualizó ${docType} de ${cleanPlate} hasta ${docData.expiry}`, true);
     } else {
+      const chk = this.canDo('create');
+      if (!chk.ok) return { success: false, message: chk.message };
+      const actor = this.getActor();
       data.documents.unshift({
         id: 'doc-' + Date.now(),
         plate: cleanPlate,
@@ -696,12 +873,16 @@ window.MotoData = {
         cost: Number(docData.cost || 0),
         status: computed.status,
         statusText: computed.statusText,
+        createdBy: actor.name,
+        createdByRole: actor.role,
+        createdAt: this.getNowLocalTimestamp(),
         lastUpdated: new Date().toISOString()
       });
+      this.logAudit('Creación', 'Documentación', `Registró ${docType} de ${cleanPlate} (vence ${docData.expiry})`, true);
     }
     this.syncVehicleDocExpiry(cleanPlate, docType, docData.expiry);
     this.persist();
-    return true;
+    return { success: true };
   },
 
   getTodayLocalISO() {
@@ -794,15 +975,26 @@ window.MotoData = {
   },
 
   saveSettings(newSettings) {
+    const chk = this.canDo('edit');
+    if (!chk.ok) return { success: false, message: chk.message };
     if (!this.data.settings) this.data.settings = {};
     this.data.settings = { ...this.data.settings, ...newSettings };
+    this.logAudit('Edición', 'Configuración', 'Actualizó parámetros operativos / plan de trabajo', true);
     this.persist();
+    return { success: true };
   },
 
   addTransaction(tx) {
+    const chk = this.canDo('create');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const actor = this.getActor();
     if (!tx.id) tx.id = 'tx-' + Date.now() + '-' + Math.floor(Math.random() * 1000);
-    const { skipBalanceUpdate, ...cleanTx } = tx;
+    const { skipBalanceUpdate, skipAudit, ...cleanTx } = tx;
+    cleanTx.createdBy = cleanTx.createdBy || actor.name;
+    cleanTx.createdByEmail = cleanTx.createdByEmail || actor.email;
+    cleanTx.createdByRole = cleanTx.createdByRole || actor.role;
+    cleanTx.createdAt = cleanTx.createdAt || this.getNowLocalTimestamp();
     data.transactions.unshift(cleanTx);
 
     if (!skipBalanceUpdate) {
@@ -812,11 +1004,19 @@ window.MotoData = {
         else if (cleanTx.type === 'expense') acct.balance = Number(acct.balance || 0) - Number(cleanTx.amount || 0);
       }
     }
+    if (!skipAudit) {
+      const tipoTxt = cleanTx.type === 'income' ? 'Ingreso' : 'Egreso';
+      this.logAudit('Creación', cleanTx.type === 'income' ? 'Tarifas / Caja' : 'Gastos y Cuentas', `${tipoTxt}: ${cleanTx.concept || cleanTx.category} ($${Number(cleanTx.amount || 0).toLocaleString('es-CO')}) en ${cleanTx.account || '-'}`, true);
+    }
     this.persist();
+    return { success: true };
   },
 
   transferBetweenAccounts({ fromAccount, toAccount, amount, plate, concept, date }) {
+    const chk = this.canDo('create');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const actor = this.getActor();
     const amt = Number(amount || 0);
     if (!fromAccount || !toAccount || fromAccount === toAccount || amt <= 0) {
       return { success: false, message: 'Datos de transferencia inválidos.' };
@@ -841,14 +1041,21 @@ window.MotoData = {
       driver: '',
       concept: concept || `Transferencia ${fromAcc.name} → ${toAcc.name}`,
       amount: amt,
-      date: date || this.getTodayLocalISO()
+      date: date || this.getTodayLocalISO(),
+      createdBy: actor.name,
+      createdByEmail: actor.email,
+      createdByRole: actor.role,
+      createdAt: this.getNowLocalTimestamp()
     };
     data.transactions.unshift(record);
+    this.logAudit('Transferencia', 'Gastos y Cuentas', `Traspasó $${amt.toLocaleString('es-CO')} de ${fromAcc.name} a ${toAcc.name}`, true);
     this.persist();
     return { success: true, record };
   },
 
   deleteTransaction(id) {
+    const chk = this.canDo('delete');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
     const idx = data.transactions.findIndex(t => t.id === id);
     if (idx === -1) return { success: false, message: 'Movimiento no encontrado.' };
@@ -867,51 +1074,79 @@ window.MotoData = {
       }
     }
     data.transactions.splice(idx, 1);
+    this.logAudit('Eliminación', 'Gastos y Cuentas', `Eliminó movimiento "${tx.concept}" ($${amt.toLocaleString('es-CO')})`, true);
     this.persist();
     return { success: true };
   },
 
   addMaintenanceOrder(order) {
+    const chk = this.canDo('create');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const actor = this.getActor();
     if (!order.id) order.id = 'm-' + Date.now();
+    order.createdBy = actor.name;
+    order.createdByRole = actor.role;
+    order.createdAt = this.getNowLocalTimestamp();
     data.maintenanceOrders.unshift(order);
+    this.logAudit('Creación', 'Mantenimientos', `Registró orden ${order.type || 'Preventivo'} para ${order.plate}: ${order.desc || ''}`, true);
     this.persist();
+    return { success: true };
   },
 
   completeMaintenanceOrder(id) {
+    const chk = this.canDo('edit');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
     const order = data.maintenanceOrders.find(o => o.id === id);
     if (!order) return { success: false };
     order.status = order.status === 'done' ? 'scheduled' : 'done';
+    this.logAudit('Edición', 'Mantenimientos', `Marcó orden de ${order.plate} como ${order.status === 'done' ? 'Terminada' : 'En taller'}`, true);
     this.persist();
     return { success: true, status: order.status };
   },
 
   deleteMaintenanceOrder(id) {
+    const chk = this.canDo('delete');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const order = data.maintenanceOrders.find(o => o.id === id);
     const prevLen = data.maintenanceOrders.length;
     data.maintenanceOrders = data.maintenanceOrders.filter(o => o.id !== id);
     if (data.maintenanceOrders.length === prevLen) return { success: false };
+    this.logAudit('Eliminación', 'Mantenimientos', `Eliminó orden de mantenimiento ${order ? order.plate : id}`, true);
     this.persist();
     return { success: true };
   },
 
   addDocument(doc) {
+    const chk = this.canDo('create');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const actor = this.getActor();
     if (!doc.id) doc.id = 'doc-' + Date.now();
     const computed = this.computeDocumentStatus(doc.expiry);
     doc.status = computed.status;
     doc.statusText = computed.statusText;
+    doc.createdBy = actor.name;
+    doc.createdByRole = actor.role;
+    doc.createdAt = this.getNowLocalTimestamp();
     data.documents.unshift(doc);
     this.syncVehicleDocExpiry(doc.plate, doc.type, doc.expiry);
+    this.logAudit('Creación', 'Documentación', `Registró ${doc.type} para ${doc.plate}`, true);
     this.persist();
+    return { success: true };
   },
 
   deleteDocument(id) {
+    const chk = this.canDo('delete');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const doc = data.documents.find(d => d.id === id);
     const prevLen = data.documents.length;
     data.documents = data.documents.filter(d => d.id !== id);
     if (data.documents.length === prevLen) return { success: false };
+    this.logAudit('Eliminación', 'Documentación', `Eliminó documento ${doc ? doc.type + ' ' + doc.plate : id}`, true);
     this.persist();
     return { success: true };
   },
@@ -922,7 +1157,10 @@ window.MotoData = {
   },
 
   addPartUsage(usageData) {
+    const chk = this.canDo('create');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
+    const actor = this.getActor();
     if (!Array.isArray(data.partUsages)) data.partUsages = [];
     const qty = Math.max(1, Number(usageData.qty || 1));
     let unitPrice = Number(usageData.unitPrice || 0);
@@ -951,9 +1189,12 @@ window.MotoData = {
       qty: qty,
       unitPrice: unitPrice,
       total: total,
-      date: usageData.date || new Date().toISOString().split('T')[0]
+      date: usageData.date || this.getTodayLocalISO(),
+      createdBy: actor.name,
+      createdAt: this.getNowLocalTimestamp()
     };
     data.partUsages.unshift(record);
+    this.logAudit('Creación', 'Inventario', `Descontó ${qty} und. de ${partName} para ${record.plate}`, true);
     this.persist();
     return { success: true, record };
   },
@@ -989,6 +1230,8 @@ window.MotoData = {
   },
 
   async clearAllData() {
+    const chk = this.canDo('reset_db');
+    if (!chk.ok) return { success: false, message: chk.message };
     this.data = {
       vehicles: [],
       transactions: [],
@@ -997,6 +1240,7 @@ window.MotoData = {
       accounts: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.accounts)),
       spareParts: [],
       partUsages: [],
+      auditLogs: [],
       maintenanceTypes: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.maintenanceTypes)),
       settings: JSON.parse(JSON.stringify(DEFAULT_INITIAL_DATA.settings))
     };
@@ -1004,6 +1248,7 @@ window.MotoData = {
       localStorage.removeItem('motocontrol_data');
       localStorage.setItem('motocontrol_clean_v5', 'true');
     } catch (e) {}
+    this.logAudit('Eliminación', 'Seguridad', 'Restableció la base de datos a cero', true);
     this.saveToLocal();
     if (this.isFirebaseActive && this.db) {
       try {
@@ -1014,6 +1259,7 @@ window.MotoData = {
     }
     window.dispatchEvent(new CustomEvent('motocontrol-data-updated'));
     window.dispatchEvent(new CustomEvent('motocontrol-render-dashboard'));
+    return { success: true };
   },
 
   getAccounts() {
@@ -1024,12 +1270,15 @@ window.MotoData = {
   },
 
   addAccount(accountData) {
+    const chk = this.canDo('edit');
+    if (!chk.ok) return { success: false, message: chk.message };
     if (!this.data.accounts) this.data.accounts = [];
     const name = accountData.name.trim();
     const existing = this.data.accounts.find(a => a.name.toLowerCase() === name.toLowerCase());
     if (existing) {
       return { success: false, message: 'Ya existe una cuenta con este nombre.' };
     }
+    const actor = this.getActor();
     const balance = Number(accountData.balance || 0);
     const newAccount = {
       id: 'acc-' + Date.now(),
@@ -1038,9 +1287,12 @@ window.MotoData = {
       bank: accountData.bank || accountData.name,
       number: accountData.number || 'Sin número',
       balance: balance,
-      description: accountData.description || 'Cuenta para operaciones de la flota'
+      description: accountData.description || 'Cuenta para operaciones de la flota',
+      createdBy: actor.name,
+      createdAt: this.getNowLocalTimestamp()
     };
     this.data.accounts.push(newAccount);
+    this.logAudit('Creación', 'Gastos y Cuentas', `Creó cuenta "${name}" con saldo inicial $${balance.toLocaleString('es-CO')}`, true);
 
     if (balance > 0) {
       // skipBalanceUpdate: true evita sumar el saldo inicial por segunda vez a newAccount.balance
@@ -1051,9 +1303,10 @@ window.MotoData = {
         category: 'Apertura de cuenta',
         concept: `Saldo inicial apertura ${name}`,
         amount: balance,
-        date: new Date().toISOString().split('T')[0],
+        date: this.getTodayLocalISO(),
         plate: 'General',
-        skipBalanceUpdate: true
+        skipBalanceUpdate: true,
+        skipAudit: true
       });
     } else {
       this.persist();
@@ -1062,102 +1315,582 @@ window.MotoData = {
   },
 
   deleteAccount(accountName) {
+    const chk = this.canDo('delete');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
     const prevLen = data.accounts.length;
     data.accounts = data.accounts.filter(a => a.name.toLowerCase() !== accountName.toLowerCase());
     if (data.accounts.length === prevLen) return { success: false, message: 'Cuenta no encontrada.' };
+    this.logAudit('Eliminación', 'Gastos y Cuentas', `Eliminó la cuenta "${accountName}"`, true);
     this.persist();
     return { success: true };
   },
 
   deleteVehicle(plate) {
+    const chk = this.canDo('delete');
+    if (!chk.ok) return { success: false, message: chk.message };
     const data = this.getCleanData();
     const prevLen = data.vehicles.length;
     data.vehicles = data.vehicles.filter(v => v.plate.toUpperCase() !== plate.toUpperCase());
     if (data.vehicles.length === prevLen) return { success: false, message: 'Motocarro no encontrado.' };
+    this.logAudit('Eliminación', 'Flota', `Eliminó el motocarro ${plate.toUpperCase()}`, true);
     this.persist();
     return { success: true };
   }
 };
 
-// --- Gestor de Autenticación de Usuario (Login / Registro / Sesión) ---
+// --- Utilidad Criptográfica SHA-256 (sin dependencias externas, funciona en HTTPS, localhost y Node) ---
+function mcSha256Hex(str) {
+  const bytes = new TextEncoder().encode(str);
+  const K = [
+    0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2
+  ];
+  const H = [0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  const len = bytes.length;
+  const totalLen = Math.ceil((len + 9) / 64) * 64;
+  const padded = new Uint8Array(totalLen);
+  padded.set(bytes);
+  padded[len] = 0x80;
+  const bitLenHi = Math.floor((len * 8) / 0x100000000);
+  const bitLenLo = (len * 8) >>> 0;
+  const view = new DataView(padded.buffer);
+  view.setUint32(totalLen - 8, bitLenHi, false);
+  view.setUint32(totalLen - 4, bitLenLo, false);
+
+  const w = new Uint32Array(64);
+  const rrot = (x, n) => (x >>> n) | (x << (32 - n));
+  for (let offset = 0; offset < totalLen; offset += 64) {
+    for (let i = 0; i < 16; i++) w[i] = view.getUint32(offset + i * 4, false);
+    for (let i = 16; i < 64; i++) {
+      const s0 = rrot(w[i - 15], 7) ^ rrot(w[i - 15], 18) ^ (w[i - 15] >>> 3);
+      const s1 = rrot(w[i - 2], 17) ^ rrot(w[i - 2], 19) ^ (w[i - 2] >>> 10);
+      w[i] = (w[i - 16] + s0 + w[i - 7] + s1) >>> 0;
+    }
+    let [a, b, c, d, e, f, g, h] = H;
+    for (let i = 0; i < 64; i++) {
+      const S1 = rrot(e, 6) ^ rrot(e, 11) ^ rrot(e, 25);
+      const ch = (e & f) ^ (~e & g);
+      const temp1 = (h + S1 + ch + K[i] + w[i]) >>> 0;
+      const S0 = rrot(a, 2) ^ rrot(a, 13) ^ rrot(a, 22);
+      const maj = (a & b) ^ (a & c) ^ (b & c);
+      const temp2 = (S0 + maj) >>> 0;
+      h = g; g = f; f = e; e = (d + temp1) >>> 0;
+      d = c; c = b; b = a; a = (temp1 + temp2) >>> 0;
+    }
+    H[0] = (H[0] + a) >>> 0; H[1] = (H[1] + b) >>> 0;
+    H[2] = (H[2] + c) >>> 0; H[3] = (H[3] + d) >>> 0;
+    H[4] = (H[4] + e) >>> 0; H[5] = (H[5] + f) >>> 0;
+    H[6] = (H[6] + g) >>> 0; H[7] = (H[7] + h) >>> 0;
+  }
+  return H.map(x => x.toString(16).padStart(8, '0')).join('');
+}
+
+// --- Gestor de Autenticación Segura, Roles por Turno y Cuentas en la Nube ---
 window.AuthManager = {
-  defaultUsers: [
-    { username: 'admin', email: 'admin@motocontrol.com', password: '123456', name: 'Andrés Rojas', role: 'Administrador de Flota' },
-    { username: 'operador', email: 'operador@motocontrol.com', password: '123456', name: 'Laura Gómez', role: 'Supervisora de Operaciones' },
-    { username: 'tesoreria', email: 'tesoreria@motocontrol.com', password: '123456', name: 'Camilo Serna', role: 'Contador / Tesorería' }
-  ],
+  STORAGE_USERS_KEY: 'motocontrol_security_users',
+  STORAGE_SESSION_KEY: 'motocontrol_auth_user',
+  STORAGE_LOCK_KEY: 'motocontrol_login_lock',
+  LEGACY_USERS_KEY: 'motocontrol_registered_users',
+  LEGACY_DEMO_EMAILS: ['admin@motocontrol.com', 'operador@motocontrol.com', 'tesoreria@motocontrol.com'],
+  LEGACY_DEMO_USERNAMES: ['admin', 'operador', 'tesoreria'],
+  cloudHasExistingData: false,
+  ROLE_DEFS: {
+    owner: { label: 'Administrador Principal', perms: ['view', 'create', 'edit', 'delete', 'manage_users', 'view_audit', 'reset_db', 'firebase_config'] },
+    admin: { label: 'Co-Administrador', perms: ['view', 'create', 'edit', 'delete', 'view_audit'] },
+    operator: { label: 'Operador (Solo Ingreso)', perms: ['view', 'create'] }
+  },
+
+  generateSalt() {
+    const arr = new Uint8Array(12);
+    if (typeof crypto !== 'undefined' && typeof crypto.getRandomValues === 'function') {
+      crypto.getRandomValues(arr);
+    } else {
+      for (let i = 0; i < arr.length; i++) arr[i] = Math.floor(Math.random() * 256);
+    }
+    return Array.from(arr, b => b.toString(16).padStart(2, '0')).join('');
+  },
+
+  hashPassword(plain, salt) {
+    return mcSha256Hex(`${salt}:motocontrol:${plain}`);
+  },
+
+  verifyPassword(plain, storedHash, salt) {
+    if (!plain || !storedHash || !salt) return false;
+    const candidate = this.hashPassword(plain, salt);
+    if (candidate.length !== storedHash.length) return false;
+    let diff = 0;
+    for (let i = 0; i < candidate.length; i++) {
+      diff |= candidate.charCodeAt(i) ^ storedHash.charCodeAt(i);
+    }
+    return diff === 0;
+  },
+
+  normalizeRoleKey(roleInput) {
+    const r = String(roleInput || '').toLowerCase();
+    if (r === 'owner' || r.includes('principal')) return 'owner';
+    if (r === 'operator' || r.includes('solo ingreso') || r.includes('operador')) return 'operator';
+    return 'admin';
+  },
+
+  _isLegacyDemo(u) {
+    if (!u) return true;
+    const email = (u.email || '').toLowerCase().trim();
+    const uname = (u.username || '').toLowerCase().trim();
+    return this.LEGACY_DEMO_EMAILS.includes(email) || (this.LEGACY_DEMO_USERNAMES.includes(uname) && (!u.passwordHash && u.password === '123456'));
+  },
 
   getUsers() {
     try {
-      const stored = localStorage.getItem('motocontrol_registered_users');
-      if (stored) {
-        const parsed = JSON.parse(stored);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+      const raw = localStorage.getItem(this.STORAGE_USERS_KEY);
+      if (raw) {
+        const parsed = JSON.parse(raw);
+        if (Array.isArray(parsed)) return parsed.filter(u => !this._isLegacyDemo(u));
       }
     } catch (e) {}
-    return this.defaultUsers;
+    return [];
+  },
+
+  _saveUsersLocal(users) {
+    try {
+      localStorage.setItem(this.STORAGE_USERS_KEY, JSON.stringify(users));
+    } catch (e) {}
+  },
+
+  async _pushUsersToCloud(users) {
+    if (!window.MotoData || !window.MotoData.db) return;
+    try {
+      const clean = JSON.parse(JSON.stringify({
+        users: users,
+        setupLocked: users.length > 0,
+        updatedAt: new Date().toISOString()
+      }));
+      await window.MotoData.db.collection('motocontrol_app').doc('security_config').set(clean);
+    } catch (e) {
+      console.error('Error syncing security_config:', e);
+    }
+  },
+
+  initSecurity() {
+    // 1. Limpiar sesiones demo antiguas inmediatamente
+    const sess = this.getCurrentUser();
+    if (sess && this._isLegacyDemo(sess)) {
+      this._clearSessionStorage();
+    }
+
+    // 2. Migrar cuenta real previa (del dueño) guardada sin hash y eliminar cuentas demo
+    try {
+      const legacyRaw = localStorage.getItem(this.LEGACY_USERS_KEY);
+      if (legacyRaw) {
+        const legacyList = JSON.parse(legacyRaw);
+        if (Array.isArray(legacyList)) {
+          const currentSec = this.getUsers();
+          const realLegacy = legacyList.filter(u => !this._isLegacyDemo(u) && (u.email || u.username) && u.password);
+          let hasOwner = currentSec.some(u => u.roleKey === 'owner');
+          realLegacy.forEach((lu, idx) => {
+            const email = (lu.email || lu.username || '').toLowerCase().trim();
+            if (!email || currentSec.some(cu => cu.email === email || cu.username === email)) return;
+            const roleKey = !hasOwner && idx === 0 ? 'owner' : this.normalizeRoleKey(lu.role);
+            if (roleKey === 'owner') hasOwner = true;
+            const salt = this.generateSalt();
+            currentSec.push({
+              id: 'usr-' + Date.now() + '-' + idx,
+              name: (lu.name || email.split('@')[0]).trim(),
+              username: (lu.username || email.split('@')[0]).toLowerCase().trim(),
+              email: email,
+              roleKey: roleKey,
+              role: this.ROLE_DEFS[roleKey].label,
+              salt: salt,
+              passwordHash: this.hashPassword(String(lu.password), salt),
+              active: true,
+              createdAt: new Date().toISOString()
+            });
+          });
+          if (currentSec.length > 0) this._saveUsersLocal(currentSec);
+        }
+        localStorage.removeItem(this.LEGACY_USERS_KEY);
+      }
+    } catch (e) {}
+
+    // 3. Revalidar sesión actual contra usuarios seguros
+    const updatedUsers = this.getUsers();
+    const cur = this.getCurrentUser();
+    if (cur && updatedUsers.length > 0) {
+      const match = updatedUsers.find(u => u.id === cur.id || u.email === (cur.email || '').toLowerCase());
+      if (!match || match.active === false) {
+        this._clearSessionStorage();
+      } else {
+        this._persistSessionObject(this._toSafeSession(match), this._isRememberedSession());
+      }
+    } else if (cur && updatedUsers.length === 0) {
+      this._clearSessionStorage();
+    }
+  },
+
+  async syncSecurityWithCloud() {
+    if (!window.MotoData || !window.MotoData.db) return;
+    try {
+      const docRef = window.MotoData.db.collection('motocontrol_app').doc('security_config');
+      const snap = await docRef.get();
+      let localUsers = this.getUsers();
+
+      if (snap.exists) {
+        const cloud = snap.data() || {};
+        const cloudUsers = Array.isArray(cloud.users) ? cloud.users.filter(u => !this._isLegacyDemo(u)) : [];
+        if (cloudUsers.length > 0) {
+          // Si este navegador tenía una cuenta recién migrada que aún no está en cloud, fusionarla preservando owner de la nube
+          const cloudEmails = new Set(cloudUsers.map(u => (u.email || '').toLowerCase()));
+          const extraLocal = localUsers.filter(u => !cloudEmails.has((u.email || '').toLowerCase()));
+          if (extraLocal.length > 0) {
+            const hasCloudOwner = cloudUsers.some(u => u.roleKey === 'owner');
+            extraLocal.forEach(eu => {
+              if (hasCloudOwner && eu.roleKey === 'owner') {
+                eu.roleKey = 'admin';
+                eu.role = this.ROLE_DEFS.admin.label;
+              }
+            });
+            const merged = [...cloudUsers, ...extraLocal];
+            this._saveUsersLocal(merged);
+            await this._pushUsersToCloud(merged);
+          } else {
+            this._saveUsersLocal(cloudUsers);
+          }
+        } else if (localUsers.length > 0) {
+          await this._pushUsersToCloud(localUsers);
+        }
+      } else if (localUsers.length > 0) {
+        // Primera subida automática del dueño ya migrado
+        await this._pushUsersToCloud(localUsers);
+      }
+
+      // Revalidar sesión contra lista actualizada
+      const finalUsers = this.getUsers();
+      const cur = this.getCurrentUser();
+      if (cur) {
+        const match = finalUsers.find(u => u.id === cur.id || u.email === (cur.email || '').toLowerCase());
+        if (!match || match.active === false) {
+          this._clearSessionStorage();
+        } else {
+          this._persistSessionObject(this._toSafeSession(match), this._isRememberedSession());
+        }
+      }
+    } catch (e) {
+      console.warn('Error syncing security_config:', e);
+    }
+  },
+
+  needsInitialSetup() {
+    return this.getUsers().length === 0;
+  },
+
+  _toSafeSession(u) {
+    const rk = this.ROLE_DEFS[u.roleKey] ? u.roleKey : this.normalizeRoleKey(u.role);
+    return {
+      id: u.id,
+      name: u.name,
+      username: u.username,
+      email: u.email,
+      roleKey: rk,
+      role: this.ROLE_DEFS[rk].label,
+      active: u.active !== false
+    };
+  },
+
+  _isRememberedSession() {
+    try {
+      return Boolean(localStorage.getItem(this.STORAGE_SESSION_KEY));
+    } catch (e) {
+      return true;
+    }
+  },
+
+  _persistSessionObject(safeUser, remember = true) {
+    try {
+      const json = JSON.stringify(safeUser);
+      if (remember) {
+        localStorage.setItem(this.STORAGE_SESSION_KEY, json);
+        if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(this.STORAGE_SESSION_KEY);
+      } else {
+        if (typeof sessionStorage !== 'undefined') sessionStorage.setItem(this.STORAGE_SESSION_KEY, json);
+        localStorage.removeItem(this.STORAGE_SESSION_KEY);
+      }
+    } catch (e) {}
+  },
+
+  _clearSessionStorage() {
+    try {
+      localStorage.removeItem(this.STORAGE_SESSION_KEY);
+      if (typeof sessionStorage !== 'undefined') sessionStorage.removeItem(this.STORAGE_SESSION_KEY);
+    } catch (e) {}
   },
 
   getCurrentUser() {
     try {
-      const u = localStorage.getItem('motocontrol_auth_user');
-      return u ? JSON.parse(u) : null;
+      const raw = localStorage.getItem(this.STORAGE_SESSION_KEY) || (typeof sessionStorage !== 'undefined' ? sessionStorage.getItem(this.STORAGE_SESSION_KEY) : null);
+      if (!raw) return null;
+      const u = JSON.parse(raw);
+      if (!u || this._isLegacyDemo(u)) return null;
+      return u;
     } catch (e) {
       return null;
     }
   },
 
-  login(identifier, password) {
-    const users = this.getUsers();
-    const id = (identifier || '').trim().toLowerCase();
-    const pass = (password || '').trim();
-    const user = users.find(u =>
-      (u.username.toLowerCase() === id || u.email.toLowerCase() === id) &&
-      u.password === pass
-    );
-
-    if (user) {
-      localStorage.setItem('motocontrol_auth_user', JSON.stringify(user));
-      return { success: true, user };
-    }
-    return { success: false, message: 'Credenciales inválidas. Usa correo o usuario y contraseña (ej. admin / 123456).' };
+  can(perm) {
+    const u = this.getCurrentUser();
+    if (!u) return false;
+    const def = this.ROLE_DEFS[u.roleKey || this.normalizeRoleKey(u.role)] || this.ROLE_DEFS.operator;
+    return def.perms.includes(perm);
   },
 
-  register(name, identifier, role, password) {
-    const users = [...this.getUsers()];
+  _getLockState() {
+    try {
+      const raw = localStorage.getItem(this.STORAGE_LOCK_KEY);
+      return raw ? JSON.parse(raw) : { attempts: 0, lockedUntil: 0 };
+    } catch (e) {
+      return { attempts: 0, lockedUntil: 0 };
+    }
+  },
+
+  _setLockState(state) {
+    try {
+      localStorage.setItem(this.STORAGE_LOCK_KEY, JSON.stringify(state));
+    } catch (e) {}
+  },
+
+  async login(identifier, password, remember = true) {
+    const lock = this._getLockState();
+    const now = Date.now();
+    if (lock.lockedUntil && now < lock.lockedUntil) {
+      const secs = Math.ceil((lock.lockedUntil - now) / 1000);
+      return { success: false, message: `Demasiados intentos fallidos. Espera ${secs}s antes de intentar de nuevo.` };
+    }
+
+    if (window.MotoData && window.MotoData.db) {
+      await this.syncSecurityWithCloud();
+    }
+
+    const users = this.getUsers();
+    if (users.length === 0) {
+      return { success: false, message: 'No hay un Administrador Principal configurado aún. Configura la primera cuenta.' };
+    }
+
     const id = (identifier || '').trim().toLowerCase();
     const pass = (password || '').trim();
-    if (!name || !id || !pass) {
-      return { success: false, message: 'Por favor completa todos los campos requeridos.' };
+    const user = users.find(u => (u.email || '').toLowerCase() === id || (u.username || '').toLowerCase() === id);
+
+    if (!user || !this.verifyPassword(pass, user.passwordHash, user.salt)) {
+      const attempts = (lock.attempts || 0) + 1;
+      const lockedUntil = attempts >= 5 ? (now + 30000) : 0;
+      this._setLockState({ attempts: lockedUntil ? 0 : attempts, lockedUntil });
+      if (lockedUntil) {
+        return { success: false, message: 'Cuenta temporalmente bloqueada 30 segundos por seguridad (5 intentos fallidos).' };
+      }
+      return { success: false, message: `Correo/usuario o contraseña incorrectos (${attempts}/5).` };
     }
-    const isEmail = id.includes('@');
-    const existing = users.find(u => u.username.toLowerCase() === id || u.email.toLowerCase() === id);
-    if (existing) {
-      return { success: false, message: 'Este usuario o correo ya está registrado.' };
+
+    if (user.active === false) {
+      return { success: false, message: 'Este usuario está desactivado. Contacta al Administrador Principal.' };
     }
+
+    this._setLockState({ attempts: 0, lockedUntil: 0 });
+    const safeUser = this._toSafeSession(user);
+    this._persistSessionObject(safeUser, remember);
+    if (window.MotoData && typeof window.MotoData.onAuthenticatedLogin === 'function') {
+      await window.MotoData.onAuthenticatedLogin(safeUser);
+    }
+    return { success: true, user: safeUser };
+  },
+
+  async registerInitialOwner({ name, email, password, projectVerify }) {
+    if (window.MotoData && window.MotoData.db) {
+      await this.syncSecurityWithCloud();
+    }
+    if (!this.needsInitialSetup()) {
+      return { success: false, message: 'Ya existe un Administrador Principal registrado. Por seguridad el registro público está cerrado.' };
+    }
+
+    const cleanName = (name || '').trim();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+    if (!cleanName || !cleanEmail || !cleanPass) {
+      return { success: false, message: 'Completa nombre completo, correo electrónico y contraseña.' };
+    }
+    if (!cleanEmail.includes('@') || cleanEmail.length < 5) {
+      return { success: false, message: 'Ingresa un correo electrónico válido.' };
+    }
+    if (cleanPass.length < 6) {
+      return { success: false, message: 'La contraseña debe tener al menos 6 caracteres.' };
+    }
+    if (this.cloudHasExistingData) {
+      const expectedPid = (() => {
+        try { return JSON.parse(localStorage.getItem('motocontrol_firebase_config') || '{}').projectId || 'motocontrol-flota'; } catch (e) { return 'motocontrol-flota'; }
+      })();
+      if ((projectVerify || '').trim() !== expectedPid) {
+        return { success: false, message: 'Código de verificación de proyecto Firebase incorrecto. No se puede reclamar la base existente sin verificarlo.' };
+      }
+    }
+
+    const salt = this.generateSalt();
+    const ownerUser = {
+      id: 'usr-' + Date.now(),
+      name: cleanName,
+      username: cleanEmail.split('@')[0],
+      email: cleanEmail,
+      roleKey: 'owner',
+      role: this.ROLE_DEFS.owner.label,
+      salt: salt,
+      passwordHash: this.hashPassword(cleanPass, salt),
+      active: true,
+      createdAt: new Date().toISOString()
+    };
+
+    const list = [ownerUser];
+    this._saveUsersLocal(list);
+    await this._pushUsersToCloud(list);
+    const safeUser = this._toSafeSession(ownerUser);
+    this._persistSessionObject(safeUser, true);
+    if (window.MotoData && typeof window.MotoData.onAuthenticatedLogin === 'function') {
+      await window.MotoData.onAuthenticatedLogin(safeUser);
+    }
+    return { success: true, user: safeUser };
+  },
+
+  async adminCreateUser({ name, email, roleKey, password }) {
+    if (!this.can('manage_users')) {
+      return { success: false, message: 'Solo el Administrador Principal puede crear cuentas.' };
+    }
+    const cleanName = (name || '').trim();
+    const cleanEmail = (email || '').trim().toLowerCase();
+    const cleanPass = (password || '').trim();
+    if (!cleanName || !cleanEmail || !cleanPass) {
+      return { success: false, message: 'Completa nombre, correo y contraseña.' };
+    }
+    if (!cleanEmail.includes('@')) {
+      return { success: false, message: 'Ingresa un correo electrónico válido para el usuario.' };
+    }
+    if (cleanPass.length < 6) {
+      return { success: false, message: 'La contraseña debe tener mínimo 6 caracteres.' };
+    }
+
+    const users = this.getUsers();
+    if (users.some(u => (u.email || '').toLowerCase() === cleanEmail || (u.username || '').toLowerCase() === cleanEmail.split('@')[0])) {
+      return { success: false, message: 'Ya existe un usuario registrado con ese correo.' };
+    }
+
+    const rk = roleKey === 'admin' ? 'admin' : 'operator';
+    const salt = this.generateSalt();
     const newUser = {
-      name: name.trim(),
-      username: isEmail ? id.split('@')[0] : id,
-      email: isEmail ? id : `${id}@motocontrol.com`,
-      role: role || 'Administrador de Flota',
-      password: pass
+      id: 'usr-' + Date.now() + '-' + Math.floor(Math.random() * 100),
+      name: cleanName,
+      username: cleanEmail.split('@')[0],
+      email: cleanEmail,
+      roleKey: rk,
+      role: this.ROLE_DEFS[rk].label,
+      salt: salt,
+      passwordHash: this.hashPassword(cleanPass, salt),
+      active: true,
+      createdAt: new Date().toISOString()
     };
     users.push(newUser);
-    try {
-      localStorage.setItem('motocontrol_registered_users', JSON.stringify(users));
-      localStorage.setItem('motocontrol_auth_user', JSON.stringify(newUser));
-      if (window.MotoData && window.MotoData.clearAllData) {
-        window.MotoData.clearAllData();
-      }
-    } catch (e) {}
-    return { success: true, user: newUser };
+    this._saveUsersLocal(users);
+    await this._pushUsersToCloud(users);
+    if (window.MotoData && window.MotoData.logAudit) {
+      window.MotoData.logAudit('Creación', 'Seguridad', `Creó usuario ${cleanName} (${newUser.role})`);
+    }
+    return { success: true, user: this._toSafeSession(newUser) };
+  },
+
+  async adminUpdateUser(userId, updates) {
+    if (!this.can('manage_users')) {
+      return { success: false, message: 'Solo el Administrador Principal puede modificar usuarios.' };
+    }
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === userId);
+    if (idx === -1) return { success: false, message: 'Usuario no encontrado.' };
+    if (users[idx].roleKey === 'owner' && (updates.active === false || (updates.roleKey && updates.roleKey !== 'owner'))) {
+      return { success: false, message: 'No puedes desactivar ni degradar al Administrador Principal.' };
+    }
+
+    if (updates.roleKey && this.ROLE_DEFS[updates.roleKey] && users[idx].roleKey !== 'owner') {
+      users[idx].roleKey = updates.roleKey;
+      users[idx].role = this.ROLE_DEFS[updates.roleKey].label;
+    }
+    if (typeof updates.active === 'boolean' && users[idx].roleKey !== 'owner') {
+      users[idx].active = updates.active;
+    }
+    if (updates.newPassword) {
+      const np = String(updates.newPassword).trim();
+      if (np.length < 6) return { success: false, message: 'La nueva contraseña debe tener mínimo 6 caracteres.' };
+      const salt = this.generateSalt();
+      users[idx].salt = salt;
+      users[idx].passwordHash = this.hashPassword(np, salt);
+    }
+
+    this._saveUsersLocal(users);
+    await this._pushUsersToCloud(users);
+    if (window.MotoData && window.MotoData.logAudit) {
+      window.MotoData.logAudit('Edición', 'Seguridad', `Actualizó permisos/estado de ${users[idx].name}`);
+    }
+    return { success: true };
+  },
+
+  async adminDeleteUser(userId) {
+    if (!this.can('manage_users')) {
+      return { success: false, message: 'Solo el Administrador Principal puede eliminar usuarios.' };
+    }
+    const users = this.getUsers();
+    const target = users.find(u => u.id === userId);
+    if (!target) return { success: false, message: 'Usuario no encontrado.' };
+    if (target.roleKey === 'owner') {
+      return { success: false, message: 'No se puede eliminar al Administrador Principal.' };
+    }
+    const filtered = users.filter(u => u.id !== userId);
+    this._saveUsersLocal(filtered);
+    await this._pushUsersToCloud(filtered);
+    if (window.MotoData && window.MotoData.logAudit) {
+      window.MotoData.logAudit('Eliminación', 'Seguridad', `Eliminó usuario ${target.name} (${target.email})`);
+    }
+    return { success: true };
+  },
+
+  async changeOwnPassword(currentPassword, newPassword) {
+    const cur = this.getCurrentUser();
+    if (!cur) return { success: false, message: 'Sesión no iniciada.' };
+    const np = String(newPassword || '').trim();
+    if (np.length < 6) return { success: false, message: 'La nueva contraseña debe tener mínimo 6 caracteres.' };
+    const users = this.getUsers();
+    const idx = users.findIndex(u => u.id === cur.id || u.email === cur.email);
+    if (idx === -1) return { success: false, message: 'Usuario no encontrado.' };
+    if (!this.verifyPassword(String(currentPassword || '').trim(), users[idx].passwordHash, users[idx].salt)) {
+      return { success: false, message: 'La contraseña actual ingresada es incorrecta.' };
+    }
+    const salt = this.generateSalt();
+    users[idx].salt = salt;
+    users[idx].passwordHash = this.hashPassword(np, salt);
+    this._saveUsersLocal(users);
+    await this._pushUsersToCloud(users);
+    if (window.MotoData && window.MotoData.logAudit) {
+      window.MotoData.logAudit('Edición', 'Seguridad', `Cambió su contraseña (${cur.name})`);
+    }
+    return { success: true };
   },
 
   logout() {
-    try {
-      localStorage.removeItem('motocontrol_auth_user');
-    } catch (e) {}
+    const cur = this.getCurrentUser();
+    if (cur && window.MotoData && typeof window.MotoData.logAudit === 'function') {
+      window.MotoData.logAudit('Cierre de sesión', 'Seguridad', `Cerró sesión ${cur.name}`);
+    }
+    this._clearSessionStorage();
+    if (window.MotoData && typeof window.MotoData.onLogout === 'function') {
+      window.MotoData.onLogout();
+    }
   }
 };
 

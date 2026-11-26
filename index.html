@@ -144,7 +144,7 @@
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-firestore-compat.js"></script>
 </head>
 <body class="bg-light-surface text-light-on-surface font-body antialiased min-h-screen">
-<div class="min-h-screen flex flex-col lg:flex-row">
+<div class="min-h-screen flex flex-col lg:flex-row hidden" id="app-main-shell">
 <!-- Mobile Sidebar Backdrop -->
 <div class="fixed inset-0 z-30 bg-light-scrim/40 hidden lg:hidden transition-opacity" id="sidebar-backdrop"></div>
 <!-- App Sidebar -->
@@ -209,15 +209,20 @@
 <!-- Multi-admin Footer Identity -->
 <div class="p-gutter-md border-t border-light-outline-variant flex items-center justify-between gap-gutter-sm">
 <div class="flex items-center gap-gutter-sm min-w-0 flex-1">
-<div class="w-9 h-9 rounded-full bg-light-primary text-light-on-primary flex items-center justify-center shrink-0 font-bold" id="sidebar-user-avatar">AR</div>
+<div class="w-9 h-9 rounded-full bg-light-primary text-light-on-primary flex items-center justify-center shrink-0 font-bold" id="sidebar-user-avatar">--</div>
 <div class="min-w-0 flex-1">
-<p class="font-label text-label-md text-light-on-surface truncate font-semibold" id="sidebar-user-name">Andrés Rojas</p>
-<p class="font-body text-body-sm text-light-on-surface-variant truncate" id="sidebar-user-role">Administrador Flota</p>
+<p class="font-label text-label-md text-light-on-surface truncate font-semibold" id="sidebar-user-name">Usuario</p>
+<p class="font-body text-body-sm text-light-on-surface-variant truncate" id="sidebar-user-role">Sesión segura</p>
 </div>
 </div>
+<div class="flex items-center gap-1">
+<button id="btn-sidebar-security" class="p-1.5 rounded text-light-on-surface-variant hover:text-light-primary hover:bg-light-surface-container transition-colors" title="Seguridad, Usuarios y Auditoría" type="button">
+<span class="material-symbols-outlined text-[20px]">shield_person</span>
+</button>
 <button id="btn-sidebar-logout" class="p-1.5 rounded text-light-on-surface-variant hover:text-light-error hover:bg-light-surface-container transition-colors" title="Cerrar sesión" type="button">
 <span class="material-symbols-outlined text-[20px]">logout</span>
 </button>
+</div>
 </div>
 </aside>
 <!-- Content Workspace -->
@@ -239,11 +244,14 @@
 <span class="w-2 h-2 rounded-full bg-light-outline" id="firebase-status-dot"></span>
 <span id="firebase-status-text">Modo Local (Listo para Firebase)</span>
 </div>
-<!-- User Profile Badge & Logout -->
+<!-- User Profile Badge, Security & Logout -->
 <div class="hidden sm:flex items-center gap-2 px-2.5 py-1 rounded bg-light-surface-container-low border border-light-outline-variant" id="header-user-badge">
-<div class="w-6 h-6 rounded-full bg-light-primary text-light-on-primary flex items-center justify-center text-xs font-bold shrink-0" id="header-user-avatar">AR</div>
-<span class="font-label text-label-sm text-light-on-surface font-medium truncate max-w-[120px]" id="header-user-name">Andrés Rojas</span>
-
+<div class="w-6 h-6 rounded-full bg-light-primary text-light-on-primary flex items-center justify-center text-xs font-bold shrink-0" id="header-user-avatar">--</div>
+<span class="font-label text-label-sm text-light-on-surface font-medium truncate max-w-[120px]" id="header-user-name">Usuario</span>
+<button id="btn-open-security-modal" class="inline-flex items-center gap-1 px-1.5 py-0.5 rounded text-light-primary hover:bg-light-secondary-container/50 text-[11px] font-label font-semibold" title="Usuarios, Seguridad y Turnos" type="button">
+<span class="material-symbols-outlined text-[15px]">shield_person</span>
+<span class="hidden md:inline">Seguridad</span>
+</button>
 <button id="btn-header-logout" class="p-0.5 rounded text-light-on-surface-variant hover:text-light-error ml-0.5" title="Cerrar sesión" type="button">
 <span class="material-symbols-outlined text-[16px]">logout</span>
 </button>
@@ -2521,18 +2529,22 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 </div>
 </div>
 
-<!-- MODAL: Autenticación de Usuario (Login / Registro por Correo o Usuario y Contraseña) -->
-<div aria-labelledby="auth-modal-title" aria-modal="true" class="fixed inset-0 z-[100] bg-light-scrim/60 hidden items-center justify-center p-gutter-md backdrop-blur-sm" id="auth-modal" role="dialog">
+<!-- MODAL: Autenticación Segura (Sin cuentas demo ni registro abierto al público) -->
+<div aria-labelledby="auth-modal-title" aria-modal="true" class="fixed inset-0 z-[100] bg-light-surface/95 flex items-center justify-center p-gutter-md backdrop-blur-md" id="auth-modal" role="dialog">
 <div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-xl w-full max-w-md p-gutter-lg flex flex-col gap-gutter-md shadow-2xl relative">
 <header class="flex flex-col items-center text-center gap-2 pt-2">
 <img alt="Logo MotoControl" class="w-14 h-14 rounded-lg object-cover border border-light-outline-variant shadow-sm" src="assets/logo.png"/>
 <div>
 <h2 class="font-headline text-headline-sm text-light-on-surface font-bold tracking-tight" id="auth-modal-title">MotoControl</h2>
-<p class="font-body text-body-sm text-light-on-surface-variant">Sistema de Gestión de Flota y Control Financiero</p>
+<p class="font-body text-body-sm text-light-on-surface-variant">Acceso privado al sistema de gestión de flota</p>
 </div>
-<div class="flex items-center gap-1 bg-light-surface-container-low p-1 rounded-lg border border-light-outline-variant w-full mt-2" role="tablist">
+<div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-light-surface-container-low border border-light-outline-variant text-[11px] font-label text-light-primary font-semibold mt-1" id="auth-security-pill">
+<span class="material-symbols-outlined text-[14px]">verified_user</span>
+<span id="auth-security-pill-text">Acceso privado con correo y contraseña</span>
+</div>
+<div class="hidden items-center gap-1 bg-light-surface-container-low p-1 rounded-lg border border-light-outline-variant w-full mt-2" id="auth-tabs-bar" role="tablist">
 <button class="auth-tab flex-1 py-1.5 rounded font-label text-label-sm bg-light-surface-container-lowest text-light-on-surface font-bold shadow-xs transition-all" data-auth-mode="login" id="tab-auth-login" role="tab" type="button">Iniciar Sesión</button>
-<button class="auth-tab flex-1 py-1.5 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface font-medium transition-all" data-auth-mode="register" id="tab-auth-register" role="tab" type="button">Crear Cuenta</button>
+<button class="auth-tab flex-1 py-1.5 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface font-medium transition-all" data-auth-mode="register" id="tab-auth-register" role="tab" type="button">Configurar Dueño</button>
 </div>
 </header>
 
@@ -2540,70 +2552,187 @@ El conductor asignado es el mismo dueño / propietario del vehículo
 <div class="hidden p-2.5 rounded text-xs font-body border" id="auth-feedback"></div>
 
 <!-- Formulario Iniciar Sesión -->
-<form class="flex flex-col gap-gutter-md" id="login-form">
+<form autocomplete="off" class="flex flex-col gap-gutter-md" id="login-form">
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-sm text-light-on-surface font-semibold">Correo electrónico o Usuario *</span>
 <div class="relative">
-<span class="material-symbols-outlined text-[18px] text-light-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2">person</span>
-<input class="w-full pl-9 pr-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="login-identifier" placeholder="admin o admin@motocontrol.com" required type="text" value="admin"/>
+<span class="material-symbols-outlined text-[18px] text-light-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2">mail</span>
+<input autocomplete="username" class="w-full pl-9 pr-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="login-identifier" placeholder="tu-correo@ejemplo.com" required="" type="text" value=""/>
 </div>
 </label>
 <label class="flex flex-col gap-1">
 <span class="font-label text-label-sm text-light-on-surface font-semibold">Contraseña *</span>
 <div class="relative">
 <span class="material-symbols-outlined text-[18px] text-light-on-surface-variant absolute left-3 top-1/2 -translate-y-1/2">lock</span>
-<input class="w-full pl-9 pr-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md focus:border-light-primary focus:ring-light-primary" id="login-password" placeholder="••••••" required type="password" value="123456"/>
+<input autocomplete="current-password" class="w-full pl-9 pr-10 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md focus:border-light-primary focus:ring-light-primary" id="login-password" placeholder="Ingresa tu contraseña" required="" type="password" value=""/>
+<button aria-label="Mostrar u ocultar contraseña" class="absolute right-2.5 top-1/2 -translate-y-1/2 text-light-on-surface-variant hover:text-light-on-surface p-1" id="toggle-login-pass" type="button">
+<span class="material-symbols-outlined text-[18px]">visibility</span>
+</button>
 </div>
 </label>
 <div class="flex items-center justify-between text-xs">
 <label class="flex items-center gap-1.5 cursor-pointer text-light-on-surface-variant">
-<input class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" id="login-remember" checked type="checkbox"/>
-<span>Recordar sesión</span>
+<input checked="" class="rounded border-light-outline-variant text-light-primary focus:ring-light-primary" id="login-remember" type="checkbox"/>
+<span>Mantener sesión iniciada en este equipo</span>
 </label>
-<span class="text-light-outline font-body">Demo: admin / 123456</span>
 </div>
-<button class="w-full py-2.5 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container transition-colors shadow-sm mt-1" type="submit">
+<button class="w-full py-2.5 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container transition-colors shadow-sm mt-1" id="btn-login-submit" type="submit">
 Ingresar al Sistema
 </button>
-<!-- Quick Demo Account Access Pills -->
-<div class="pt-2 border-t border-light-outline-variant/60 flex flex-col gap-1.5">
-<span class="text-[11px] font-label text-light-outline text-center">Acceso rápido para demostración:</span>
-<div class="flex items-center justify-center gap-2">
-<button type="button" class="quick-demo-btn px-2.5 py-1 rounded bg-light-surface-container-low border border-light-outline-variant text-[11px] font-mono text-light-on-surface hover:bg-light-primary hover:text-light-on-primary transition-colors" data-user="admin" data-pass="123456">Admin (admin / 123456)</button>
-<button type="button" class="quick-demo-btn px-2.5 py-1 rounded bg-light-surface-container-low border border-light-outline-variant text-[11px] font-mono text-light-on-surface hover:bg-light-primary hover:text-light-on-primary transition-colors" data-user="operador" data-pass="123456">Operador (operador / 123456)</button>
-</div>
-</div>
+<p class="text-[11px] font-body text-light-outline text-center pt-1 border-t border-light-outline-variant/60">
+El registro público está desactivado. Solo usuarios autorizados por el Administrador Principal pueden ingresar.
+</p>
 </form>
 
-<!-- Formulario Registrar Nuevo Usuario -->
+<!-- Formulario Configuración Inicial (Solo visible si NO existe Administrador Principal aún) -->
 <form class="hidden flex-col gap-gutter-md" id="register-form">
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-sm text-light-on-surface font-semibold">Nombre completo *</span>
-<input class="w-full px-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="reg-name" placeholder="Ej. Carlos Valderrama" required type="text"/>
-</label>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-sm text-light-on-surface font-semibold">Correo o Nombre de Usuario *</span>
-<input class="w-full px-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="reg-identifier" placeholder="ejemplo@motocontrol.com o usuario" required type="text"/>
-</label>
-<div class="grid grid-cols-2 gap-gutter-sm">
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-sm text-light-on-surface font-semibold">Rol *</span>
-<select class="w-full px-2.5 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-sm focus:border-light-primary" id="reg-role">
-<option value="Administrador de Flota">Administrador</option>
-<option value="Supervisor de Operaciones">Supervisor</option>
-<option value="Contador / Tesorería">Tesorero / Contador</option>
-</select>
-</label>
-<label class="flex flex-col gap-1">
-<span class="font-label text-label-sm text-light-on-surface font-semibold">Contraseña *</span>
-<input class="w-full px-3 py-2 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="reg-password" placeholder="Mínimo 6 caracteres" required type="password"/>
-</label>
+<div class="p-2.5 rounded bg-light-secondary-container/40 border border-light-primary/30 text-xs font-body text-light-on-surface">
+<strong>Configuración única inicial:</strong> Crea la cuenta del <strong>Administrador Principal</strong>. Al finalizar, el registro público se cerrará automáticamente.
 </div>
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Nombre completo del dueño *</span>
+<input class="w-full px-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="reg-name" placeholder="Ej. Wilberto Fontalvo" required="" type="text"/>
+</label>
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Correo electrónico *</span>
+<input class="w-full px-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-body text-body-md focus:border-light-primary focus:ring-light-primary" id="reg-identifier" placeholder="tu-correo@ejemplo.com" required="" type="email"/>
+</label>
+<label class="flex flex-col gap-1">
+<span class="font-label text-label-sm text-light-on-surface font-semibold">Contraseña segura (mín. 6 caracteres) *</span>
+<input class="w-full px-3 py-2.5 rounded border border-light-outline-variant bg-light-surface text-light-on-surface font-mono text-mono-md focus:border-light-primary" id="reg-password" placeholder="Mínimo 6 caracteres" required="" type="password"/>
+</label>
+<label class="hidden flex-col gap-1" id="reg-project-verify-wrap">
+<span class="font-label text-label-sm text-light-error font-semibold">Código de proyecto Firebase (para proteger datos existentes) *</span>
+<input class="w-full px-3 py-2 rounded border border-light-error/50 bg-light-surface text-light-on-surface font-mono text-mono-sm" id="reg-project-verify" placeholder="Ingresa el Project ID de tu Firebase" type="text"/>
+</label>
 <button class="w-full py-2.5 rounded bg-light-primary text-light-on-primary font-label text-label-md font-bold hover:bg-light-primary-container transition-colors shadow-sm mt-1" type="submit">
-Crear Cuenta y Acceder
+Registrar Administrador Principal y Bloquear Acceso
 </button>
 </form>
 
+</div>
+</div>
+
+<!-- MODAL: Centro de Seguridad, Usuarios Autorizados y Auditoría de Turnos -->
+<div aria-modal="true" class="fixed inset-0 z-50 bg-light-scrim/50 hidden items-center justify-center p-gutter-md" id="security-center-modal" role="dialog">
+<div class="bg-light-surface-container-lowest border border-light-outline-variant rounded-md w-full max-w-4xl p-gutter-lg flex flex-col gap-gutter-md max-h-[90vh] overflow-y-auto shadow-2xl">
+<header class="flex items-center justify-between gap-gutter-sm border-b border-light-outline-variant pb-gutter-sm">
+<div class="flex items-center gap-2.5">
+<span class="material-symbols-outlined text-[26px] text-light-primary">shield_person</span>
+<div>
+<h2 class="font-headline text-headline-sm text-light-on-surface">Seguridad, Usuarios y Auditoría de Turnos</h2>
+<p class="font-body text-body-sm text-light-on-surface-variant">Control de accesos por rol y registro de actividad de cada administrador/operador</p>
+</div>
+</div>
+<button aria-label="Cerrar modal" class="inline-flex items-center justify-center w-8 h-8 rounded text-light-on-surface-variant hover:bg-light-surface-container-low" id="close-security-modal-btn" type="button">
+<span class="material-symbols-outlined text-[20px]">close</span>
+</button>
+</header>
+
+<!-- Navigation Tabs -->
+<div class="flex flex-wrap items-center gap-1.5 bg-light-surface-container-low p-1 rounded border border-light-outline-variant" role="tablist">
+<button class="sec-tab-btn px-3 py-1.5 rounded font-label text-label-sm bg-light-surface-container-lowest text-light-on-surface font-bold shadow-xs" data-sec-tab="users" id="sec-tab-btn-users" type="button">Usuarios y Roles</button>
+<button class="sec-tab-btn px-3 py-1.5 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface" data-sec-tab="audit" id="sec-tab-btn-audit" type="button">Historial de Turnos (Auditoría)</button>
+<button class="sec-tab-btn px-3 py-1.5 rounded font-label text-label-sm text-light-on-surface-variant hover:text-light-on-surface" data-sec-tab="account" id="sec-tab-btn-account" type="button">Mi Contraseña y Protección</button>
+</div>
+
+<!-- TAB 1: USUARIOS Y PERMISOS (Solo Administrador Principal) -->
+<section class="flex flex-col gap-gutter-md" id="sec-panel-users">
+<form class="p-gutter-md bg-light-surface-container-low rounded-md border border-light-outline-variant grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-12 gap-2.5 items-end" id="sec-create-user-form">
+<div class="lg:col-span-3 flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="sec-new-name">Nombre completo *</label>
+<input class="h-9 rounded border border-light-outline-variant bg-light-surface px-2.5 font-body text-body-sm" id="sec-new-name" placeholder="Ej. Segundo Admin / Socio" required="" type="text"/>
+</div>
+<div class="lg:col-span-3 flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="sec-new-email">Correo electrónico *</label>
+<input class="h-9 rounded border border-light-outline-variant bg-light-surface px-2.5 font-body text-body-sm" id="sec-new-email" placeholder="usuario@correo.com" required="" type="email"/>
+</div>
+<div class="lg:col-span-3 flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="sec-new-role">Rol y Permisos *</label>
+<select class="h-9 rounded border border-light-outline-variant bg-light-surface px-2 font-body text-body-sm" id="sec-new-role">
+<option value="admin">Co-Administrador (Control operativo)</option>
+<option value="operator">Operador (Solo Ingresar · Sin editar ni borrar)</option>
+</select>
+</div>
+<div class="lg:col-span-2 flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="sec-new-password">Contraseña *</label>
+<input class="h-9 rounded border border-light-outline-variant bg-light-surface px-2.5 font-mono text-mono-sm" id="sec-new-password" placeholder="Mín. 6 chars" required="" type="password"/>
+</div>
+<button class="lg:col-span-1 h-9 px-3 rounded bg-light-primary text-light-on-primary font-label text-label-sm font-bold hover:bg-light-primary-container" type="submit">Crear</button>
+</form>
+
+<div class="border border-light-outline-variant rounded overflow-x-auto">
+<table class="w-full text-left border-collapse">
+<thead>
+<tr class="bg-light-surface-container-low border-b border-light-outline-variant">
+<th class="px-3 py-2 font-label text-label-sm text-light-on-surface-variant">Usuario</th>
+<th class="px-3 py-2 font-label text-label-sm text-light-on-surface-variant">Rol</th>
+<th class="px-3 py-2 font-label text-label-sm text-light-on-surface-variant">Estado</th>
+<th class="px-3 py-2 font-label text-label-sm text-light-on-surface-variant text-right">Acciones</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-light-outline-variant" id="sec-users-tbody"></tbody>
+</table>
+</div>
+</section>
+
+<!-- TAB 2: HISTORIAL DE TURNOS (AUDITORÍA) -->
+<section class="hidden flex-col gap-gutter-md" id="sec-panel-audit">
+<div class="flex flex-wrap items-center justify-between gap-2">
+<div class="flex flex-wrap items-center gap-2">
+<select class="h-9 rounded border border-light-outline-variant bg-light-surface px-2.5 font-label text-label-sm" id="audit-filter-user">
+<option value="all">Todos los usuarios</option>
+</select>
+<select class="h-9 rounded border border-light-outline-variant bg-light-surface px-2.5 font-label text-label-sm" id="audit-filter-action">
+<option value="all">Todas las acciones</option>
+<option value="Creación">Registros / Ingresos</option>
+<option value="Transferencia">Transferencias</option>
+<option value="Edición">Ediciones</option>
+<option value="Eliminación">Eliminaciones</option>
+<option value="Inicio de sesión">Inicios de sesión</option>
+</select>
+</div>
+<span class="font-body text-body-xs text-light-outline" id="audit-count-label">0 registros</span>
+</div>
+<div class="border border-light-outline-variant rounded overflow-x-auto max-h-[380px] overflow-y-auto">
+<table class="w-full text-left border-collapse">
+<thead class="sticky top-0 bg-light-surface-container-low border-b border-light-outline-variant">
+<tr>
+<th class="px-3 py-2 font-label text-label-xs text-light-on-surface-variant">Fecha / Hora</th>
+<th class="px-3 py-2 font-label text-label-xs text-light-on-surface-variant">Usuario (Turno)</th>
+<th class="px-3 py-2 font-label text-label-xs text-light-on-surface-variant">Acción</th>
+<th class="px-3 py-2 font-label text-label-xs text-light-on-surface-variant">Detalle</th>
+</tr>
+</thead>
+<tbody class="divide-y divide-light-outline-variant" id="audit-logs-tbody"></tbody>
+</table>
+</div>
+</section>
+
+<!-- TAB 3: MI CONTRASEÑA Y NIVEL DE PROTECCIÓN -->
+<section class="hidden flex-col gap-gutter-md" id="sec-panel-account">
+<form class="p-gutter-md bg-light-surface-container-low rounded-md border border-light-outline-variant grid grid-cols-1 sm:grid-cols-3 gap-3 items-end" id="sec-change-pass-form">
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="sec-curr-pass">Contraseña actual *</label>
+<input class="h-9 rounded border border-light-outline-variant bg-light-surface px-2.5 font-mono text-mono-sm" id="sec-curr-pass" required="" type="password"/>
+</div>
+<div class="flex flex-col gap-1">
+<label class="font-label text-label-xs text-light-on-surface" for="sec-next-pass">Nueva contraseña (mín. 6) *</label>
+<input class="h-9 rounded border border-light-outline-variant bg-light-surface px-2.5 font-mono text-mono-sm" id="sec-next-pass" required="" type="password"/>
+</div>
+<button class="h-9 px-4 rounded bg-light-primary text-light-on-primary font-label text-label-sm font-bold hover:bg-light-primary-container" type="submit">Actualizar Contraseña</button>
+</form>
+<div class="p-gutter-md rounded-md border border-light-outline-variant bg-light-surface flex flex-col gap-1.5 text-xs font-body text-light-on-surface-variant">
+<p class="font-label text-label-sm text-light-on-surface font-bold">Protecciones activas en esta versión:</p>
+<ul class="list-disc pl-5 space-y-1">
+<li>Cuentas demo (<code>admin/123456</code>, <code>operador</code>) eliminadas permanentemente y registro público cerrado.</li>
+<li>Contraseñas protegidas con hash criptográfico <strong>SHA-256 + salt aleatorio</strong> y bloqueo temporal tras 5 intentos fallidos.</li>
+<li>Los datos reales de flota no se cargan ni se muestran hasta iniciar sesión con una cuenta autorizada.</li>
+<li>Rol <strong>Operador (Solo Ingreso)</strong> bloqueado tanto visualmente como en la base para impedir editar o borrar registros.</li>
+<li>Auditoría automática de cada movimiento y acción por usuario y hora de turno.</li>
+</ul>
+</div>
+</section>
 </div>
 </div>
 
